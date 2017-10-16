@@ -11,9 +11,9 @@
 #include "port.h"
 
 /* Windows includes */
-#include <tchar.h>
-#include <conio.h>
-#include <winsock.h>
+// #include <tchar.h>
+// #include <conio.h>
+// #include <winsock.h>
 
 
 #if defined(_DEBUG) && 0
@@ -30,13 +30,13 @@ using namespace std;
 
 int halt_status = -1;
 
-BOOL __declspec(noreturn) WINAPI CtrlHandlerRoutine(DWORD dwCtrlType)
+BOOL WINAPI CtrlHandlerRoutine(DWORD dwCtrlType)
 {
 	dwCtrlType;
 	exit(halt_status);
 }
 
-void __declspec(noreturn) halt(int status)
+void halt(int status)
 {
 	halt_status = status;
 	SetConsoleCtrlHandler(CtrlHandlerRoutine, TRUE);
