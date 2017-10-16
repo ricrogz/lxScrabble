@@ -8,6 +8,8 @@
 #include <fstream>
 #include <time.h>
 
+#include "port.h"
+
 /* Windows includes */
 #include <tchar.h>
 #include <conio.h>
