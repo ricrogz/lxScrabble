@@ -3,20 +3,14 @@
 // WScrabble.cpp : définit le point d'entrée pour l'application console.
 //
 
-#pragma once
-
-#define WIN32_LEAN_AND_MEAN		// Exclure les en-têtes Windows rarement utilisés
 #include <stdio.h>
-#include <tchar.h>
-#pragma warning(disable:4710)
-#pragma warning(push,3)
-#pragma warning(disable:4702)
-#pragma warning(disable:4701)
 #include <iostream>
 #include <fstream>
-#pragma warning(pop)
-#include <conio.h>
 #include <time.h>
+
+/* Windows includes */
+#include <tchar.h>
+#include <conio.h>
 #include <winsock.h>
 
 
