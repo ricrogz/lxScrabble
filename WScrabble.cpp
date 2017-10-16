@@ -1,11 +1,11 @@
 // This work is licensed under the CC BY-NC-SA 4.0 license (Creative Common Attribution-NonCommercial-ShareAlike 4.0 International). See LICENSE.txt
 // ______________________________________________________________
-// WScrabble.cpp : définit le point d'entrée pour l'application console.
+// WScrabble.cpp : dÃ©finit le point d'entrÃ©e pour l'application console.
 //
 
 #pragma once
 
-#define WIN32_LEAN_AND_MEAN		// Exclure les en-têtes Windows rarement utilisés
+#define WIN32_LEAN_AND_MEAN		// Exclure les en-tÃªtes Windows rarement utilisÃ©s
 #include <stdio.h>
 #include <tchar.h>
 #pragma warning(disable:4710)
@@ -25,9 +25,9 @@
 #define CHEAT
 #endif
 
-#define BOTNAME "WScrabble 1.10" // penser a mettre à jour VERSIONINFO aussi
+#define BOTNAME "WScrabble 1.10" // penser a mettre Ã  jour VERSIONINFO aussi
 #define BOTFULLNAME BOTNAME " by Wizou"
-#define ADVERTISE "\x002""\x003""9,2 ~\x003""08 † \x003""04¤ \x003""00" BOTNAME " \x003""15-\x003""00 http://wiz0u.free.fr/wscrabble \x003""04¤\x003""08 † \x003""09~\x00F"""
+#define ADVERTISE "\x002""\x003""9,2 ~\x003""08 Â† \x003""04Â¤ \x003""00" BOTNAME " \x003""15-\x003""00 http://wiz0u.free.fr/wscrabble \x003""04Â¤\x003""08 Â† \x003""09~\x00F"""
 
 
 using namespace std;
@@ -388,9 +388,9 @@ char distrib[DISTRIB_MAX];
 size_t wordlen;
 
 struct Cell {
-	struct Cell *other; // autres lettres possibles (plus grandes dans l'ordre alphabétiques)
+	struct Cell *other; // autres lettres possibles (plus grandes dans l'ordre alphabÃ©tiques)
 	struct Cell *longer; // mots plus long disponibles
-	char *words; // succession des mots contenant ces lettres, séparés par des \0 et terminé par un autre \0
+	char *words; // succession des mots contenant ces lettres, sÃ©parÃ©s par des \0 et terminÃ© par un autre \0
 	unsigned short wordsCount;
 	char letter; // la lettre
 };
@@ -685,7 +685,7 @@ bool update_top(Top *top, const char *nickname, int score)
 	if (newPos == TOP_MAX) return false; // le score n'entre pas dans le top
 	for (int index = newPos; index < TOP_MAX-1; index++)
 		if (stricmp(top[index].nick, nickname) == 0)
-			break; // le nom etait déjà dans le top
+			break; // le nom etait dÃ©jÃ  dans le top
 	// 0 1 2 3 4 5 6 7 8 9
 	memmove(&top[newPos+1], &top[newPos], (index-newPos)*sizeof(Top));
 	strcpy(top[newPos].nick, nickname);
