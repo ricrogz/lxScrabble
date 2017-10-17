@@ -29,6 +29,15 @@ void strupr(string &str) {
     for (auto &c: str) c = (char) toupper(c);
 }
 
+char* strupr(char* s) {
+    char* tmp = s;
+    for (;*tmp;++tmp) {
+        *tmp = (char)toupper((unsigned char) *tmp);
+    }
+
+    return s;
+}
+
 void readIni() {
 
     INIReader reader(INI_FILE);
