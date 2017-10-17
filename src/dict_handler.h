@@ -2,7 +2,7 @@
 // Created by invik on 17/10/17.
 //
 
-#include "neWScrabble.h"
+#include "lxScrabble.h"
 
 #ifndef WSCRABBLE_DICT_HANDLER_H
 #define WSCRABBLE_DICT_HANDLER_H

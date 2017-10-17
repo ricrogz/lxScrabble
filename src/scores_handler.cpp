@@ -28,7 +28,7 @@ void read_top(Top *top, string & value) {
 void read_tops() {
 
     string value;
-    INIReader reader("scores.ini");
+    INIReader reader(SCORE_FILE);
 
     // Check error
     int error_check = reader.ParseError();

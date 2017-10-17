@@ -2,11 +2,12 @@
 // Created by invik on 17/10/17.
 //
 
-#include "neWScrabble.h"
+#include "lxScrabble.h"
 
 #ifndef WSCRABBLE_SCORES_HANDLER_H
 #define WSCRABBLE_SCORES_HANDLER_H
 
+#define SCORE_FILE "scores.ini"
 #define TOP_MAX 10
 
 

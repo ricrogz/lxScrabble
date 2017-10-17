@@ -181,15 +181,22 @@ void irc_connect(const string &servername, int port, const string &password, str
     irc_send(" :");
     irc_sendline(fullname.c_str());
 
+    // All connection data has been send. Now, analyze answers for 45 secs
     char line[1024];
     clock_t ticks = clock();
     while (clock() - ticks < 45000) {
         if (irc_recv(line)) {
             char *cmd, *dummy;
+
+            // Get response text
             irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy, &dummy);
+
+            // We got a numeric indicating success
             if (strcmp(cmd, "001") == 0) {
                 irc_flushrecv();
                 return;
+
+            // Numerics indicating the nick is busy; use alternate
             } else if ((strcmp(cmd, "432") == 0) || (strcmp(cmd, "433") == 0)) {
                 if (nickname == altnickname) {
                     cerr << "Nicknames already in use" << endl;
@@ -203,18 +210,19 @@ void irc_connect(const string &servername, int port, const string &password, str
             usleep(500);
     }
 
+    // Time out: we were not able to connect
     cerr << "Problem during connection" << endl;
     halt(7);
 #endif
 }
 
 void get_connection() {
-    INIReader reader("WScrabble.ini");
+    INIReader reader(INI_FILE);
 
     // Check error
     int error_check = reader.ParseError();
     if (error_check < 0) {
-        cout << "Can't load 'WScrabble.ini'\n";
+        cout << "Can't load 'lxScrabble.ini'\n";
         halt(error_check);
     }
 
@@ -222,7 +230,7 @@ void get_connection() {
     string servername = reader.Get("IRC", "Server", DEFAULT_SERVER);
     // TODO: is this really necessary? -- remove it
     if (strcmp(servername.c_str(), "<IRC SERVER HOSTNAME>") == 0) {
-        cerr << endl << "Configure WScrabble.ini first !!" << endl;
+        cerr << endl << "Configure lxScrabble.ini first !!" << endl;
         halt(2);
     }
     int port = (int) reader.GetInteger("IRC", "Port", DEFAULT_PORT);
@@ -246,9 +254,13 @@ void get_connection() {
 
     // Connect
     irc_connect(servername, port, server_pass, nickname, altnickname, ident, "localhost", fullname);
-    //do_perform(perform);
-    //irc_flushrecv();
 
+    // Perform actions (identify registered nick, etc)
+    //do_perform(perform);
+    irc_flushrecv();
+
+    // Join channel
+    //irc_join(channel, channelkey);
 }
 
 void irc_connect() {
@@ -258,10 +270,10 @@ void irc_connect() {
     // Connect
     get_connection();
 
+    // Init execution
     /*
-    irc_join(channel, channelkey);
     show_about();
     cur_state = running;
     UINT noWinner = 0;
-     */
+    */
 }
