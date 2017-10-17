@@ -10,9 +10,11 @@ set(CMAKE_CXX_STANDARD 11)
 #add_executable(wscrabble ${SOURCE_FILES})
 
 set(NEW_SOURCE_FILES
-        neWScrabble.cpp
+        src/neWScrabble.cpp
+        src/dict_handler.cpp
+        src/scores_handler.cpp
         ./lib/inih/cpp/INIReader.cpp
-        ./lib/inih/ini.c neWScrabble.h)
+        ./lib/inih/ini.c src/neWScrabble.h src/scores_handler.cpp src/scores_handler.h src/dict_handler.cpp src/dict_handler.h)
 
 
 add_executable(neWScrabble ${NEW_SOURCE_FILES})
