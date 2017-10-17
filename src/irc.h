@@ -23,7 +23,7 @@
 #define DEFAULT_CHANNEL "#scrabble"
 #define DEFAULT_CHANNEL_KEY ""
 
-
+#define CONNECT_TIMEOUT 45 * 1000 // 45 s
 
 void irc_connect();
 

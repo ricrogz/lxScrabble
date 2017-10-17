@@ -20,7 +20,6 @@ struct Top topWeek[TOP_MAX];
 struct Top topYear[TOP_MAX];
 
 
-
 void halt(int stat_code) {
     exit(stat_code);
 }
@@ -87,7 +86,15 @@ int main(int argc, char *argv[]) {
 #endif
 
     // Connect to irc
+    cout << "Connecting to IRC..." << endl;
     irc_connect();
+
+    // Init execution
+/*
+    show_about();
+    cur_state = running;
+    UINT noWinner = 0;
+*/
 
 
 #ifndef OFFLINE

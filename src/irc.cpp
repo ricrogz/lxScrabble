@@ -184,7 +184,7 @@ void irc_connect(const string &servername, int port, const string &password, str
     // All connection data has been send. Now, analyze answers for 45 secs
     char line[1024];
     clock_t ticks = clock();
-    while (clock() - ticks < 45000) {
+    while (clock() - ticks < CONNECT_TIMEOUT) {
         if (irc_recv(line)) {
             char *cmd, *dummy;
 
@@ -292,7 +292,7 @@ void irc_sendnotice(const char *dest) {
     irc_send(" :");
 }
 
-void get_connection() {
+void irc_connect() {
     INIReader reader(INI_FILE);
 
     // Check error
@@ -328,7 +328,8 @@ void get_connection() {
     string perform = reader.Get("IRC", "Perform", "");
     owner = reader.Get("IRC", "Owner", "");
 
-    // Connect
+    // Prepare socket & connect
+    init_socket();
     irc_connect(servername, port, server_pass, nickname, altnickname, ident, "localhost", fullname);
 
     // Perform actions (identify registered nick, etc)
@@ -337,19 +338,4 @@ void get_connection() {
 
     // Join channel
     irc_join(channel, channelkey);
-}
-
-void irc_connect() {
-    cout << "Connecting to IRC..." << endl;
-    init_socket();
-
-    // Connect
-    get_connection();
-
-    // Init execution
-    /*
-    show_about();
-    cur_state = running;
-    UINT noWinner = 0;
-    */
 }
