@@ -7,6 +7,8 @@
 #ifndef WSCRABBLE_SCORES_HANDLER_H
 #define WSCRABBLE_SCORES_HANDLER_H
 
+#define TOP_MAX 10
+
 
 void clear_top(Top *top);
 

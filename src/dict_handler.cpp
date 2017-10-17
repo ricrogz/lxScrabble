@@ -11,6 +11,8 @@
 void sortLetters(const string &letters, char *sortedLetters) {
     char *scan = sortedLetters;
     sortedLetters[0] = 127;
+
+    // TODO: improve this, use quicksort
     for (char ch: letters) {
         scan = sortedLetters;
         while (ch >= *scan) scan++;
@@ -25,6 +27,9 @@ void sortLetters(const string &letters, char *sortedLetters) {
 }
 
 void addWord(const string &word) {
+
+    // TODO: convert Cell to a class, and implement this as a method
+
     char letters[word.length() + 1];
     sortLetters(word, letters);
     struct Cell **cell = &dictionary;

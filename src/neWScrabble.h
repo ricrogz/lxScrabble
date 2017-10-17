@@ -5,14 +5,6 @@
 #ifndef WSCRABBLE_NEWSCRABBLE_H
 #define WSCRABBLE_NEWSCRABBLE_H
 
-
-#define BOTNAME "WScrabble 1.10" // penser a mettre à jour VERSIONINFO aussi
-#define BOTFULLNAME BOTNAME " by Wizou"
-#define ADVERTISE "\x002""\x003""9,2 ~\x003""08  \x003""04¤ \x003""00" BOTNAME \
-                  " \x003""15-\x003""00 http://wiz0u.free.fr/wscrabble \x003""04¤\x003""08  \x003""09~\x00F"""
-
-#define TOP_MAX 10
-
 #include <cstddef>
 #include <string>
 #include <iostream>
@@ -40,8 +32,8 @@ extern long bonus;
 extern string distrib;
 extern string dict_file;
 extern struct Cell *dictionary;
-extern struct Top topWeek[TOP_MAX];
-extern struct Top topYear[TOP_MAX];
+extern struct Top topWeek[];
+extern struct Top topYear[];
 
 void halt(int stat_code);
 

@@ -993,6 +993,14 @@ reconnect:
 	show_about();
 	cur_state = running;
 	UINT noWinner = 0;
+
+
+
+
+
+
+
+
 	while (cur_state != halting)
 	{
 		char letters[WORD_MAX], sortedLetters[WORD_MAX];
