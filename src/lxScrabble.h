@@ -41,4 +41,6 @@ void halt(int stat_code);
 
 void strupr(string &str);
 
+char* strupr(char* s);
+
 #endif //WSCRABBLE_NEWSCRABBLE_H
