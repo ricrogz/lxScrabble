@@ -196,7 +196,7 @@ void irc_connect(const string &servername, int port, const string &password, str
                 irc_flushrecv();
                 return;
 
-            // Numerics indicating the nick is busy; use alternate
+                // Numerics indicating the nick is busy; use alternate
             } else if ((strcmp(cmd, "432") == 0) || (strcmp(cmd, "433") == 0)) {
                 if (nickname == altnickname) {
                     cerr << "Nicknames already in use" << endl;
@@ -214,6 +214,82 @@ void irc_connect(const string &servername, int port, const string &password, str
     cerr << "Problem during connection" << endl;
     halt(7);
 #endif
+}
+
+void do_perform(const string & perform) {
+    char *token = strtok((char *)perform.c_str(), "|");
+    while (token != nullptr) {
+        token = token + strspn(token, " ");
+        if (*token == '/') token++;
+        char *scan = strchr(token, ' ');
+        if (scan) *scan++ = '\0';
+        strupr(token);
+        if ((strcmp(token, "MSG") == 0) || (strcmp(token, "NOTICE") == 0)) {
+            if (!scan) {
+                cerr << "Missing argument for " << token << " on Perform= setting" << endl;
+                halt(2);
+            }
+            if (strcmp(token, "MSG") == 0)
+                irc_send("PRIVMSG");
+            else
+                irc_send(token);
+            token = scan;
+            scan = strchr(token, ' ');
+            *--token = ' ';
+            *scan++ = '\0';
+            irc_send(token);
+            irc_send(" :");
+            irc_sendline(scan);
+        } else {
+            if (scan) *--scan = ' ';
+            irc_sendline(token);
+        }
+        token = strtok(nullptr, "|");
+    }
+
+}
+
+bool irc_want(const char *wantCmd, uint timeout = 15000) {
+#ifdef OFFLINE
+    wantCmd, timeout;
+    return true;
+#else
+    char line[1024];
+    clock_t ticks = clock();
+    while (clock() - ticks < timeout) {
+        if (irc_recv(line)) {
+            char *cmd, *dummy;
+            irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy, &dummy);
+            if (strcmp(cmd, wantCmd) == 0)
+                return true;
+        } else
+            usleep(100);
+    }
+    return false;
+#endif
+}
+
+void irc_join(const string & channel, const string & channelkey = nullptr) {
+    irc_send("JOIN ");
+    if (!channelkey.empty()) {
+        irc_send(channel.c_str());
+        irc_send(" ");
+        irc_sendline(channelkey.c_str());
+    } else
+        irc_sendline(channel.c_str());
+    irc_want("JOIN");
+}
+
+void irc_sendmsg(const char *dest) {
+    irc_send("PRIVMSG ");
+    irc_send(dest);
+    irc_send(" :");
+}
+
+void irc_sendnotice(const char *dest) {
+    irc_send("NOTICE ");
+    irc_send(dest);
+    irc_send(" :");
 }
 
 void get_connection() {
@@ -256,11 +332,11 @@ void get_connection() {
     irc_connect(servername, port, server_pass, nickname, altnickname, ident, "localhost", fullname);
 
     // Perform actions (identify registered nick, etc)
-    //do_perform(perform);
+    do_perform(perform);
     irc_flushrecv();
 
     // Join channel
-    //irc_join(channel, channelkey);
+    irc_join(channel, channelkey);
 }
 
 void irc_connect() {
