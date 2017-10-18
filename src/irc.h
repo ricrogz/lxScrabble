@@ -36,11 +36,11 @@
 
 void irc_connect();
 
-void irc_sendline(const char *line);
+void irc_sendline(const string & line);
 
-void irc_sendmsg(const char *dest);
+void irc_sendmsg(const string & dest);
 
-void irc_sendnotice(const char *dest);
+void irc_sendnotice(const string & dest);
 
 void irc_stripcodes(char *text);
 
@@ -53,7 +53,7 @@ void irc_analyze(char *line, char **nickname, char **ident, char **hostname, cha
 
 bool irc_recv(char line[]);
 
-void irc_send(const char *text);
+void irc_send(const string & text);
 
 void irc_send(char ch);
 

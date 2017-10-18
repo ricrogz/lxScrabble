@@ -6,13 +6,14 @@
 #define WSCRABBLE_NEWSCRABBLE_H
 
 #define INI_FILE "lxScrabble.ini"
-#define WORD_MAX 64
 
 #include <cstddef>
 #include <string>
 #include <iostream>
 
 #include "inicpp/inicpp.h"
+
+#include "mimics.h"
 
 using namespace std;
 using namespace inicpp;
@@ -31,23 +32,19 @@ struct Top {
 };
 
 extern size_t wordlen;
-extern long bonus;
+extern ulong bonus;
 extern string distrib;
 extern string dict_file;
 extern struct Cell *dictionary;
 extern struct Top topWeek[];
 extern struct Top topYear[];
-extern int foundWords;
-extern int foundMaxWords;
-extern int maxWordLen;
-extern int dispMaxWords;
+extern size_t foundWords;
+extern size_t foundMaxWords;
+extern size_t maxWordLen;
+extern size_t dispMaxWords;
 extern char dispMaxWordsString[];
 
 void halt(int stat_code);
-
-void strupr(string &str);
-
-char* strupr(char* s);
 
 template<class T> T cfg(const string & section, const string & option, const T & default_value);
 

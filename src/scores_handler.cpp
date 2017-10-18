@@ -74,7 +74,7 @@ void write_tops() {
     scorep["Top"]["Year"].set<string>(value);
 }
 
-bool update_top(Top *top, const string &nickname, ulong score) {
+bool update_top(Top *top, const string & nickname, ulong score) {
     int newPos, index;
     for (newPos = 0; newPos < TOP_MAX; newPos++)
         if (score >= top[newPos].score)
@@ -90,14 +90,14 @@ bool update_top(Top *top, const string &nickname, ulong score) {
     return true;
 }
 
-void get_scores(const string &nickname, ulong *year, ulong *week) {
+void get_scores(const string & nickname, ulong *year, ulong *week) {
     char *scan;
     string value = cfg<string>("Scores", nickname, "0 0");
     *year = strtoul(value.c_str(), &scan, 10);
     *week = strtoul(scan, &scan, 10);
 }
 
-void set_scores(const string &nickname, ulong year, ulong week) {
+void set_scores(const string & nickname, ulong year, ulong week) {
     string value = to_string(year) + " " + to_string(week);
     scorep["Scores"][nickname].set<string>(value);
     bool updated = update_top(topWeek, nickname, week);

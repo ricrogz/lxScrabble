@@ -5,11 +5,12 @@
 #ifndef LXSCRABBLE_MIMICS_H
 #define LXSCRABBLE_MIMICS_H
 
-//#include <cstdlib>
+#include <string>
 
 bool kbhit();
 
-//int strncasecmp(const char *a, const char *b, uint n);
+void strupr(std::string &str);
 
+char* strupr(char* s);
 
 #endif //LXSCRABBLE_MIMICS_H

@@ -5,7 +5,6 @@
 #include "game.h"
 #include "dict_handler.h"
 #include "scores_handler.h"
-#include "mimics.h"
 
 #include <unistd.h>
 #include <ncurses.h>
@@ -20,12 +19,12 @@ ulong winInARow;
 void show_about() {
     char buffer[sizeof(ADVERTISE)];
     strcpy(buffer, ADVERTISE);
-    irc_sendmsg(channel.c_str());
+    irc_sendmsg(channel);
     if (irc_blackAndWhite) irc_stripcodes(buffer);
     irc_sendline(buffer);
 }
 
-void pickLetters(char letters[WORD_MAX], char sortedLetters[WORD_MAX]) {
+void pickLetters(char *letters, char *sortedLetters) {
     size_t count = distrib.length();
     char availableLetters[count];
     strcpy(availableLetters, distrib.c_str());
@@ -45,9 +44,9 @@ void pickLetters(char letters[WORD_MAX], char sortedLetters[WORD_MAX]) {
     sortLetters(letters, sortedLetters);
 }
 
-void displayLetters(const char letters[WORD_MAX]) {
-    irc_sendmsg(channel.c_str());
-    char s_letters[WORD_MAX * 2];
+void displayLetters(const char *letters) {
+    irc_sendmsg(channel);
+    char s_letters[wordlen * 2];
     for (size_t i = 0; i < wordlen; i++) {
         s_letters[i * 2] = letters[i];
         s_letters[i * 2 + 1] = ' ';
@@ -56,7 +55,7 @@ void displayLetters(const char letters[WORD_MAX]) {
     irc_sendformat(true, "Letters", "[Mixed Letters]  - %s -", s_letters);
 }
 
-void send_update_stats(const string &nickname, int gain) {
+void send_update_stats(const string &nickname, ulong gain) {
     ulong year, week;
     get_scores(nickname, &year, &week);
     year += gain;
@@ -96,12 +95,12 @@ bool isWord(const char *letters, const char *word) {
     return false;
 }
 
-bool checkWord(const char availableLetters[WORD_MAX], const char *word) {
-    char letters[WORD_MAX];
+bool checkWord(const char *availableLetters, const char *word) {
+    char letters[wordlen];
     size_t len = strlen(word);
     if (len > wordlen) return false;
     sortLetters(word, letters);
-    int scan = wordlen;
+    size_t scan = wordlen;
     while (len--) {
         do {
             if (scan == 0) return false;
@@ -180,22 +179,19 @@ bool scrabbleCmd(const char *nickname, char *command) {
         cur_state = RUNNING;
     else if ((anyoneCanStop || isOwner) && (strcasecmp(command, "!stop") == 0)) {
         if (cur_state == RUNNING) {
-            irc_sendmsg(channel.c_str());
+            irc_sendmsg(channel);
             irc_sendformat(true, "Stop", "%1 has stopped the game.", nickname);
         }
         cur_state = STOPPED;
     } else if (isOwner) {
         if (strcasecmp(command, "!newweek") == 0) {
-            irc_sendmsg(channel.c_str());
+            irc_sendmsg(channel);
             irc_sendformat(true, "NewWeek", "A new week is beginning ! Resetting all week scores...");
             clear_week_scores();
         } else if (strcasecmp(command, "!disconnect") == 0) {
             cur_state = HALTING;
         } else if (strcasecmp(command, "!op") == 0) {
-            irc_send("MODE ");
-            irc_send(channel.c_str());
-            irc_send(" +o ");
-            irc_sendline(nickname);
+            irc_sendline("MODE " + channel + " +o " + nickname);
         } else
             return false;
     } else
@@ -207,7 +203,6 @@ bool scrabbleCmd(const char *nickname, char *command) {
 void run_game() {
 
     cur_state = RUNNING;
-    const char *chan = channel.c_str();
     uint noWinner = 0;
 
     // Use global cfg reader to read cfg
@@ -215,15 +210,15 @@ void run_game() {
     uint cfg_warning = (uint) cfg<unsigned_ini_t>("Delay", "warning", 30) * 10;
     uint cfg_after = (uint) cfg<unsigned_ini_t>("Delay", "after", 30) * 10;
     uint autostop = (uint) cfg<unsigned_ini_t>("Settings", "autostop", 3);
-    bool autovoice = (bool) cfg<unsigned_ini_t>("Settings", "autovoice", true);
+    bool autovoice = (bool) cfg<unsigned_ini_t>("Settings", "autovoice", 1);
 
     while (cur_state != HALTING) {
-        char letters[WORD_MAX], sortedLetters[WORD_MAX];
+        char letters[wordlen], sortedLetters[wordlen];
         do {
             pickLetters(letters, sortedLetters);
             displayLetters(letters);
             findWords(sortedLetters);
-            irc_sendmsg(chan);
+            irc_sendmsg(channel);
             if (foundWords == 0)
                 irc_sendformat(true, "FoundNone", "[I've found no possible words !! Let's roll again ;-)...]");
             else
@@ -243,26 +238,26 @@ void run_game() {
         int lastHour = systemTime->tm_hour;
         char line[1024];
         char winningNick[128];                /////////////////////// revisar esto ¿String?
-        int winningWordLen = 0;
+        size_t winningWordLen = 0;
         clock_t lastRecvTicks = clock();
         bool PINGed = false;
         do {
             tclock--;
             if (tclock == warning) { // plus que 10 sec
-                irc_sendmsg(chan);
+                irc_sendmsg(channel);
                 irc_sendformat(true, "Warning", "Warning, time is nearly out!");
             } else if (tclock == 0) {
-                irc_sendmsg(chan);
+                irc_sendmsg(channel);
                 displayMaxWords(sortedLetters, maxWordLen);
                 irc_sendformat(true, "Timeout", "[Time is out.] MAX words were %s", dispMaxWordsString + 3);
                 if (winningWordLen) {
-                    irc_sendmsg(chan);
+                    irc_sendmsg(channel);
                     irc_sendformat(false, "WinSome", "%s gets %d points! ", winningNick, winningWordLen);
                     send_update_stats(winningNick, winningWordLen);
                     noWinner = 0;
                 } else if (++noWinner == autostop) {
                     noWinner = 0;
-                    irc_sendmsg(chan);
+                    irc_sendmsg(channel);
                     irc_sendformat(true, "GameOver", "[Game is over. Type !start to restart it.]");
                     cur_state = STOPPED;
                 }
@@ -274,7 +269,7 @@ void run_game() {
             systemTime = localtime(&t);
             if (systemTime->tm_wday != lastDayOfWeek) {
                 if (systemTime->tm_wday == 1) { // we are now monday
-                    irc_sendmsg(chan);
+                    irc_sendmsg(channel);
                     irc_sendformat(true, "NewWeek", "A new week is beginning ! Resetting all week scores...");
                     clear_week_scores();
                 }
@@ -291,7 +286,7 @@ void run_game() {
                 PINGed = false;
                 char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1, &param2, &paramtext);
-                if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, chan) == 0)) {
+                if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, channel.c_str()) == 0)) {
                     irc_stripcodes(paramtext);
                     while (isspace(*paramtext)) paramtext++;
                     if (*paramtext == 0) continue;
@@ -303,10 +298,10 @@ void run_game() {
                         char *wordEnd = paramtext + 1;
                         while (isalpha(*wordEnd)) wordEnd++;
                         *wordEnd = 0;
-                        if ((int) strlen(paramtext) > winningWordLen) {
+                        if (strlen(paramtext) > winningWordLen) {
                             strupr(paramtext);
                             if (checkWord(sortedLetters, paramtext)) {
-                                irc_sendmsg(chan);
+                                irc_sendmsg(channel);
                                 strcpy(winningNick, nickname);
                                 winningWordLen = (int) strlen(paramtext);
                                 if (winningWordLen == maxWordLen) {
@@ -315,10 +310,7 @@ void run_game() {
                                                    nickname, paramtext, winningWordLen, bonus);
                                     send_update_stats(nickname, winningWordLen + bonus);
                                     if (autovoice) {
-                                        irc_send("MODE ");
-                                        irc_send(chan);
-                                        irc_send(" +v ");
-                                        irc_sendline(nickname);
+                                        irc_sendline("MODE " + channel + " +v " + nickname);
                                     }
                                     tclock = 0;
                                 } else {
@@ -333,8 +325,7 @@ void run_game() {
             }
             if (!PINGed && (clock() - lastRecvTicks > 15000)) {
                 sprintf(line, "%.8X", (rand() << 16) | rand());
-                irc_send("PING :");
-                irc_sendline(line);
+                irc_sendline("PING :" + (string)line);
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
                 irc_disconnect();
@@ -348,7 +339,7 @@ void run_game() {
             while (irc_recv(line)) {
                 char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1, &param2, &paramtext);
-                if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, chan) == 0)) {
+                if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, channel.c_str()) == 0)) {
                     irc_stripcodes(paramtext);
                     while (isspace(*paramtext)) paramtext++;
                     if (*paramtext == 0) continue;

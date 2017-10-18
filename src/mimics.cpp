@@ -25,11 +25,16 @@ bool kbhit() {
     return byteswaiting > 0;
 }
 
-/*
-int strncasecmp(const char *a, const char *b, uint n) {
-    char c[n + 1];
-    memcpy(c, a, n);
-    c[n] = 0;
-    return strcasecmp(c, b);
+void strupr(std::string &str) {
+    for (auto &c: str) c = (char) toupper(c);
 }
- */
+
+char* strupr(char* s) {
+    char* tmp = s;
+    for (;*tmp;++tmp) {
+        *tmp = (char)toupper(*tmp);
+    }
+
+    return s;
+}
+

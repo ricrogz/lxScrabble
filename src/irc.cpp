@@ -29,10 +29,10 @@ void init_socket() {
 #endif
 }
 
-void irc_send(const char *text) {
+void irc_send(const string &text) {
     cout << text;
 #ifndef OFFLINE
-    send(irc_socket, text, (int) strlen(text), 0);
+    send(irc_socket, text.c_str(), text.length(), 0);
 #endif
 }
 
@@ -52,10 +52,10 @@ void irc_send(int value) {
 #endif
 }
 
-void irc_sendline(const char *line) {
+void irc_sendline(const string &line) {
     cout << line << endl;
 #ifndef OFFLINE
-    send(irc_socket, line, (int) strlen(line), 0);
+    send(irc_socket, line.c_str(), line.length(), 0);
     send(irc_socket, "\n", 1, 0);
 #endif
 }
@@ -166,20 +166,11 @@ void irc_connect(const string &servername, int port, const string &password, str
 
     if (!password.empty()) {
         irc_send("PASS ");
-        irc_sendline(password.c_str());
+        irc_sendline(password);
     }
 
-    irc_send("NICK ");
-    irc_sendline(nickname.c_str());
-
-    irc_send("USER ");
-    irc_send(ident.c_str());
-    irc_send(' ');
-    irc_send(localhost.c_str());
-    irc_send(' ');
-    irc_send(servername.c_str());
-    irc_send(" :");
-    irc_sendline(fullname.c_str());
+    irc_sendline("NICK " + nickname);
+    irc_sendline("USER " + ident + " " + localhost + " " + servername + " :" + fullname);
 
     // All connection data has been send. Now, analyze answers for 45 secs
     char line[1024];
@@ -203,8 +194,7 @@ void irc_connect(const string &servername, int port, const string &password, str
                     halt(6);
                 }
                 nickname = altnickname;
-                irc_send("NICK ");
-                irc_sendline(nickname.c_str());
+                irc_sendline("NICK " + nickname);
             }
         } else
             usleep(500);
@@ -272,24 +262,18 @@ bool irc_want(const char *wantCmd, uint timeout = 15000) {
 void irc_join(const string &channel, const string &channelkey = nullptr) {
     irc_send("JOIN ");
     if (!channelkey.empty()) {
-        irc_send(channel.c_str());
-        irc_send(" ");
-        irc_sendline(channelkey.c_str());
+        irc_sendline(channel + " " + channelkey);
     } else
-        irc_sendline(channel.c_str());
+        irc_sendline(channel);
     irc_want("JOIN");
 }
 
-void irc_sendmsg(const char *dest) {
-    irc_send("PRIVMSG ");
-    irc_send(dest);
-    irc_send(" :");
+void irc_sendmsg(const string &dest) {
+    irc_send("PRIVMSG " + dest + " :");
 }
 
-void irc_sendnotice(const char *dest) {
-    irc_send("NOTICE ");
-    irc_send(dest);
-    irc_send(" :");
+void irc_sendnotice(const string &dest) {
+    irc_send("NOTICE " + dest + " :");
 }
 
 void irc_connect() {
@@ -317,8 +301,8 @@ void irc_connect() {
     string channelkey = cfg<string>("IRC", "ChannelKey", DEFAULT_CHANNEL_KEY);
 
     // Other configs
-    irc_blackAndWhite = (bool) cfg<unsigned_ini_t>("IRC", "BlackAndWhite", false);
-    anyoneCanStop = (bool) cfg<unsigned_ini_t>("IRC", "AnyoneCanStop", false);
+    irc_blackAndWhite = (bool) cfg<unsigned_ini_t>("IRC", "BlackAndWhite", 0);
+    anyoneCanStop = (bool) cfg<unsigned_ini_t>("IRC", "AnyoneCanStop", 0);
     string perform = cfg<string>("IRC", "Perform", "");
     owner = cfg<string>("IRC", "Owner", "");
 
@@ -338,13 +322,10 @@ void irc_stripcodes(char *text) {
     char *scan = text;
     char ch;
     while ((ch = *scan++) != 0) {
-        if (ch == 3) // couleur CTRL-K
-        {
-            if (isdigit(*scan)) // suivi d'un chiffre
-            {
+        if (ch == 3) {  // couleur CTRL-K
+            if (isdigit(*scan)) {  // suivi d'un chiffre
                 if (isdigit(*++scan)) scan++; // eventuellement un 2eme chiffre
-                if ((*scan == ',') && isdigit(*(scan + 1))) // eventellement une virgule suivie d'un chiffre
-                {
+                if ((*scan == ',') && isdigit(*(scan + 1))) {  // eventellement une virgule suivie d'un chiffre
                     scan += 2;
                     if (isdigit(*scan)) scan++; // eventuellement un 2eme chiffre
                 }
@@ -365,8 +346,8 @@ void irc_disconnect() {
 #endif
 }
 
-void irc_sendformat(bool set_endl, const string &lpKeyName, const string &lpDefault, ...) {
-    string sbuffer = cfg<string>("Strings", lpKeyName, lpDefault);
+void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDefault, ...) {
+    string sbuffer = cfg<string_ini_t>("Strings", lpKeyName, lpDefault);
     auto *buffer = (char *) sbuffer.c_str();
     if (irc_blackAndWhite) irc_stripcodes(buffer);
     va_list arguments;

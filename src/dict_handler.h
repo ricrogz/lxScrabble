@@ -13,8 +13,8 @@ void addWord(const string &word);
 
 void readDictionary(const string &filename);
 
-void findWords(const char letters[]);
+void findWords(const char *letters);
 
-void displayMaxWords(const char letters[WORD_MAX], int len);
+void displayMaxWords(const char *letters, size_t len);
 
 #endif //WSCRABBLE_DICT_HANDLER_H

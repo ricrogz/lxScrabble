@@ -18,33 +18,20 @@
 
 
 size_t wordlen;
-long bonus;
+ulong bonus;
 string distrib;
 string dict_file;
 struct Cell *dictionary = nullptr;
 struct Top topWeek[TOP_MAX];
 struct Top topYear[TOP_MAX];
-int foundWords;
-int foundMaxWords;
-int maxWordLen;
-int dispMaxWords;
+size_t foundWords;
+size_t foundMaxWords;
+size_t maxWordLen;
+size_t dispMaxWords;
 char dispMaxWordsString[1024];
 
 void halt(int stat_code) {
     exit(stat_code);
-}
-
-void strupr(string &str) {
-    for (auto &c: str) c = (char) toupper(c);
-}
-
-char* strupr(char* s) {
-    char* tmp = s;
-    for (;*tmp;++tmp) {
-        *tmp = (char)toupper(*tmp);
-    }
-
-    return s;
 }
 
 template<class T> T cfg(const string & section, const string & option, const T & default_value) {

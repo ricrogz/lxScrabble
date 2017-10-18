@@ -4,9 +4,6 @@
 
 #include "dict_handler.h"
 
-#include <cstring>
-#include <fstream>
-#include <iostream>
 
 void sortLetters(const char *letters, char *sortedLetters) {
     char *scan = sortedLetters;
@@ -83,7 +80,7 @@ void readDictionary(const string &filename) {
     }
 }
 
-void findWords(const struct Cell *cell, const char *letters, int len) {
+void findWords(const struct Cell *cell, const char *letters, size_t len) {
     char ch = *letters++;
     while (cell && (cell->letter < ch)) cell = cell->other;
     if (cell) {
@@ -115,7 +112,7 @@ void findWords(const struct Cell *cell, const char *letters, int len) {
     }
 }
 
-void findWords(const char letters[WORD_MAX]) {
+void findWords(const char *letters) {
     dispMaxWords = 0;
     foundWords = 0;
     foundMaxWords = 0;
@@ -123,7 +120,7 @@ void findWords(const char letters[WORD_MAX]) {
     findWords(dictionary, letters, 1);
 }
 
-void displayMaxWords(const char letters[WORD_MAX], int len) {
+void displayMaxWords(const char *letters, size_t len) {
     dispMaxWordsString[0] = '\0';
     dispMaxWords = len;
     foundWords = 0;
