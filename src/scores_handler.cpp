@@ -32,14 +32,15 @@ void save_scores() {
 
 void clear_top(Top *top) {
     for (int index = 0; index < TOP_MAX; index++) {
-        top[index].score = 0;
         top[index].nick = "---";
+        top[index].score = 0;
     }
 }
 
 void read_top(Top *top, vector<string> &value) {
     clear_top(top);
     for (auto &row : value) {
+        if (row.empty()) break;
         ulong separator = row.find(' ');
         top->nick = row.substr(0, separator);
         top->score = (ulong) strtol(row.substr(separator + 1).c_str(), nullptr, 10);
@@ -90,7 +91,7 @@ bool update_top(Top *top, const string & nickname, ulong score) {
             break;
     if (newPos == TOP_MAX) return false; // le score n'entre pas dans le top
     for (index = newPos; index < TOP_MAX - 1; index++)
-        if (top[index].nick == nickname)
+        if (top[index].nick == nickname || top[index].nick == "---")
             break; // le nom etait déjà dans le top
     // 0 1 2 3 4 5 6 7 8 9
     memmove(&top[newPos + 1], &top[newPos], (index - newPos) * sizeof(Top));
