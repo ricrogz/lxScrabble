@@ -7,7 +7,7 @@
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
-
+#include <sys/stat.h>
 
 bool kbhit() {
     termios term;
@@ -39,5 +39,10 @@ char* strupr(char* s) {
 }
 
 void msleep(ulong t) {
-    usleep(t * 1000);
+    usleep((__useconds_t)t * 1000);
+}
+
+bool fexists (const std::string & name) {
+    struct stat buffer;
+    return (stat (name.c_str(), &buffer) == 0);
 }

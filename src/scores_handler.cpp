@@ -6,8 +6,16 @@
 
 config scorep;
 
-template<class T>
-vector<T> score_get_list(const string &section, const string &option, const T &default_value) {
+template<class T> void score_add(const string &section, const string &option, const T &value) {
+    if (!scorep.contains(section))
+        scorep.add_section(section);
+    if (!scorep[section].contains(option))
+        scorep[section].add_option(option, value);
+    else
+        scorep[section][option].set<T>(value);
+}
+
+template<class T> vector<T> score_get_list(const string &section, const string &option, const T &default_value) {
     if (!scorep.contains(section))
         scorep.add_section(section);
     if (!scorep[section].contains(option))
@@ -42,6 +50,7 @@ void read_top(Top *top, vector<string> &value) {
 void read_tops() {
 
     // Create score parser
+    if (!fexists(SCORE_FILE)) save_scores();
     scorep = parser::load_file(SCORE_FILE);
 
     vector<string> value;
@@ -68,10 +77,10 @@ void write_tops() {
     write_top(topWeek, value);
 
     // Score should already have the section / options created
-    scorep["Top"]["Week"].set<string>(value);
+    score_add<string>("Top", "Week", value);
 
     write_top(topYear, value);
-    scorep["Top"]["Year"].set<string>(value);
+    score_add<string>("Top", "Year", value);
 }
 
 bool update_top(Top *top, const string & nickname, ulong score) {
@@ -99,7 +108,7 @@ void get_scores(const string & nickname, ulong *year, ulong *week) {
 
 void set_scores(const string & nickname, ulong year, ulong week) {
     string value = to_string(year) + " " + to_string(week);
-    scorep["Scores"][nickname].set<string>(value);
+    score_add<string>("Scores", nickname, value);
     bool updated = update_top(topWeek, nickname, week);
     updated |= update_top(topYear, nickname, year);
     if (updated) write_tops();
