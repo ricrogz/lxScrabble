@@ -13,4 +13,6 @@ void strupr(std::string &str);
 
 char* strupr(char* s);
 
+void msleep(ulong t);
+
 #endif //LXSCRABBLE_MIMICS_H

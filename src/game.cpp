@@ -6,7 +6,6 @@
 #include "dict_handler.h"
 #include "scores_handler.h"
 
-#include <unistd.h>
 #include <ncurses.h>
 
 enum {
@@ -154,7 +153,6 @@ void replyTop3(const char *dest, Top *top, const char *whichTop, const char *lpD
                        top[2].score);
 }
 
-
 bool scrabbleCmd(const char *nickname, char *command) {
     bool isOwner = is_owner(nickname);
     if (strcasecmp(command, "!score") == 0)
@@ -198,7 +196,6 @@ bool scrabbleCmd(const char *nickname, char *command) {
         return false;
     return true; // commande reconnue
 }
-
 
 void run_game() {
 
@@ -263,7 +260,7 @@ void run_game() {
                 }
                 break;
             }
-            usleep(100);
+            msleep(100);
 
             t = time(nullptr);
             systemTime = localtime(&t);
@@ -334,7 +331,7 @@ void run_game() {
         } while ((cur_state == RUNNING) && tclock);
         tclock = cfg_after;
         do {
-            usleep(100);
+            msleep(100);
             if (kbhit() && (getch() == 27)) cur_state = HALTING;
             while (irc_recv(line)) {
                 char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;

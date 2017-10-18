@@ -6,7 +6,7 @@
 
 #include <sys/ioctl.h>
 #include <termios.h>
-#include <cstring>
+#include <unistd.h>
 
 
 bool kbhit() {
@@ -38,3 +38,6 @@ char* strupr(char* s) {
     return s;
 }
 
+void msleep(ulong t) {
+    usleep(t * 1000);
+}

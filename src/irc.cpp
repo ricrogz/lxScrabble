@@ -102,7 +102,7 @@ void irc_flushrecv() {
     char line[1024];
     do {
         while (irc_recv(line));
-        usleep(500);
+        msleep(500);
     } while (irc_recv(line));
 }
 
@@ -161,7 +161,7 @@ void irc_connect(const string &servername, int port, const string &password, str
     serv_addr.sin_port = htons((u_short) port);
     connect(irc_socket, (sockaddr *) &serv_addr, sizeof(serv_addr));
 
-    usleep(500);
+    msleep(500);
     irc_flushrecv();
 
     if (!password.empty()) {
@@ -197,7 +197,7 @@ void irc_connect(const string &servername, int port, const string &password, str
                 irc_sendline("NICK " + nickname);
             }
         } else
-            usleep(500);
+            msleep(500);
     }
 
     // Time out: we were not able to connect
@@ -253,7 +253,7 @@ bool irc_want(const char *wantCmd, uint timeout = 15000) {
             if (strcmp(cmd, wantCmd) == 0)
                 return true;
         } else
-            usleep(100);
+            msleep(100);
     }
     return false;
 #endif
@@ -340,7 +340,7 @@ void irc_disconnect() {
     irc_sendline("QUIT :Game Over");
 #ifndef OFFLINE
     do {
-        usleep(500);
+        msleep(500);
     } while (!irc_want("ERROR"));
     close(irc_socket);
 #endif
