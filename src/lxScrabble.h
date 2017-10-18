@@ -27,7 +27,7 @@ struct Cell {
 
 struct Top {
     string nick;
-    unsigned long score;
+    ulong score;
 };
 
 extern size_t wordlen;

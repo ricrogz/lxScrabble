@@ -40,6 +40,8 @@ void irc_sendline(const char *line);
 
 void irc_sendmsg(const char *dest);
 
+void irc_sendnotice(const char *dest);
+
 void irc_stripcodes(char *text);
 
 void irc_disconnect();
@@ -59,5 +61,7 @@ void irc_send(int value);
 
 extern bool irc_blackAndWhite;
 extern string channel;
+extern string owner;
+extern bool anyoneCanStop;
 
 #endif //WSCRABBLE_IRC_H

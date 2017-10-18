@@ -303,7 +303,7 @@ void irc_connect() {
         cerr << endl << "Configure lxScrabble.ini first !!" << endl;
         halt(2);
     }
-    int port = (int)cfg<unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
+    int port = (int) cfg<unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
 
     // IRC parameters
     string nickname = cfg<string>("IRC", "Nick", DEFAULT_NICK);
@@ -317,8 +317,8 @@ void irc_connect() {
     string channelkey = cfg<string>("IRC", "ChannelKey", DEFAULT_CHANNEL_KEY);
 
     // Other configs
-    irc_blackAndWhite = (bool)cfg<unsigned_ini_t>("IRC", "BlackAndWhite", false);
-    anyoneCanStop = (bool)cfg<unsigned_ini_t>("IRC", "AnyoneCanStop", false);
+    irc_blackAndWhite = (bool) cfg<unsigned_ini_t>("IRC", "BlackAndWhite", false);
+    anyoneCanStop = (bool) cfg<unsigned_ini_t>("IRC", "AnyoneCanStop", false);
     string perform = cfg<string>("IRC", "Perform", "");
     owner = cfg<string>("IRC", "Owner", "");
 
@@ -360,14 +360,14 @@ void irc_disconnect() {
 #ifndef OFFLINE
     do {
         usleep(500);
-    } while (! irc_want("ERROR"));
+    } while (!irc_want("ERROR"));
     close(irc_socket);
 #endif
 }
 
-void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDefault, ...) {
+void irc_sendformat(bool set_endl, const string &lpKeyName, const string &lpDefault, ...) {
     string sbuffer = cfg<string>("Strings", lpKeyName, lpDefault);
-    auto *buffer = (char*)sbuffer.c_str();
+    auto *buffer = (char *) sbuffer.c_str();
     if (irc_blackAndWhite) irc_stripcodes(buffer);
     va_list arguments;
     char text[8192];
@@ -378,7 +378,7 @@ void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDe
     if (set_endl)
         cout << endl;
 #ifndef OFFLINE
-    send(irc_socket, text, (int)strlen(text), 0);
+    send(irc_socket, text, (int) strlen(text), 0);
     if (set_endl)
         send(irc_socket, "\n", 1, 0);
 #endif

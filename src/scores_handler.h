@@ -17,5 +17,10 @@ void read_top(Top *top, string & value);
 
 void read_tops();
 
+void get_scores(const string & nickname, ulong *year, ulong *week);
+
+void set_scores(const string & nickname, ulong year, ulong week);
+
+void clear_week_scores();
 
 #endif //WSCRABBLE_SCORES_HANDLER_H

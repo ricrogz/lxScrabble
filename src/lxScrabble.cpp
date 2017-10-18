@@ -41,7 +41,7 @@ void strupr(string &str) {
 char* strupr(char* s) {
     char* tmp = s;
     for (;*tmp;++tmp) {
-        *tmp = (char)toupper((unsigned char) *tmp);
+        *tmp = (char)toupper(*tmp);
     }
 
     return s;

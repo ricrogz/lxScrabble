@@ -11,9 +11,16 @@ set(SOURCE_FILES
         src/dict_handler.cpp
         src/scores_handler.cpp
         src/irc.cpp
-        src/game.cpp)
+        src/game.cpp
+        src/mimics.cpp)
 
 add_executable(lxScrabble ${SOURCE_FILES})
+
+#################################
+
+find_package(Curses REQUIRED)
+include_directories(${CURSES_INCLUDE_DIRS})
+target_link_libraries(lxScrabble ${CURSES_LIBRARIES})
 
 #################################
 

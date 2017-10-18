@@ -4,13 +4,26 @@
 
 #include "scores_handler.h"
 
-template<class T> vector<T> score_get_list(const string & section, const string & option, const T & default_value){
-    static config scorep = parser::load_file(SCORE_FILE);
-    if (! scorep.contains(section))
-        scorep.add_section(section);
-    if (! scorep[section].contains(option))
-        scorep[section].add_option(option, default_value);
-    return scorep[section][option].get_list<T>();
+#include <fstream>
+
+config *scorep = nullptr;
+
+template<class T>
+vector<T> score_get_list(const string &section, const string &option, const T &default_value) {
+    if (scorep == nullptr)
+        *scorep = parser::load_file(SCORE_FILE);
+    if (!scorep->contains(section))
+        scorep->add_section(section);
+    if (!(*scorep)[section].contains(option))
+        (*scorep)[section].add_option(option, default_value);
+    return (*scorep)[section][option].get_list<T>();
+}
+
+void save_scores() {
+    ofstream outfs;
+    outfs.open(SCORE_FILE);
+    outfs << scorep;
+    outfs.close();
 }
 
 void clear_top(Top *top) {
@@ -22,10 +35,10 @@ void clear_top(Top *top) {
 
 void read_top(Top *top, vector<string> &value) {
     clear_top(top);
-    for (auto & row : value) {
+    for (auto &row : value) {
         ulong separator = row.find(' ');
         top->nick = row.substr(0, separator);
-        top->score = (unsigned long) strtol(row.substr(separator + 1).c_str(), nullptr, 10);
+        top->score = (ulong) strtol(row.substr(separator + 1).c_str(), nullptr, 10);
         top++;
     }
 }
@@ -43,28 +56,64 @@ void read_tops() {
     read_top(topYear, value);
 }
 
-void get_scores(const char *nickname, int *year, int *week) {
-    /*
-    char value[50], *scan;
-    char lnickname[NICK_MAX + 1];
-    lnickname[0] = '_';
-    strcpy(lnickname + 1, nickname);
-    GetPrivateProfileString("Scores", lnickname, "0 0", value, sizeof(value), ".\\scores.ini");
-    *year = strtoul(value, &scan, 10);
-    *week = strtoul(scan, &scan, 10);
-    */
+void write_top(Top *top, string &value) {
+    for (int index = 0; index < TOP_MAX; index++) {
+        if (top->score == 0) break;
+        if (index > 0) value += ":";
+        value += top->nick + " " + to_string(top->score);
+    }
 }
 
-void set_scores(const char *nickname, int year, int week) {
-    char value[50];
-    /*
-    char lnickname[NICK_MAX + 1];
-    lnickname[0] = '_';
-    strcpy(lnickname + 1, nickname);
-    sprintf(value, "%d %d", year, week);
-    WritePrivateProfileString("Scores", lnickname, value, ".\\scores.ini");
+void write_tops() {
+    string value;
+    write_top(topWeek, value);
+
+    // Score should already have the section / options created
+    (*scorep)["Top"]["Week"].set<string>(value);
+
+    write_top(topYear, value);
+    (*scorep)["Top"]["Year"].set<string>(value);
+}
+
+bool update_top(Top *top, const string &nickname, ulong score) {
+    int newPos, index;
+    for (newPos = 0; newPos < TOP_MAX; newPos++)
+        if (score >= top[newPos].score)
+            break;
+    if (newPos == TOP_MAX) return false; // le score n'entre pas dans le top
+    for (index = newPos; index < TOP_MAX - 1; index++)
+        if (top[index].nick == nickname)
+            break; // le nom etait déjà dans le top
+    // 0 1 2 3 4 5 6 7 8 9
+    memmove(&top[newPos + 1], &top[newPos], (index - newPos) * sizeof(Top));
+    top[newPos].nick = nickname;
+    top[newPos].score = score;
+    return true;
+}
+
+void get_scores(const string &nickname, ulong *year, ulong *week) {
+    char *scan;
+    string value = cfg<string>("Scores", nickname, "0 0");
+    *year = strtoul(value.c_str(), &scan, 10);
+    *week = strtoul(scan, &scan, 10);
+}
+
+void set_scores(const string &nickname, ulong year, ulong week) {
+    string value = to_string(year) + " " + to_string(week);
+    (*scorep)["Scores"][nickname].set<string>(value);
     bool updated = update_top(topWeek, nickname, week);
     updated |= update_top(topYear, nickname, year);
     if (updated) write_tops();
-    */
+    save_scores();
+}
+
+void clear_week_scores() {
+    for (auto & player : (*scorep)["Scores"]) {
+        string score = player.get<string>();
+        ulong len = score.find(' ');
+        player.set<string>(score.substr(0, len) + '0');
+    }
+    clear_top(topWeek);
+    write_tops();
+    save_scores();
 }
