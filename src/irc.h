@@ -11,8 +11,8 @@
 #define IRC_COLOR "\x003"
 
 
-#define BOT_URL "//\\\\//\\\\//\\\\//\\\\"
-#define BOTNAME "lxScrabble 0.10"
+#define BOT_URL "(Development Version)"
+#define BOTNAME "lxScrabble 0.90b"
 #define BOTFULLNAME BOTNAME" by Invik"
 #define ADVERTISE IRC_BOLD \
                     IRC_COLOR "9,2 ~" IRC_COLOR "8,2*" IRC_COLOR "9,2~ " \
