@@ -63,10 +63,10 @@ void send_update_stats(const string &nickname, ulong gain) {
 
     if (strcasecmp(lastWinner.c_str(), nickname.c_str()) != 0) {
         winInARow = 1;
-        irc_sendformat(true, "Stats", "( %1!d! pts :  %2!d! pts)", week, year);
+        irc_sendformat(true, "Stats", "( %d pts :  %d pts)", week, year);
     } else {
         winInARow++;
-        irc_sendformat(true, "StatsCont", "( %1!d! pts :  %2!d! pts) - %3!d!  contiguous won games!", week, year,
+        irc_sendformat(true, "StatsCont", "( %d pts :  %d pts) - %d  contiguous won games!", week, year,
                        winInARow);
     }
     lastWinner = nickname;
@@ -126,9 +126,9 @@ void replyScore(const char *nickname, const char *dest) {
     get_scores(nickname, &year, &week);
     irc_sendnotice(dest);
     if (year == 0)
-        irc_sendformat(true, "ScoreUnknown", "%1 has never played with me.", nickname);
+        irc_sendformat(true, "ScoreUnknown", "%s has never played with me.", nickname);
     else
-        irc_sendformat(true, "Score", "%1's score is %2!d! point(s) for this week, %3!d! for this year.", nickname, week,
+        irc_sendformat(true, "Score", "%s's score is %d point(s) for this week, %d for this year.", nickname, week,
                            year);
 }
 
@@ -161,24 +161,24 @@ bool scrabbleCmd(const char *nickname, char *command) {
         replyScore(command + 7, nickname);
     else if ((strcasecmp(command, "!top") == 0) || (strcasecmp(command, "!top10") == 0))
         replyTop10(nickname, topWeek,
-                   "TopW10", "The 10 best players of the week: 1. %1 (%2!d!)",
-                   "TopW10More", "%1!d!. %2 (%3!d!) - %4!d!. %5 (%6!d!) - %7!d!. %8 (%9!d!)");
+                   "TopW10", "The 10 best players of the week: 1. %s (%d)",
+                   "TopW10More", "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
     else if (strcasecmp(command, "!top10year") == 0)
         replyTop10(nickname, topYear,
-                   "TopY10", "The 10 best players of the year: 1. %1 (%2!d!)",
-                   "TopY10More", "%1!d!. %2 (%3!d!) - %4!d!. %5 (%6!d!) - %7!d!. %8 (%9!d!)");
+                   "TopY10", "The 10 best players of the year: 1. %s (%d)",
+                   "TopY10More", "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
     else if (strcasecmp(command, "!top3") == 0)
         replyTop3(nickname, topWeek, "TopW3",
-                  "The 3 best players of the week:  1. %1 (%2!d!) - 2. %3 (%4!d!) - 3. %5 (%6!d!)");
+                  "The 3 best players of the week:  1. %s (%d) - 2. %s (%d) - 3. %s (%d)");
     else if (strcasecmp(command, "!top3year") == 0)
         replyTop3(nickname, topYear, "TopY3",
-                  "The 3 best players of the year:  1. %1 (%2!d!) - 2. %3 (%4!d!) - 3. %5 (%6!d!)");
+                  "The 3 best players of the year:  1. %s (%d) - 2. %s (%d) - 3. %s (%d)");
     else if (strcasecmp(command, "!start") == 0)
         cur_state = RUNNING;
     else if ((anyoneCanStop || isOwner) && (strcasecmp(command, "!stop") == 0)) {
         if (cur_state == RUNNING) {
             irc_sendmsg(channel);
-            irc_sendformat(true, "Stop", "%1 has stopped the game.", nickname);
+            irc_sendformat(true, "Stop", "%s has stopped the game.", nickname);
         }
         cur_state = STOPPED;
     } else if (isOwner) {
