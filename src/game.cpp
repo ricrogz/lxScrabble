@@ -129,28 +129,28 @@ void replyScore(const char *nickname, const char *dest) {
         irc_sendformat(true, "ScoreUnknown", "%s has never played with me.", nickname);
     else
         irc_sendformat(true, "Score", "%s's score is %d point(s) for this week, %d for this year.", nickname, week,
-                           year);
+                       year);
 }
 
 void replyTop10(const char *dest, Top *top, const char *whichTop, const char *lpDefault, const char *whichTopMore,
                 const char *lpDefaultMore) {
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTop, lpDefault, top[0].nick, top[0].score);
+    irc_sendformat(true, whichTop, lpDefault, top[0].nick.c_str(), top[0].score);
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTopMore, lpDefaultMore, 2, top[1].nick, top[1].score, 3, top[2].nick, top[2].score, 4,
-                       top[3].nick, top[3].score);
+    irc_sendformat(true, whichTopMore, lpDefaultMore, 2, top[1].nick.c_str(), top[1].score, 3, top[2].nick.c_str(),
+                   top[2].score, 4, top[3].nick.c_str(), top[3].score);
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTopMore, lpDefaultMore, 5, top[4].nick, top[4].score, 6, top[5].nick, top[5].score, 7,
-                       top[6].nick, top[6].score);
+    irc_sendformat(true, whichTopMore, lpDefaultMore, 5, top[4].nick.c_str(), top[4].score, 6, top[5].nick.c_str(),
+                   top[5].score, 7, top[6].nick.c_str(), top[6].score);
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTopMore, lpDefaultMore, 8, top[7].nick, top[7].score, 9, top[8].nick, top[8].score, 10,
-                       top[9].nick, top[9].score);
+    irc_sendformat(true, whichTopMore, lpDefaultMore, 8, top[7].nick.c_str(), top[7].score, 9, top[8].nick.c_str(),
+                   top[8].score, 10, top[9].nick.c_str(), top[9].score);
 }
 
 void replyTop3(const char *dest, Top *top, const char *whichTop, const char *lpDefault) {
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTop, lpDefault, top[0].nick, top[0].score, top[1].nick, top[1].score, top[2].nick,
-                       top[2].score);
+    irc_sendformat(true, whichTop, lpDefault, top[0].nick.c_str(), top[0].score, top[1].nick.c_str(), top[1].score,
+                   top[2].nick.c_str(), top[2].score);
 }
 
 bool scrabbleCmd(const char *nickname, char *command) {
@@ -322,7 +322,7 @@ void run_game() {
             }
             if (!PINGed && (clock() - lastRecvTicks > 15000)) {
                 sprintf(line, "%.8X", (rand() << 16) | rand());
-                irc_sendline("PING :" + (string)line);
+                irc_sendline("PING :" + (string) line);
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
                 irc_disconnect();
