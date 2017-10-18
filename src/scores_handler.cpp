@@ -67,9 +67,9 @@ void read_tops() {
 
 void write_top(Top *top, string &value) {
     for (int index = 0; index < TOP_MAX; index++) {
-        if (top->score == 0) break;
+        if (top[index].score == 0) break;
         if (index > 0) value += ":";
-        value += top->nick + " " + to_string(top->score);
+        value += top[index].nick + " " + to_string(top[index].score);
     }
 }
 
@@ -80,6 +80,7 @@ void write_tops() {
     // Score should already have the section / options created
     score_add<string>("Top", "Week", value);
 
+    value = "";
     write_top(topYear, value);
     score_add<string>("Top", "Year", value);
 }
