@@ -4,19 +4,15 @@
 
 #include "scores_handler.h"
 
-#include <fstream>
-
-config *scorep = nullptr;
+config scorep;
 
 template<class T>
 vector<T> score_get_list(const string &section, const string &option, const T &default_value) {
-    if (scorep == nullptr)
-        *scorep = parser::load_file(SCORE_FILE);
-    if (!scorep->contains(section))
-        scorep->add_section(section);
-    if (!(*scorep)[section].contains(option))
-        (*scorep)[section].add_option(option, default_value);
-    return (*scorep)[section][option].get_list<T>();
+    if (!scorep.contains(section))
+        scorep.add_section(section);
+    if (!scorep[section].contains(option))
+        scorep[section].add_option(option, default_value);
+    return scorep[section][option].get_list<T>();
 }
 
 void save_scores() {
@@ -45,6 +41,9 @@ void read_top(Top *top, vector<string> &value) {
 
 void read_tops() {
 
+    // Create score parser
+    scorep = parser::load_file(SCORE_FILE);
+
     vector<string> value;
 
     // Weekly top
@@ -69,10 +68,10 @@ void write_tops() {
     write_top(topWeek, value);
 
     // Score should already have the section / options created
-    (*scorep)["Top"]["Week"].set<string>(value);
+    scorep["Top"]["Week"].set<string>(value);
 
     write_top(topYear, value);
-    (*scorep)["Top"]["Year"].set<string>(value);
+    scorep["Top"]["Year"].set<string>(value);
 }
 
 bool update_top(Top *top, const string &nickname, ulong score) {
@@ -100,7 +99,7 @@ void get_scores(const string &nickname, ulong *year, ulong *week) {
 
 void set_scores(const string &nickname, ulong year, ulong week) {
     string value = to_string(year) + " " + to_string(week);
-    (*scorep)["Scores"][nickname].set<string>(value);
+    scorep["Scores"][nickname].set<string>(value);
     bool updated = update_top(topWeek, nickname, week);
     updated |= update_top(topYear, nickname, year);
     if (updated) write_tops();
@@ -108,7 +107,7 @@ void set_scores(const string &nickname, ulong year, ulong week) {
 }
 
 void clear_week_scores() {
-    for (auto & player : (*scorep)["Scores"]) {
+    for (auto & player : scorep["Scores"]) {
         string score = player.get<string>();
         ulong len = score.find(' ');
         player.set<string>(score.substr(0, len) + '0');
