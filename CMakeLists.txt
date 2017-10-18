@@ -1,18 +1,24 @@
 # cmake_minimum_required(VERSION <specify CMake version here>)
-project(wscrabble)
+cmake_minimum_required(VERSION 3.8)
+project(lxScrabble)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall")
 
-# inih library include files
-set(INIH_SOURCE
-        ./lib/inih/cpp/INIReader.cpp
-        ./lib/inih/ini.c)
+# add_definitions(-DCHEAT)
 
-set(NEW_SOURCE_FILES
-        ${INIH_SOURCE}
+set(SOURCE_FILES
         src/lxScrabble.cpp
         src/dict_handler.cpp
         src/scores_handler.cpp
-        src/irc.cpp)
+        src/irc.cpp
+        src/game.cpp)
 
-add_executable(lxScrabble ${NEW_SOURCE_FILES})
+add_executable(lxScrabble ${SOURCE_FILES})
+
+#################################
+
+include_directories(dependencies/inicpp/include)
+target_link_libraries(lxScrabble inicpp)
+add_subdirectory(dependencies/inicpp)
+
+#################################

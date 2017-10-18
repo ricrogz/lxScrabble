@@ -8,12 +8,13 @@
 #include <fstream>
 #include <iostream>
 
-void sortLetters(const string &letters, char *sortedLetters) {
+void sortLetters(const char *letters, char *sortedLetters) {
     char *scan = sortedLetters;
+    char ch;
     sortedLetters[0] = 127;
 
     // TODO: improve this, use quicksort
-    for (char ch: letters) {
+    while ((ch = *letters++) != '\0') {
         scan = sortedLetters;
         while (ch >= *scan) scan++;
         char ch2;
@@ -31,7 +32,7 @@ void addWord(const string &word) {
     // TODO: convert Cell to a class, and implement this as a method
 
     char letters[word.length() + 1];
-    sortLetters(word, letters);
+    sortLetters(word.c_str(), letters);
     struct Cell **cell = &dictionary;
     char *scan = letters;
     char ch = *scan;
@@ -80,4 +81,53 @@ void readDictionary(const string &filename) {
 
         addWord(word);
     }
+}
+
+void findWords(const struct Cell *cell, const char *letters, int len) {
+    char ch = *letters++;
+    while (cell && (cell->letter < ch)) cell = cell->other;
+    if (cell) {
+        if (cell->letter == ch) {
+            if (cell->wordsCount) {
+                if (dispMaxWords) {
+                    if (len == dispMaxWords) {
+                        for (size_t index = 0; index < cell->wordsCount; index++) {
+                            strcat(dispMaxWordsString, " - ");
+                            strcat(dispMaxWordsString, cell->words + (len + 1) * index);
+                        }
+                    }
+                } else {
+                    foundWords += cell->wordsCount;
+                    if (len > maxWordLen) {
+                        foundMaxWords = cell->wordsCount;
+                        maxWordLen = len;
+                    } else if (len == maxWordLen)
+                        foundMaxWords += cell->wordsCount;
+                }
+            }
+            if ((*letters != 0) && cell->longer) {
+                findWords(cell->longer, letters, len + 1);
+            }
+            while (*letters == ch) letters++;
+        }
+        if (*letters != 0)
+            findWords(cell, letters, len);
+    }
+}
+
+void findWords(const char letters[WORD_MAX]) {
+    dispMaxWords = 0;
+    foundWords = 0;
+    foundMaxWords = 0;
+    maxWordLen = 0;
+    findWords(dictionary, letters, 1);
+}
+
+void displayMaxWords(const char letters[WORD_MAX], int len) {
+    dispMaxWordsString[0] = '\0';
+    dispMaxWords = len;
+    foundWords = 0;
+    foundMaxWords = 0;
+    maxWordLen = 0;
+    findWords(dictionary, letters, 1);
 }

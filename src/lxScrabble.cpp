@@ -7,8 +7,14 @@
 
 #include "dict_handler.h"
 #include "scores_handler.h"
-#include "irc.h"
+#include "game.h"
 
+/*
+ * TODO: cambiar de ini parser. inih no escribe.
+ *
+ * Probar inicpp https://github.com/SemaiCZE/inicpp
+ *
+ */
 
 
 size_t wordlen;
@@ -18,7 +24,11 @@ string dict_file;
 struct Cell *dictionary = nullptr;
 struct Top topWeek[TOP_MAX];
 struct Top topYear[TOP_MAX];
-
+int foundWords;
+int foundMaxWords;
+int maxWordLen;
+int dispMaxWords;
+char dispMaxWordsString[1024];
 
 void halt(int stat_code) {
     exit(stat_code);
@@ -37,26 +47,26 @@ char* strupr(char* s) {
     return s;
 }
 
+template<class T> T cfg(const string & section, const string & option, const T & default_value) {
+    static config cfgp = parser::load_file(INI_FILE);
+    if (! cfgp.contains(section))
+        cfgp.add_section(section);
+    if (! cfgp[section].contains(option))
+        cfgp[section].add_option(option, (T) default_value);
+    return cfgp[section][option].get<T>();
+}
+
 void readIni() {
 
-    INIReader reader(INI_FILE);
-
-    // Check error
-    int error_check = reader.ParseError();
-    if (error_check < 0) {
-        cout << "Can't load 'lxScrabble.ini'\n";
-        halt(error_check);
-    }
-
     // Game settings
-    wordlen = (size_t) reader.GetInteger("Settings", "wordlen", 12);
-    bonus = reader.GetInteger("Settings", "bonus", 10);
+    wordlen = cfg<size_t>("Settings", "wordlen", 12);
+    bonus = cfg<unsigned_ini_t >("Settings", "bonus", 10);
 
     // Dictionary settings
-    distrib = reader.Get("Settings", "distribution",
+    distrib = cfg<string>("Settings", "distribution",
                          "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOO"
                                  "PPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ");
-    dict_file = reader.Get("Settings", "dictionary", "english.dic");
+    dict_file = cfg<string>("Settings", "dictionary", "english.dic");
 }
 
 
@@ -85,17 +95,8 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
 
-    // Connect to irc
-    cout << "Connecting to IRC..." << endl;
-    irc_connect();
-
-    // Init execution
-/*
-    show_about();
-    cur_state = running;
-    UINT noWinner = 0;
-*/
-
+    // Connect and start game
+    game_loop();
 
 #ifndef OFFLINE
 #ifdef _WIN32

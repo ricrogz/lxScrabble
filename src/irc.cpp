@@ -4,12 +4,12 @@
 
 #include "irc.h"
 
-#include <cstring>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <cstdarg>
 
 int irc_socket;
 char irc_buffer[8193];
@@ -17,6 +17,7 @@ size_t irc_bufLen = 0;
 bool irc_blackAndWhite;
 bool anyoneCanStop;
 string owner;
+string channel;
 
 void init_socket() {
 #ifndef OFFLINE
@@ -69,7 +70,6 @@ bool irc_handlestd(char line[1024]) {
 }
 
 bool irc_recv(char line[1024]) {
-    line;
 #ifndef OFFLINE
     u_long value = 0;
     ioctl(irc_socket, FIONREAD, &value);
@@ -216,8 +216,8 @@ void irc_connect(const string &servername, int port, const string &password, str
 #endif
 }
 
-void do_perform(const string & perform) {
-    char *token = strtok((char *)perform.c_str(), "|");
+void do_perform(const string &perform) {
+    char *token = strtok((char *) perform.c_str(), "|");
     while (token != nullptr) {
         token = token + strspn(token, " ");
         if (*token == '/') token++;
@@ -269,7 +269,7 @@ bool irc_want(const char *wantCmd, uint timeout = 15000) {
 #endif
 }
 
-void irc_join(const string & channel, const string & channelkey = nullptr) {
+void irc_join(const string &channel, const string &channelkey = nullptr) {
     irc_send("JOIN ");
     if (!channelkey.empty()) {
         irc_send(channel.c_str());
@@ -293,40 +293,34 @@ void irc_sendnotice(const char *dest) {
 }
 
 void irc_connect() {
-    INIReader reader(INI_FILE);
 
-    // Check error
-    int error_check = reader.ParseError();
-    if (error_check < 0) {
-        cout << "Can't load 'lxScrabble.ini'\n";
-        halt(error_check);
-    }
+    /* Read cfg with global reader */
 
     // Connection data
-    string servername = reader.Get("IRC", "Server", DEFAULT_SERVER);
+    string servername = cfg<string>("IRC", "Server", DEFAULT_SERVER);
     // TODO: is this really necessary? -- remove it
     if (strcmp(servername.c_str(), "<IRC SERVER HOSTNAME>") == 0) {
         cerr << endl << "Configure lxScrabble.ini first !!" << endl;
         halt(2);
     }
-    int port = (int) reader.GetInteger("IRC", "Port", DEFAULT_PORT);
+    int port = (int)cfg<unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
 
     // IRC parameters
-    string nickname = reader.Get("IRC", "Nick", DEFAULT_NICK);
-    string server_pass = reader.Get("IRC", "Password", "");
-    string altnickname = reader.Get("IRC", "ANick", DEFAULT_ANICK);
-    string ident = reader.Get("IRC", "Ident", DEFAULT_IDENT);
-    string fullname = reader.Get("IRC", "Fullname", BOTFULLNAME);
+    string nickname = cfg<string>("IRC", "Nick", DEFAULT_NICK);
+    string server_pass = cfg<string>("IRC", "Password", "");
+    string altnickname = cfg<string>("IRC", "ANick", DEFAULT_ANICK);
+    string ident = cfg<string>("IRC", "Ident", DEFAULT_IDENT);
+    string fullname = cfg<string>("IRC", "Fullname", BOTFULLNAME);
 
     // Channel
-    string channel = reader.Get("IRC", "Channel", DEFAULT_CHANNEL);
-    string channelkey = reader.Get("IRC", "ChannelKey", DEFAULT_CHANNEL_KEY);
+    channel = cfg<string>("IRC", "Channel", DEFAULT_CHANNEL);
+    string channelkey = cfg<string>("IRC", "ChannelKey", DEFAULT_CHANNEL_KEY);
 
     // Other configs
-    irc_blackAndWhite = (bool) reader.GetInteger("IRC", "BlackAndWhite", 0);
-    anyoneCanStop = (bool) reader.GetInteger("IRC", "AnyoneCanStop", 0);
-    string perform = reader.Get("IRC", "Perform", "");
-    owner = reader.Get("IRC", "Owner", "");
+    irc_blackAndWhite = (bool)cfg<unsigned_ini_t>("IRC", "BlackAndWhite", false);
+    anyoneCanStop = (bool)cfg<unsigned_ini_t>("IRC", "AnyoneCanStop", false);
+    string perform = cfg<string>("IRC", "Perform", "");
+    owner = cfg<string>("IRC", "Owner", "");
 
     // Prepare socket & connect
     init_socket();
@@ -338,4 +332,54 @@ void irc_connect() {
 
     // Join channel
     irc_join(channel, channelkey);
+}
+
+void irc_stripcodes(char *text) {
+    char *scan = text;
+    char ch;
+    while ((ch = *scan++) != 0) {
+        if (ch == 3) // couleur CTRL-K
+        {
+            if (isdigit(*scan)) // suivi d'un chiffre
+            {
+                if (isdigit(*++scan)) scan++; // eventuellement un 2eme chiffre
+                if ((*scan == ',') && isdigit(*(scan + 1))) // eventellement une virgule suivie d'un chiffre
+                {
+                    scan += 2;
+                    if (isdigit(*scan)) scan++; // eventuellement un 2eme chiffre
+                }
+            }
+        } else if (ch >= 32)
+            *text++ = ch;
+    }
+    *text++ = 0;
+}
+
+void irc_disconnect() {
+    irc_sendline("QUIT :Game Over");
+#ifndef OFFLINE
+    do {
+        usleep(500);
+    } while (! irc_want("ERROR"));
+    close(irc_socket);
+#endif
+}
+
+void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDefault, ...) {
+    string sbuffer = cfg<string>("Strings", lpKeyName, lpDefault);
+    auto *buffer = (char*)sbuffer.c_str();
+    if (irc_blackAndWhite) irc_stripcodes(buffer);
+    va_list arguments;
+    char text[8192];
+    va_start(arguments, lpDefault);
+    vsnprintf(text, 8192, buffer, arguments);
+    va_end(arguments);
+    cout << text;
+    if (set_endl)
+        cout << endl;
+#ifndef OFFLINE
+    send(irc_socket, text, (int)strlen(text), 0);
+    if (set_endl)
+        send(irc_socket, "\n", 1, 0);
+#endif
 }
