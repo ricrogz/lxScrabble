@@ -15,6 +15,14 @@ template<class T> void score_add(const string &section, const string &option, co
         scorep[section][option].set<T>(value);
 }
 
+template<class T> T score_get(const string & section, const string & option, const T & default_value) {
+    if (! scorep.contains(section))
+        scorep.add_section(section);
+    if (! scorep[section].contains(option))
+        scorep[section].add_option(option, (T) default_value);
+    return scorep[section][option].get<T>();
+}
+
 template<class T> vector<T> score_get_list(const string &section, const string &option, const T &default_value) {
     if (!scorep.contains(section))
         scorep.add_section(section);
@@ -103,7 +111,7 @@ bool update_top(Top *top, const string & nickname, ulong score) {
 
 void get_scores(const string & nickname, ulong *year, ulong *week) {
     char *scan;
-    string value = cfg<string>("Scores", nickname, "0 0");
+    string value = score_get<string>("Scores", nickname, "0 0");
     *year = strtoul(value.c_str(), &scan, 10);
     *week = strtoul(scan, &scan, 10);
 }
