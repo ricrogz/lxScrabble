@@ -1,0 +1,3 @@
+[submodule "dependencies/inicpp"]
+	path = dependencies/inicpp
+	url = https://github.com/SemaiCZE/inicpp.git
