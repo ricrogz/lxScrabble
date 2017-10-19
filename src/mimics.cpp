@@ -10,6 +10,11 @@
 #include <sys/stat.h>
 
 bool kbhit() {
+    /*
+     * Taken from:
+     * https://stackoverflow.com/questions/29335758/using-kbhit-and-getch-on-linux
+     */
+
     termios term;
     tcgetattr(0, &term);
 
