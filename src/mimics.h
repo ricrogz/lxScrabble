@@ -5,9 +5,15 @@
 #ifndef LXSCRABBLE_MIMICS_H
 #define LXSCRABBLE_MIMICS_H
 
+#define NONLATIN_LCASE "ñç"
+#define NONLATIN_UCASE "ÑÇ"
+
+
 #include <string>
 
 bool kbhit();
+
+bool is_valid_char(char c);
 
 void strupr(std::string &str);
 

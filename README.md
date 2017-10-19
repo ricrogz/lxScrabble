@@ -123,6 +123,10 @@ These commands may only be used by users whose nick is listed in the **Owner** c
 * **!disconnect**: Quit. **WARNING**: this will stop the bot, and you will have to executer the program again.
 * **!op**: get op'ed by the bot (the bot must have 'op' itself).
 
+# Usage of non-ascii characters
+
+Before non-ascii characters can be used, they have to be incorporated to the code of the program. The proper way of doing it is in the header file "mimics.h", by adding them to the defines `NONLATIN_LCASE` and `NONLATIN_UCASE`, respetively for the lowercase character and its uppercase equivalent. Please keep the characters ordered so that different cases of the same letters are placed at the same indexes in both strings!
+
 # Changes from WScrabble
 
 * Source code has been divided into several files for clarity.
@@ -134,14 +138,16 @@ These commands may only be used by users whose nick is listed in the **Owner** c
     - Commas, colons and semicolons (',', ':', ';') in format strings in lxScrabble need to be escaped ('\\,', '\\:', '\\;').
     - Formatting placeholders ('%...') format strings in lxScrabble have been replaced by proper *printf* placeholders ('%s', '%d').
     - Player scores in score.ini do no longer start with an underscore ('_').
+* Current source code allows for incorporation of non-ascii characters.
 
 # Potential future improvements
 
+* Require to mention bot's nick to quit.
 * Mute/redirect output to a log file.
 * Implementation of a "!help" command to show remote commands.
-* Usage of unicode characters.
 * Improved score tracking functionality, plus usage of a SQLite database to track scores.
 * Mutichannel capability.
+* Dictionary selection between different options.
 * Global code rewrite.
 
 # License

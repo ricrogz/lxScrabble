@@ -233,7 +233,7 @@ void run_game() {
         int lastDayOfWeek = systemTime->tm_wday;
         int lastHour = systemTime->tm_hour;
         char line[1024];
-        char winningNick[128];                /////////////////////// revisar esto Â¿String?
+        char winningNick[128];                /////////////////////// revisar esto ¿String?
         size_t winningWordLen = 0;
         clock_t lastRecvTicks = clock();
         bool PINGed = false;
@@ -276,7 +276,11 @@ void run_game() {
                 lastHour = systemTime->tm_hour;
             }
 
-            if (kbhit() && (getch() == 27)) cur_state = HALTING;
+            if (kbhit()) {
+                int k;
+                if ((k = getch()) == 27) cur_state = HALTING;
+                else cout << "key: " << k << endl;
+            }
             while (irc_recv(line)) {
                 lastRecvTicks = clock();
                 PINGed = false;
@@ -289,10 +293,10 @@ void run_game() {
                     if (strncasecmp(paramtext, "!r", 2) == 0)
                         displayLetters(letters);
                     else if (!scrabbleCmd(nickname, paramtext)) {
-                        while ((*paramtext != 0) && !isalpha(*paramtext)) paramtext++;
+                        while ((*paramtext != 0) && !is_valid_char(*paramtext)) paramtext++;
                         if (*paramtext == 0) continue;
                         char *wordEnd = paramtext + 1;
-                        while (isalpha(*wordEnd)) wordEnd++;
+                        while (is_valid_char(*wordEnd)) wordEnd++;
                         *wordEnd = 0;
                         if (strlen(paramtext) > winningWordLen) {
                             strupr(paramtext);

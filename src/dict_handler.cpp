@@ -58,9 +58,9 @@ void addWord(const string &word) {
 }
 
 void readDictionary(const string &filename) {
-    ifstream stream(filename);
+    ifstream stream(filename, ios::in | ios::binary);
     if (stream.fail()) {
-        cerr << "Could not open dictionnary file" << endl;
+        cerr << "Could not open dictionary file" << endl;
         halt(3);
     }
     string word;
@@ -68,7 +68,7 @@ void readDictionary(const string &filename) {
         stream >> word;
         if (0 == word.length()) continue;
         if (wordlen < word.length()) continue;
-        strupr(word);
+        strupr(&word[0]);
 
         if (strspn(word.c_str(), distrib.c_str()) != word.length()) {
             cerr << "Invalid dictionary entry: " << word << endl;

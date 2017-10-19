@@ -19,9 +19,9 @@ using namespace std;
 using namespace inicpp;
 
 struct Cell {
-    struct Cell *other; // autres lettres possibles (plus grandes dans l'ordre alphabÃ©tiques)
+    struct Cell *other; // autres lettres possibles (plus grandes dans l'ordre alphabétiques)
     struct Cell *longer; // mots plus long disponibles
-    char *words; // succession des mots contenant ces lettres, sÃ©parÃ©s par des \0 et terminÃ© par un autre \0
+    char *words; // succession des mots contenant ces lettres, séparés par des \0 et terminé par un autre \0
     size_t wordsCount;
     char letter; // la lettre
 };

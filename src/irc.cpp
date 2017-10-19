@@ -87,7 +87,6 @@ bool irc_recv(char line[1024]) {
             line[lineLen - 1] = 0;
             irc_bufLen -= lineLen + 1;
             memmove(irc_buffer, irc_buffer + lineLen + 1, irc_bufLen + 1);
-            cout << "<- " << line << endl;
             if (!irc_handlestd(line))
                 return true;
         } else
@@ -330,7 +329,7 @@ void irc_stripcodes(char *text) {
                     if (isdigit(*scan)) scan++; // eventuellement un 2eme chiffre
                 }
             }
-        } else if (ch >= 32)
+        } else if (is_valid_char(ch))
             *text++ = ch;
     }
     *text++ = 0;
