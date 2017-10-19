@@ -66,8 +66,7 @@ void send_update_stats(const string &nickname, ulong gain) {
         irc_sendformat(true, "Stats", "( %d pts :  %d pts)", week, year);
     } else {
         winInARow++;
-        irc_sendformat(true, "StatsCont", "( %d pts :  %d pts) - %d  contiguous won games!", week, year,
-                       winInARow);
+        irc_sendformat(true, "StatsCont", "( %d pts :  %d pts) - %d  contiguous won games!", winInARow, week, year);
     }
     lastWinner = nickname;
 }
@@ -304,7 +303,7 @@ void run_game() {
                                 if (winningWordLen == maxWordLen) {
                                     irc_sendformat(false, "Win",
                                                    "Congratulations %s ! There's not better [%s] !! You get %d points + %d bonus !",
-                                                   nickname, paramtext, winningWordLen, bonus);
+                                                   paramtext, nickname, winningWordLen, bonus);
                                     send_update_stats(nickname, winningWordLen + bonus);
                                     if (autovoice) {
                                         irc_sendline("MODE " + channel + " +v " + nickname);
@@ -313,7 +312,7 @@ void run_game() {
                                 } else {
                                     irc_sendformat(true, "Word",
                                                    "Not bad %s... I keep your word [%s] ! Who can say better than %d letters ?",
-                                                   nickname, paramtext, (int) strlen(paramtext));
+                                                   paramtext, nickname, (int) strlen(paramtext));
                                 }
                             }
                         }
