@@ -26,6 +26,15 @@ lxScrabble is a linux port (although it probably can be used in any \*nix system
     $ git submodule update --recursive
     ```
 
+    Depending on your linux distro/version, you might also need to do:
+
+    ``` bash
+    $ cd vendor/googletest
+    $ git submodule init
+    $ git submodule update
+    $ cd ../..
+    ```
+    
 1. Return to lxScrabble root directory, and compile. After this step, you should have a *lxScrabble* executable.
 
     ``` bash
