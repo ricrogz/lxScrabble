@@ -18,6 +18,7 @@ bool irc_blackAndWhite;
 bool anyoneCanStop;
 string owner;
 string channel;
+string bot_nick;
 
 void init_socket() {
 #ifndef OFFLINE
@@ -289,7 +290,7 @@ void irc_connect() {
     int port = (int) cfg<unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
 
     // IRC parameters
-    string nickname = cfg<string>("IRC", "Nick", DEFAULT_NICK);
+    bot_nick = cfg<string>("IRC", "Nick", DEFAULT_NICK);
     string server_pass = cfg<string>("IRC", "Password", "");
     string altnickname = cfg<string>("IRC", "ANick", DEFAULT_ANICK);
     string ident = cfg<string>("IRC", "Ident", DEFAULT_IDENT);
@@ -307,7 +308,7 @@ void irc_connect() {
 
     // Prepare socket & connect
     init_socket();
-    irc_connect(servername, port, server_pass, nickname, altnickname, ident, "localhost", fullname);
+    irc_connect(servername, port, server_pass, bot_nick, altnickname, ident, "localhost", fullname);
 
     // Perform actions (identify registered nick, etc)
     do_perform(perform);

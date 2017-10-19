@@ -120,7 +120,7 @@ These commands may only be used by users whose nick is listed in the **Owner** c
 
 * **!stop**: Stop the bot.
 * **!newweek**: Reset the weekly scores, and start a new week.
-* **!disconnect**: Quit. **WARNING**: this will stop the bot, and you will have to executer the program again.
+* **!disconnect <bot's nick>**: Quit. **WARNING**: this will stop the bot, and you will have to executer the program again.
 * **!op**: get op'ed by the bot (the bot must have 'op' itself).
 
 # Usage of non-ascii characters
@@ -142,7 +142,6 @@ Before non-ascii characters can be used, they have to be incorporated to the cod
 
 # Potential future improvements
 
-* Require to mention bot's nick to quit.
 * Mute/redirect output to a log file.
 * Implementation of a "!help" command to show remote commands.
 * Improved score tracking functionality, plus usage of a SQLite database to track scores.

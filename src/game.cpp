@@ -179,7 +179,7 @@ bool scrabbleCmd(const char *nickname, char *command) {
             irc_sendmsg(channel);
             irc_sendformat(true, "NewWeek", "A new week is beginning ! Resetting all week scores...");
             clear_week_scores();
-        } else if (strcasecmp(command, "!disconnect") == 0) {
+        } else if (strcasecmp(command, ((string)"!disconnect " + bot_nick).c_str()) == 0) {
             cur_state = HALTING;
         } else if (strcasecmp(command, "!op") == 0) {
             irc_sendline("MODE " + channel + " +o " + nickname);

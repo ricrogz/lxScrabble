@@ -49,6 +49,7 @@ extern size_t maxWordLen;
 extern size_t dispMaxWords;
 extern char dispMaxWordsString[];
 extern run_state cur_state;
+extern string bot_nick;
 
 void halt(int stat_code);
 
