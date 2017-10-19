@@ -12,7 +12,6 @@
 
 
 #define BOT_URL "https://github.com/ricrogz/lxScrabble"
-#define BOTNAME "lxScrabble 0.95b"
 #define BOTFULLNAME BOTNAME" by invik"
 #define ADVERTISE IRC_BOLD \
                     IRC_COLOR "9,2 ~" IRC_COLOR "8,2*" IRC_COLOR "9,2~ " \

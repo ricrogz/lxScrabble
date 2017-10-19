@@ -13,6 +13,7 @@
 
 #include "inicpp/inicpp.h"
 
+#include "version.h"
 #include "mimics.h"
 
 using namespace std;
