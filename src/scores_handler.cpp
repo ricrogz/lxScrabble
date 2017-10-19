@@ -101,7 +101,7 @@ bool update_top(Top *top, const string & nickname, ulong score) {
     if (newPos == TOP_MAX) return false; // le score n'entre pas dans le top
     for (index = newPos; index < TOP_MAX - 1; index++)
         if (top[index].nick == nickname || top[index].nick == "---")
-            break; // le nom etait dÃ©jÃ  dans le top
+            break; // le nom etait déjà dans le top
     // 0 1 2 3 4 5 6 7 8 9
     memmove(&top[newPos + 1], &top[newPos], (index - newPos) * sizeof(Top));
     top[newPos].nick = nickname;
@@ -111,14 +111,14 @@ bool update_top(Top *top, const string & nickname, ulong score) {
 
 void get_scores(const string & nickname, ulong *year, ulong *week) {
     char *scan;
-    string value = score_get<string>("Scores", nickname, "0 0");
+    string value = score_get<string>("Scores", "x" + nickname, "0 0");
     *year = strtoul(value.c_str(), &scan, 10);
     *week = strtoul(scan, &scan, 10);
 }
 
 void set_scores(const string & nickname, ulong year, ulong week) {
     string value = to_string(year) + " " + to_string(week);
-    score_add<string>("Scores", nickname, value);
+    score_add<string>("Scores", "x" + nickname, value);
     bool updated = update_top(topWeek, nickname, week);
     updated |= update_top(topYear, nickname, year);
     if (updated) write_tops();
