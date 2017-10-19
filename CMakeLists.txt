@@ -1,5 +1,5 @@
 # cmake_minimum_required(VERSION <specify CMake version here>)
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 2.5)
 project(lxScrabble)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall")
