@@ -6,12 +6,6 @@
 #include "dict_handler.h"
 #include "scores_handler.h"
 
-#include <ncurses.h>
-
-enum {
-    RUNNING, STOPPED, HALTING
-} cur_state;
-
 string lastWinner;
 ulong winInARow;
 
@@ -330,7 +324,6 @@ void run_game() {
         tclock = cfg_after;
         do {
             msleep(100);
-            if (kbhit() && (getch() == 27)) cur_state = HALTING;
             while (irc_recv(line)) {
                 char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1, &param2, &paramtext);

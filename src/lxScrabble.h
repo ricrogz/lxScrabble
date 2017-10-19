@@ -32,6 +32,10 @@ struct Top {
     ulong score;
 };
 
+enum run_state {
+    RUNNING, STOPPED, HALTING
+};
+
 extern size_t wordlen;
 extern ulong bonus;
 extern string distrib;
@@ -44,6 +48,7 @@ extern size_t foundMaxWords;
 extern size_t maxWordLen;
 extern size_t dispMaxWords;
 extern char dispMaxWordsString[];
+extern run_state cur_state;
 
 void halt(int stat_code);
 

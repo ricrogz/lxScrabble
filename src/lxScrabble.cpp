@@ -5,6 +5,8 @@
 
 #include "lxScrabble.h"
 
+#include <signal.h>
+
 #include "dict_handler.h"
 #include "scores_handler.h"
 #include "game.h"
@@ -29,6 +31,7 @@ size_t foundMaxWords;
 size_t maxWordLen;
 size_t dispMaxWords;
 char dispMaxWordsString[1024];
+run_state cur_state;
 
 void halt(int stat_code) {
     exit(stat_code);
@@ -63,11 +66,28 @@ void readIni() {
     dict_file = cfg<string>("Settings", "dictionary", "english.dic");
 }
 
+void gentle_terminator(int) {
+    cout << "Terminating gently..." << endl;
+    cur_state = HALTING;
+}
+
+void setup_interrupt_catcher() {
+    struct sigaction sigIntHandler;
+
+    sigIntHandler.sa_handler = gentle_terminator;
+    sigemptyset(&sigIntHandler.sa_mask);
+    sigIntHandler.sa_flags = 0;
+
+    sigaction(SIGINT, &sigIntHandler, nullptr);
+}
 
 int main(int argc, char *argv[]) {
     // Show banner, initialize random number generator
     cout << BOTFULLNAME << endl;
     srand((unsigned) time(nullptr));
+
+    // Setup a handler to catch interrupt signals;
+    setup_interrupt_catcher();
 
     // Read ini file
     readIni();
