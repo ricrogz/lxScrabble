@@ -11,8 +11,6 @@
 
 #include <string>
 
-bool kbhit();
-
 bool is_valid_char(char c);
 
 void strupr(std::string &str);

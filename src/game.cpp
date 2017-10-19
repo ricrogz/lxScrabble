@@ -276,11 +276,6 @@ void run_game() {
                 lastHour = systemTime->tm_hour;
             }
 
-            if (kbhit()) {
-                int k;
-                if ((k = getch()) == 27) cur_state = HALTING;
-                else cout << "key: " << k << endl;
-            }
             while (irc_recv(line)) {
                 lastRecvTicks = clock();
                 PINGed = false;

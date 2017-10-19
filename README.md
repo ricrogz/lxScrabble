@@ -59,7 +59,7 @@ lxScrabble is a linux port (although it probably can be used in any \*nix system
     $ ./lxScrabble
     ```
 
-To stop the bot, go to the terminal where it is running and press the Escape key.
+To stop the bot, either issue "!disconnect" with an "Owner" nick, or interrupt it with Ctrl-c from the console where it runs.
 
 # Configuration file options
 
