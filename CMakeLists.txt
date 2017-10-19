@@ -12,7 +12,8 @@ set(SOURCE_FILES
         src/scores_handler.cpp
         src/irc.cpp
         src/game.cpp
-        src/mimics.cpp)
+        src/mimics.cpp
+        src/bot_commands.cpp)
 
 add_executable(lxScrabble ${SOURCE_FILES})
 

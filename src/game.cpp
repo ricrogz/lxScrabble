@@ -5,6 +5,7 @@
 #include "game.h"
 #include "dict_handler.h"
 #include "scores_handler.h"
+#include "bot_commands.h"
 
 string lastWinner;
 ulong winInARow;
@@ -15,6 +16,10 @@ void show_about() {
     irc_sendmsg(channel);
     if (irc_blackAndWhite) irc_stripcodes(buffer);
     irc_sendline(buffer);
+
+    irc_sendmsg(channel);
+    if (irc_blackAndWhite) irc_stripcodes(buffer);
+    irc_sendformat(true, "Help", "Use '!help' to ask the bot for available commands");
 }
 
 void pickLetters(char *letters, char *sortedLetters) {
@@ -148,7 +153,9 @@ void replyTop3(const char *dest, Top *top, const char *whichTop, const char *lpD
 
 bool scrabbleCmd(const char *nickname, char *command) {
     bool isOwner = is_owner(nickname);
-    if (strcasecmp(command, "!score") == 0)
+    if (strncasecmp(command, "!help", 5) == 0)
+        help_cmd(nickname, isOwner);
+    else if (strcasecmp(command, "!score") == 0)
         replyScore(nickname, nickname);
     else if (strncasecmp(command, "!score ", 7) == 0)
         replyScore(command + 7, nickname);

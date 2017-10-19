@@ -104,6 +104,7 @@ The options and strings in this section enumerate the format strings that will b
 
 Channel messages recognized by the bot as commands:
 
+* **!help**: get the list of available commands in a private query.
 * **!start**: Start a game (works only when the bot is stopped).
 * **!score**: Show your current score.
 * **!score <nick>**: Show <nick>'s current score.
@@ -120,7 +121,7 @@ These commands may only be used by users whose nick is listed in the **Owner** c
 
 * **!stop**: Stop the bot.
 * **!newweek**: Reset the weekly scores, and start a new week.
-* **!disconnect <bot's nick>**: Quit. **WARNING**: this will stop the bot, and you will have to executer the program again.
+* **!disconnect <bot's nick>**: Quit. **WARNING**: this will stop the bot, and you will have to execute the program again.
 * **!op**: get op'ed by the bot (the bot must have 'op' itself).
 
 # Usage of non-ascii characters
@@ -143,7 +144,6 @@ Before non-ascii characters can be used, they have to be incorporated to the cod
 # Potential future improvements
 
 * Mute/redirect output to a log file.
-* Implementation of a "!help" command to show remote commands.
 * Improved score tracking functionality, plus usage of a SQLite database to track scores.
 * Mutichannel capability.
 * Dictionary selection between different options.
