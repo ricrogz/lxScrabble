@@ -45,6 +45,13 @@ template<class T> T cfg(const string & section, const string & option, const T &
 
 void readIni() {
 
+    // Check that the config file exists
+    if (! fexists(INI_FILE)) {
+        cerr  << endl << endl << "Configuration file not found. Please put 'lxScrabble.ini' into this directory!" ;
+        cerr << endl << endl;
+        halt(1);
+    }
+
     // Game settings
     wordlen = cfg<size_t>("Settings", "wordlen", 12);
     bonus = cfg<unsigned_ini_t >("Settings", "bonus", 10);
