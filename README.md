@@ -29,7 +29,7 @@ lxScrabble is a linux port (although it probably can be used in any \*nix system
     Depending on your linux distro/version, you might also need to do:
 
     ``` bash
-    $ cd vendor/googletest
+    $ cd dependencies/inicpp
     $ git submodule init
     $ git submodule update
     $ cd ../..
