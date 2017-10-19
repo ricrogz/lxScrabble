@@ -22,6 +22,7 @@ lxScrabble is a linux port (although it probably can be used in any \*nix system
 
     ``` bash
     $ cd lxScrabble
+    $ git submodule init
     $ git submodule update --recursive
     ```
 
