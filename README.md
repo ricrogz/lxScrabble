@@ -59,7 +59,7 @@ lxScrabble is a linux port (although it probably can be used in any \*nix system
     $ ./lxScrabble
     ```
 
-To stop the bot, either issue "!disconnect" with an "Owner" nick, or interrupt it with Ctrl-c from the console where it runs.
+To stop the bot, either issue "!quit <bot's nick>" with an "Owner" nick, or interrupt it with Ctrl-c from the console where it runs.
 
 # Configuration file options
 
@@ -121,7 +121,7 @@ These commands may only be used by users whose nick is listed in the **Owner** c
 
 * **!stop**: Stop the bot.
 * **!newweek**: Reset the weekly scores, and start a new week.
-* **!disconnect <bot's nick>**: Quit. **WARNING**: this will stop the bot, and you will have to execute the program again.
+* **!quit <bot's nick>**: Quit. **WARNING**: this will stop the bot, and you will have to execute the program again.
 * **!op**: get op'ed by the bot (the bot must have 'op' itself).
 
 # Usage of non-ascii characters

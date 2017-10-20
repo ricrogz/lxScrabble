@@ -24,7 +24,7 @@ void help_cmd(const string &dest, bool is_owner) {
 
     string owner_commands[] = {
             "!newweek: Reset the weekly scores, and start a new week.",
-            "!disconnect " + bot_nick + ": Quit. WARNING: this will stop the bot, and you will have to start the program again.",
+            "!quit " + bot_nick + ": Quit. WARNING: this will stop the bot, and you will have to start the program again.",
             "!op: get op'ed by the bot (the bot must have 'op' itself)."
     };
 
