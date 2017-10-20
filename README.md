@@ -42,7 +42,7 @@ lxScrabble is a linux port (although it probably can be used in any \*nix system
     $ mkdir build
     $ cd build
     $ cmake ..
-    $ make
+    $ make -j2 lxScrabble
     ```
 
 1. Copy the executable, the configuration file, and the dictionary file to the target directory:

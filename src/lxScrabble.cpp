@@ -67,7 +67,7 @@ void readIni() {
 }
 
 void gentle_terminator(int) {
-    cout << "Terminating gently..." << endl;
+    cout << endl << "Terminating gently..." << endl;
     cur_state = HALTING;
 }
 
