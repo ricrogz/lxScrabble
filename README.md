@@ -128,6 +128,8 @@ These commands may only be used by users whose nick is listed in the **Owner** c
 
 Before non-ascii characters can be used, they have to be incorporated to the code of the program. The proper way of doing it is in the header file "mimics.h", by adding them to the defines `NONLATIN_LCASE` and `NONLATIN_UCASE`, respetively for the lowercase character and its uppercase equivalent. Please keep the characters ordered so that different cases of the same letters are placed at the same indexes in both strings!
 
+Also take care that the ini and dictionary files are stored in the proper encoding!!
+
 # Changes from WScrabble
 
 * Source code has been divided into several files for clarity.
