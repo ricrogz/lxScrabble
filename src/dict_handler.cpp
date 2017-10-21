@@ -8,18 +8,18 @@
 void sortLetters(const char *letters, char *sortedLetters) {
     char *scan = sortedLetters;
     char ch;
-    sortedLetters[0] = 127;
+    sortedLetters[0] = (unsigned char)255;
 
     // TODO: improve this, use quicksort
     while ((ch = *letters++) != '\0') {
         scan = sortedLetters;
-        while (ch >= *scan) scan++;
+        while ((int)ch >= (int)*scan) scan++;
         char ch2;
         do {
             ch2 = *scan;
             *scan++ = ch;
-        } while ((ch = ch2) != 127);
-        *scan = 127;
+        } while ((int)(ch = ch2) != 255);
+        *scan = (unsigned char)255;
     }
     *scan = 0;
 }
@@ -29,6 +29,7 @@ void addWord(const string &word) {
     // TODO: convert Cell to a class, and implement this as a method
 
     char letters[word.length() + 1];
+    letters[word.length()] = '\0';
     sortLetters(word.c_str(), letters);
     struct Cell **cell = &dictionary;
     char *scan = letters;
@@ -58,14 +59,14 @@ void addWord(const string &word) {
 }
 
 void readDictionary(const string &filename) {
-    ifstream stream(filename, ios::in | ios::binary);
+    ifstream stream(filename);
     if (stream.fail()) {
         cerr << "Could not open dictionary file" << endl;
         halt(3);
     }
     string word;
     while (!stream.eof()) {
-        stream >> word;
+        getline(stream, word);
         if (0 == word.length()) continue;
         if (wordlen < word.length()) continue;
         strupr(&word[0]);
@@ -75,9 +76,9 @@ void readDictionary(const string &filename) {
             cerr << "(contains lowercase letters or symbols not in the valid distribution)" << endl;
             halt(3);
         }
-
         addWord(word);
     }
+    stream.close();
 }
 
 void findWords(const struct Cell *cell, const char *letters, size_t len) {

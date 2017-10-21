@@ -147,7 +147,7 @@ void irc_analyze(char *line, char **nickname, char **ident, char **hostname, cha
 void irc_connect(const string &servername, int port, const string &password, string &nickname,
                  const string &altnickname, const string &ident, const string &localhost, const string &fullname) {
 #ifdef OFFLINE
-    servername, port, password, nickname, altnickname, ident, localhost, fullname;
+    return;
 #else
     struct hostent *host = gethostbyname(servername.c_str());
     if (!host) {
@@ -241,7 +241,6 @@ void do_perform(const string &perform) {
 
 bool irc_want(const char *wantCmd, uint timeout = 15000) {
 #ifdef OFFLINE
-    wantCmd, timeout;
     return true;
 #else
     char line[1024];

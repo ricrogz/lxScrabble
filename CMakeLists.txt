@@ -5,6 +5,7 @@ project(lxScrabble)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall")
 
 # add_definitions(-DCHEAT)
+# add_definitions(-DOFFLINE)
 
 set(SOURCE_FILES
         src/lxScrabble.cpp
