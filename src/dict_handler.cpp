@@ -56,8 +56,7 @@ void readDictionary(const string &filename) {
         halt(3);
     }
     string word;
-    size_t total_words = 0;
-    size_t imported_words = 0;
+    struct dict_stats words;
     while (!stream.eof()) {
         getline(stream, word);
 
@@ -71,12 +70,13 @@ void readDictionary(const string &filename) {
         // Skip if line is empty
         if (0 == word.length()) continue;
 
-        total_words++;
+        words.total++;
 
         // Skip too long words
         if (wordlen < word.length()) {
             if (list_failed_words)
                 printf("%s -- word is too long for configured wordlen (%lu)\n", &word[0], wordlen);
+            words.too_long++;
             continue;
         }
 
@@ -84,22 +84,27 @@ void readDictionary(const string &filename) {
         strupr(&word[0]);
         size_t valid_length;
         if ((valid_length = strspn(&word[0], &distrib[0])) != word.length()) {
-            printf("%s -- word contains invalid character '%c'\n", &word[0], word.at(valid_length));
+            if (list_failed_words)
+                printf("%s -- word contains invalid character '%c'\n", &word[0], word.at(valid_length));
+            words.wrong_symbols++;
             continue;
         }
         addWord(word);
-        imported_words ++;
+        words.loaded++;
     }
     stream.close();
 
     // Report imported words
-    printf("Imported %lu/%lu words.", imported_words, total_words);
+    printf("Read %lu words:\n", words.total);
+    printf("  %8lu too long (> %lu letters).\n", words.too_long, wordlen);
+    printf("  %8lu with invalid symbols.\n", words.wrong_symbols);
+    printf("  %8lu valid words.\n", words.loaded);
     if (! list_failed_words)
-        cout << "To list failed words, execute with --list parameter.";
+        cout << "To list invalid words, execute with --list parameter.";
     cout << endl;
 
     // Exit if no words could be imported
-    if (imported_words == 0) {
+    if (words.loaded == 0) {
         cerr << "ERROR: No words were imported, game cannot continue." << endl;
         halt(1);
     }
