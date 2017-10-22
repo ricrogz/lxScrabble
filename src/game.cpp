@@ -24,7 +24,7 @@ void show_about() {
 
 void pickLetters(char *letters, char *sortedLetters) {
     size_t count = distrib.length();
-    char availableLetters[count];
+    char availableLetters[count + 1];
     strcpy(availableLetters, &distrib[0]);
     for (size_t index = 0; index < wordlen; index++) {
         u_long value;
@@ -93,7 +93,8 @@ bool isWord(const char *letters, const char *word) {
 }
 
 bool checkWord(const char *availableLetters, const char *word) {
-    char letters[wordlen];
+    char letters[wordlen + 1];
+    letters[wordlen] = '\0';
     size_t len = strlen(word);
     if (len > wordlen) return false;
     sortLetters(word, letters);
@@ -198,7 +199,7 @@ void run_game() {
     u_int noWinner = 0;
 
     while (cur_state != HALTING) {
-        char letters[wordlen], sortedLetters[wordlen];
+        char letters[wordlen + 1], sortedLetters[wordlen + 1];
         do {
             pickLetters(letters, sortedLetters);
             displayLetters(letters);
@@ -215,7 +216,6 @@ void run_game() {
 #ifdef CHEAT
         displayMaxWords(sortedLetters, maxWordLen);
         cout << dispMaxWordsString + 3 << endl;
-        tclock = 1;
 #endif
         time_t t = time(nullptr);
         struct tm *systemTime = localtime(&t);
