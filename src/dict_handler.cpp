@@ -12,6 +12,7 @@ void sortLetters(const char *letters, char *sortedLetters) {
     size_t len = strlen(letters);
     strncpy(sortedLetters, letters, len);
     qsort((void*)sortedLetters, len, sizeof(char), compare_char);
+    sortedLetters[len] = '\0';
 }
 
 void addWord(const string &word) {
