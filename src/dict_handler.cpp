@@ -112,6 +112,7 @@ void findWords(const struct Cell *cell, const char *letters, size_t len) {
             if (cell->wordsCount) {
                 if (dispMaxWords) {
                     if (len == dispMaxWords) {
+                        maxWordLen = len;
                         for (size_t index = 0; index < cell->wordsCount; index++) {
                             strcat(dispMaxWordsString, " - ");
                             strcat(dispMaxWordsString, cell->words + (len + 1) * index);

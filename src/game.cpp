@@ -93,7 +93,8 @@ bool isWord(const char *letters, const char *word) {
 }
 
 bool checkWord(const char *availableLetters, const char *word) {
-    char letters[wordlen];
+    char letters[wordlen + 1];
+    letters[wordlen] = '\0';
     size_t len = strlen(word);
     if (len > wordlen) return false;
     sortLetters(word, letters);
@@ -215,7 +216,6 @@ void run_game() {
 #ifdef CHEAT
         displayMaxWords(sortedLetters, maxWordLen);
         cout << dispMaxWordsString + 3 << endl;
-        tclock = 1;
 #endif
         time_t t = time(nullptr);
         struct tm *systemTime = localtime(&t);
