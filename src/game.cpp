@@ -24,7 +24,7 @@ void show_about() {
 
 void pickLetters(char *letters, char *sortedLetters) {
     size_t count = distrib.length();
-    char availableLetters[count];
+    char availableLetters[count + 1];
     strcpy(availableLetters, &distrib[0]);
     for (size_t index = 0; index < wordlen; index++) {
         u_long value;
@@ -199,7 +199,7 @@ void run_game() {
     u_int noWinner = 0;
 
     while (cur_state != HALTING) {
-        char letters[wordlen], sortedLetters[wordlen];
+        char letters[wordlen + 1], sortedLetters[wordlen + 1];
         do {
             pickLetters(letters, sortedLetters);
             displayLetters(letters);
