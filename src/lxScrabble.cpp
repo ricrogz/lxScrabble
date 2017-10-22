@@ -12,7 +12,7 @@
 #include "game.h"
 
 size_t wordlen;
-ulong bonus;
+u_long bonus;
 string distrib;
 string dict_file;
 struct Cell *dictionary = nullptr;
@@ -33,11 +33,10 @@ string ident;
 string fullname;
 string channelkey;
 string perform;
-vector<string> owner;
-uint cfg_clock;
-uint cfg_warning;
-uint cfg_after;
-uint autostop;
+u_int cfg_clock;
+u_int cfg_warning;
+u_int cfg_after;
+u_int autostop;
 bool autovoice;
 
 void halt(int stat_code) {
@@ -84,7 +83,7 @@ void readIni() {
 
     // Connection data
     servername = cfg<string>("IRC", "Server", DEFAULT_SERVER);
-    if (strcmp(servername.c_str(), "<IRC SERVER HOSTNAME>") == 0) {
+    if (strcmp(&servername[0], "<IRC SERVER HOSTNAME>") == 0) {
         cerr << endl << "Configure lxScrabble.ini first !!" << endl;
         halt(2);
     }
@@ -108,10 +107,10 @@ void readIni() {
     owner = cfg_get_list<string>("IRC", "Owner", "");
 
     // Game parameters
-    cfg_clock = (uint) cfg<unsigned_ini_t>("Delay", "max", 40) * 10;
-    cfg_warning = (uint) cfg<unsigned_ini_t>("Delay", "warning", 30) * 10;
-    cfg_after = (uint) cfg<unsigned_ini_t>("Delay", "after", 30) * 10;
-    autostop = (uint) cfg<unsigned_ini_t>("Settings", "autostop", 3);
+    cfg_clock = (u_int) cfg<unsigned_ini_t>("Delay", "max", 40) * 10;
+    cfg_warning = (u_int) cfg<unsigned_ini_t>("Delay", "warning", 30) * 10;
+    cfg_after = (u_int) cfg<unsigned_ini_t>("Delay", "after", 30) * 10;
+    autostop = (u_int) cfg<unsigned_ini_t>("Settings", "autostop", 3);
     autovoice = (bool) cfg<unsigned_ini_t>("Settings", "autovoice", 1);
 }
 

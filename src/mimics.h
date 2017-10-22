@@ -33,13 +33,13 @@ inline char* strupr(char* s) {
     return s;
 }
 
-inline void msleep(ulong t) {
+inline void msleep(u_long t) {
     usleep((__useconds_t)t * 1000);
 }
 
 inline bool fexists (const std::string & name) {
     struct stat buffer = {0};
-    return (stat (name.c_str(), &buffer) == 0);
+    return (stat (&name[0], &buffer) == 0);
 }
 
 #endif //LXSCRABBLE_MIMICS_H

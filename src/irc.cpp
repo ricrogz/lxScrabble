@@ -17,6 +17,7 @@ bool irc_blackAndWhite;
 bool anyoneCanStop;
 string channel;
 string bot_nick;
+vector<string> owner;
 
 void init_socket() {
 #ifndef OFFLINE
@@ -31,7 +32,7 @@ void init_socket() {
 void irc_send(const string &text) {
     cout << text;
 #ifndef OFFLINE
-    send(irc_socket, text.c_str(), text.length(), 0);
+    send(irc_socket, &text[0], text.length(), 0);
 #endif
 }
 
@@ -54,7 +55,7 @@ void irc_send(int value) {
 void irc_sendline(const string &line) {
     cout << line << endl;
 #ifndef OFFLINE
-    send(irc_socket, line.c_str(), line.length(), 0);
+    send(irc_socket, &line[0], line.length(), 0);
     send(irc_socket, "\n", 1, 0);
 #endif
 }
@@ -147,7 +148,7 @@ void irc_connect(const string &servername, int port, const string &password, str
 #ifdef OFFLINE
     return;
 #else
-    struct hostent *host = gethostbyname(servername.c_str());
+    struct hostent *host = gethostbyname(&servername[0]);
     if (!host) {
         cerr << "Could not resolve server name" << endl;
         halt(2);
@@ -205,7 +206,7 @@ void irc_connect(const string &servername, int port, const string &password, str
 }
 
 void do_perform(const string &perform) {
-    char *token = strtok((char *) perform.c_str(), "|");
+    char *token = strtok((char *)&perform[0], "|");
     while (token != nullptr) {
         token = token + strspn(token, " ");
         if (*token == '/') token++;
@@ -237,7 +238,7 @@ void do_perform(const string &perform) {
 
 }
 
-bool irc_want(const char *wantCmd, uint timeout = 15000) {
+bool irc_want(const char *wantCmd, u_int timeout = 15000) {
 #ifdef OFFLINE
     return true;
 #else
@@ -316,13 +317,12 @@ void irc_disconnect() {
 }
 
 void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDefault, ...) {
-    string sbuffer = cfg<string_ini_t>("Strings", lpKeyName, lpDefault);
-    auto *buffer = (char *) sbuffer.c_str();
-    if (irc_blackAndWhite) irc_stripcodes(buffer);
+    string buffer = cfg<string_ini_t>("Strings", lpKeyName, lpDefault);
+    if (irc_blackAndWhite) irc_stripcodes(&buffer[0]);
     va_list arguments;
     char text[8192];
     va_start(arguments, lpDefault);
-    vsnprintf(text, 8192, buffer, arguments);
+    vsnprintf(text, 8192, &buffer[0], arguments);
     va_end(arguments);
     cout << text;
     if (set_endl)

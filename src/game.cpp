@@ -8,7 +8,7 @@
 #include "bot_commands.h"
 
 string lastWinner;
-ulong winInARow;
+u_long winInARow;
 
 void show_about() {
     char buffer[sizeof(ADVERTISE)];
@@ -25,11 +25,11 @@ void show_about() {
 void pickLetters(char *letters, char *sortedLetters) {
     size_t count = distrib.length();
     char availableLetters[count];
-    strcpy(availableLetters, distrib.c_str());
+    strcpy(availableLetters, &distrib[0]);
     for (size_t index = 0; index < wordlen; index++) {
-        ulong value;
+        u_long value;
         do {
-            value = ((ulong) rand()) * count / RAND_MAX;
+            value = ((u_long) rand()) * count / RAND_MAX;
         } while (availableLetters[value] == 0);
         letters[index] = availableLetters[value];
         availableLetters[value] = 0;
@@ -39,7 +39,7 @@ void pickLetters(char *letters, char *sortedLetters) {
     cout << "[CHEATING] Input letters" << endl;
     cin >> letters;
 #endif
-    sortLetters(letters, sortedLetters);
+    sortLetters((const char*)letters, sortedLetters);
 }
 
 void displayLetters(const char *letters) {
@@ -53,14 +53,14 @@ void displayLetters(const char *letters) {
     irc_sendformat(true, "Letters", "[Mixed Letters]  - %s -", s_letters);
 }
 
-void send_update_stats(const string &nickname, ulong gain) {
-    ulong year, week;
+void send_update_stats(const string &nickname, u_long gain) {
+    u_long year, week;
     get_scores(nickname, &year, &week);
     year += gain;
     week += gain;
     set_scores(nickname, year, week);
 
-    if (strcasecmp(lastWinner.c_str(), nickname.c_str()) != 0) {
+    if (strcasecmp(&lastWinner[0], &nickname[0]) != 0) {
         winInARow = 1;
         irc_sendformat(true, "Stats", "( %d pts :  %d pts)", week, year);
     } else {
@@ -80,7 +80,7 @@ bool isWord(const char *letters, const char *word) {
             ch = *letters++;
             if (ch == 0) {
                 size_t len = strlen(word) + 1;
-                for (ulong index = 0; index < cell->wordsCount; index++)
+                for (u_long index = 0; index < cell->wordsCount; index++)
                     if (strcmp(cell->words + index * len, word) == 0)
                         return true;
                 return false;
@@ -115,7 +115,7 @@ bool is_owner(const string &nickname) {
 }
 
 void replyScore(const char *nickname, const char *dest) {
-    ulong year, week;
+    u_long year, week;
     get_scores(nickname, &year, &week);
     irc_sendnotice(dest);
     if (year == 0)
@@ -128,22 +128,22 @@ void replyScore(const char *nickname, const char *dest) {
 void replyTop10(const char *dest, Top *top, const char *whichTop, const char *lpDefault, const char *whichTopMore,
                 const char *lpDefaultMore) {
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTop, lpDefault, top[0].nick.c_str(), top[0].score);
+    irc_sendformat(true, whichTop, lpDefault, &(top[0].nick)[0], top[0].score);
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTopMore, lpDefaultMore, 2, top[1].nick.c_str(), top[1].score, 3, top[2].nick.c_str(),
-                   top[2].score, 4, top[3].nick.c_str(), top[3].score);
+    irc_sendformat(true, whichTopMore, lpDefaultMore, 2, &(top[1].nick)[0], top[1].score, 3, &(top[2].nick)[0],
+                   top[2].score, 4, &(top[3].nick)[0], top[3].score);
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTopMore, lpDefaultMore, 5, top[4].nick.c_str(), top[4].score, 6, top[5].nick.c_str(),
-                   top[5].score, 7, top[6].nick.c_str(), top[6].score);
+    irc_sendformat(true, whichTopMore, lpDefaultMore, 5, &(top[4].nick)[0], top[4].score, 6, &(top[5].nick)[0],
+                   top[5].score, 7, &(top[6].nick)[0], top[6].score);
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTopMore, lpDefaultMore, 8, top[7].nick.c_str(), top[7].score, 9, top[8].nick.c_str(),
-                   top[8].score, 10, top[9].nick.c_str(), top[9].score);
+    irc_sendformat(true, whichTopMore, lpDefaultMore, 8, &(top[7].nick)[0], top[7].score, 9, &(top[8].nick)[0],
+                   top[8].score, 10, &(top[9].nick)[0], top[9].score);
 }
 
 void replyTop3(const char *dest, Top *top, const char *whichTop, const char *lpDefault) {
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTop, lpDefault, top[0].nick.c_str(), top[0].score, top[1].nick.c_str(), top[1].score,
-                   top[2].nick.c_str(), top[2].score);
+    irc_sendformat(true, whichTop, lpDefault, &(top[0].nick)[0], top[0].score, &(top[1].nick)[0], top[1].score,
+                   &(top[2].nick)[0], top[2].score);
 }
 
 bool scrabbleCmd(const char *nickname, char *command) {
@@ -181,7 +181,7 @@ bool scrabbleCmd(const char *nickname, char *command) {
             irc_sendmsg(channel);
             irc_sendformat(true, "NewWeek", "A new week is beginning ! Resetting all week scores...");
             clear_week_scores();
-        } else if (strncasecmp(command, ((string)"!quit " + bot_nick).c_str(), 6 + bot_nick.length()) == 0) {
+        } else if (strncasecmp(command, &((string)"!quit " + bot_nick)[0], 6 + bot_nick.length()) == 0) {
             cur_state = HALTING;
         } else if (strcasecmp(command, "!op") == 0) {
             irc_sendline("MODE " + channel + " +o " + nickname);
@@ -195,7 +195,7 @@ bool scrabbleCmd(const char *nickname, char *command) {
 void run_game() {
 
     cur_state = RUNNING;
-    uint noWinner = 0;
+    u_int noWinner = 0;
 
     while (cur_state != HALTING) {
         char letters[wordlen], sortedLetters[wordlen];
@@ -270,7 +270,7 @@ void run_game() {
                 PINGed = false;
                 char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1, &param2, &paramtext);
-                if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, channel.c_str()) == 0)) {
+                if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, &channel[0]) == 0)) {
                     irc_stripcodes(paramtext);
                     while (isspace(*paramtext)) paramtext++;
                     if (*paramtext == 0) continue;
@@ -322,7 +322,7 @@ void run_game() {
             while (irc_recv(line)) {
                 char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1, &param2, &paramtext);
-                if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, channel.c_str()) == 0)) {
+                if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, &channel[0]) == 0)) {
                     irc_stripcodes(paramtext);
                     while (isspace(*paramtext)) paramtext++;
                     if (*paramtext == 0) continue;

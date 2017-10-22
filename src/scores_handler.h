@@ -17,9 +17,9 @@ void read_top(Top *top, string & value);
 
 void read_tops();
 
-void get_scores(const string & nickname, ulong *year, ulong *week);
+void get_scores(const string & nickname, u_long *year, u_long *week);
 
-void set_scores(const string & nickname, ulong year, ulong week);
+void set_scores(const string & nickname, u_long year, u_long week);
 
 void clear_week_scores();
 

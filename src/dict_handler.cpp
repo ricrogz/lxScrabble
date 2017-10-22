@@ -20,7 +20,7 @@ void addWord(const string &word) {
 
     char letters[word.length() + 1];
     letters[word.length()] = '\0';
-    sortLetters(word.c_str(), letters);
+    sortLetters(&word[0], letters);
     struct Cell **cell = &dictionary;
     char *scan = letters;
     char ch = *scan;
@@ -45,7 +45,7 @@ void addWord(const string &word) {
     }
     size_t wordsCount = (*cell)->wordsCount++;
     (*cell)->words = (char *) realloc((*cell)->words, (wordsCount + 1) * len);
-    strcpy(&(*cell)->words[wordsCount * len], word.c_str());
+    strcpy(&(*cell)->words[wordsCount * len], &word[0]);
 }
 
 void readDictionary(const string &filename) {
@@ -70,7 +70,7 @@ void readDictionary(const string &filename) {
         if (wordlen < word.length()) continue;
         strupr(&word[0]);
 
-        if (strspn(word.c_str(), distrib.c_str()) != word.length()) {
+        if (strspn(&word[0], &distrib[0]) != word.length()) {
             cerr << "Invalid dictionary entry: " << word << endl;
             cerr << "(contains lowercase letters or symbols not in the valid distribution)" << endl;
             halt(3);

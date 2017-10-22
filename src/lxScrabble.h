@@ -29,7 +29,7 @@ struct Cell {
 
 struct Top {
     string nick;
-    ulong score;
+    u_long score;
 };
 
 enum run_state {
@@ -37,7 +37,7 @@ enum run_state {
 };
 
 extern size_t wordlen;
-extern ulong bonus;
+extern u_long bonus;
 extern string distrib;
 extern string dict_file;
 extern struct Cell *dictionary;
@@ -62,10 +62,10 @@ extern string ident;
 extern string fullname;
 extern string channelkey;
 extern string perform;
-extern uint cfg_clock;
-extern uint cfg_warning;
-extern uint cfg_after;
-extern uint autostop;
+extern u_int cfg_clock;
+extern u_int cfg_warning;
+extern u_int cfg_after;
+extern u_int autostop;
 extern bool autovoice;
 
 void halt(int stat_code);

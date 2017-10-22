@@ -49,9 +49,9 @@ void read_top(Top *top, vector<string> &value) {
     clear_top(top);
     for (auto &row : value) {
         if (row.empty()) break;
-        ulong separator = row.find(' ');
+        u_long separator = row.find(' ');
         top->nick = row.substr(0, separator);
-        top->score = (ulong) strtol(row.substr(separator + 1).c_str(), nullptr, 10);
+        top->score = (u_long) strtol(row.substr(separator + 1).c_str(), nullptr, 10);
         top++;
     }
 }
@@ -93,7 +93,7 @@ void write_tops() {
     score_add<string>("Top", "Year", value);
 }
 
-bool update_top(Top *top, const string & nickname, ulong score) {
+bool update_top(Top *top, const string & nickname, u_long score) {
     int newPos, index;
     for (newPos = 0; newPos < TOP_MAX; newPos++)
         if (score >= top[newPos].score)
@@ -109,14 +109,14 @@ bool update_top(Top *top, const string & nickname, ulong score) {
     return true;
 }
 
-void get_scores(const string & nickname, ulong *year, ulong *week) {
+void get_scores(const string & nickname, u_long *year, u_long *week) {
     char *scan;
     string value = score_get<string>("Scores", "x" + nickname, "0 0");
     *year = strtoul(value.c_str(), &scan, 10);
     *week = strtoul(scan, &scan, 10);
 }
 
-void set_scores(const string & nickname, ulong year, ulong week) {
+void set_scores(const string & nickname, u_long year, u_long week) {
     string value = to_string(year) + " " + to_string(week);
     score_add<string>("Scores", "x" + nickname, value);
     bool updated = update_top(topWeek, nickname, week);
@@ -128,7 +128,7 @@ void set_scores(const string & nickname, ulong year, ulong week) {
 void clear_week_scores() {
     for (auto & player : scorep["Scores"]) {
         string score = player.get<string>();
-        ulong len = score.find(' ');
+        u_long len = score.find(' ');
         player.set<string>(score.substr(0, len) + '0');
     }
     clear_top(topWeek);
