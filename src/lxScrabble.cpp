@@ -11,6 +11,7 @@
 #include "scores_handler.h"
 #include "game.h"
 
+bool list_failed_words = false;
 size_t wordlen;
 u_long bonus;
 string distrib;
@@ -120,7 +121,7 @@ void gentle_terminator(int) {
 }
 
 void setup_interrupt_catcher() {
-    struct sigaction sigIntHandler;
+    struct sigaction sigIntHandler = {nullptr};
 
     sigIntHandler.sa_handler = gentle_terminator;
     sigemptyset(&sigIntHandler.sa_mask);
@@ -133,6 +134,11 @@ int main(int argc, char *argv[]) {
     // Show banner, initialize random number generator
     cout << BOTFULLNAME << endl;
     srand((unsigned) time(nullptr));
+
+    // Detect --list parameter
+    for (int i = 0; i < argc; i++) {
+        list_failed_words = strcmp("--list", argv[i]) == 0;
+    }
 
     // Setup a handler to catch interrupt signals;
     setup_interrupt_catcher();

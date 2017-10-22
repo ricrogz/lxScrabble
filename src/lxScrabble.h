@@ -36,6 +36,7 @@ enum run_state {
     RUNNING, STOPPED, HALTING
 };
 
+extern bool list_failed_words;
 extern size_t wordlen;
 extern u_long bonus;
 extern string distrib;

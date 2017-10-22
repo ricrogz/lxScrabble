@@ -55,6 +55,8 @@ void readDictionary(const string &filename) {
         halt(3);
     }
     string word;
+    size_t total_words = 0;
+    size_t imported_words = 0;
     while (!stream.eof()) {
         getline(stream, word);
 
@@ -65,19 +67,41 @@ void readDictionary(const string &filename) {
             while (*&word[l - 1] == c)
                 *&word[l--] = '\0';
 
-        // Skip if word is empty or too long
+        // Skip if line is empty
         if (0 == word.length()) continue;
-        if (wordlen < word.length()) continue;
-        strupr(&word[0]);
 
-        if (strspn(&word[0], &distrib[0]) != word.length()) {
-            cerr << "Invalid dictionary entry: " << word << endl;
-            cerr << "(contains lowercase letters or symbols not in the valid distribution)" << endl;
-            halt(3);
+        total_words++;
+
+        // Skip too long words
+        if (wordlen < word.length()) {
+            if (list_failed_words)
+                printf("%s -- word is too long for configured wordlen (%lu)\n", &word[0], wordlen);
+            continue;
+        }
+
+        // Make uppercase and check for invalid characters
+        strupr(&word[0]);
+        size_t valid_length;
+        if ((valid_length = strspn(&word[0], &distrib[0])) != word.length()) {
+            printf("%s -- word contains invalid character '%c'\n", &word[0], word.at(valid_length));
+            continue;
         }
         addWord(word);
+        imported_words ++;
     }
     stream.close();
+
+    // Report imported words
+    printf("Imported %lu/%lu words.", imported_words, total_words);
+    if (! list_failed_words)
+        cout << "To list failed words, execute with --list parameter.";
+    cout << endl;
+
+    // Exit if no words could be imported
+    if (imported_words == 0) {
+        cerr << "ERROR: No words were imported, game cannot continue." << endl;
+        halt(1);
+    }
 }
 
 void findWords(const struct Cell *cell, const char *letters, size_t len) {
