@@ -2,10 +2,18 @@
 // Created by invik on 17/10/17.
 //
 
-#include "lxScrabble.h"
 
 #ifndef WSCRABBLE_DICT_HANDLER_H
 #define WSCRABBLE_DICT_HANDLER_H
+
+#include "lxScrabble.h"
+
+struct dict_stats {
+    size_t too_long = 0;
+    size_t wrong_symbols = 0;
+    size_t loaded= 0;
+    size_t total = 0;
+};
 
 void sortLetters(const char *letters, char *sortedLetters);
 
