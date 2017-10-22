@@ -8,7 +8,7 @@ inline int compare_char(const void* a, const void* b) {
     return *(u_char*)a - *(u_char*)b;
 }
 
-inline void sortLetters(const char *letters, char *sortedLetters) {
+void sortLetters(const char *letters, char *sortedLetters) {
     size_t len = strlen(letters);
     strncpy(sortedLetters, letters, len);
     qsort((void*)sortedLetters, len, sizeof(char), compare_char);
