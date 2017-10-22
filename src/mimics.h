@@ -8,17 +8,38 @@
 #define NONLATIN_LCASE "ñç"
 #define NONLATIN_UCASE "ÑÇ"
 
-
 #include <string>
+#include <cstring>
+#include <unistd.h>
+#include <sys/stat.h>
 
-bool is_valid_char(char c);
 
-void strupr(std::string &str);
+inline bool is_valid_char(char c) {
+    return  isascii(c) || strchr(NONLATIN_LCASE, c) || strchr(NONLATIN_UCASE, c);
+}
 
-char* strupr(char* s);
 
-void msleep(ulong t);
+inline char* strupr(char* s) {
+    char *pch;
+    char *tmp = s;
+    char lcases[] = NONLATIN_LCASE;
+    for (;*tmp;++tmp) {
+        if (isalpha(*tmp)) *tmp = (char)toupper(*tmp);
+        else if ((pch = strchr(lcases, *tmp)) != nullptr) {
+            size_t p = lcases - pch;
+            *tmp = NONLATIN_UCASE[p];
+        }
+    }
+    return s;
+}
 
-bool fexists (const std::string & name);
+inline void msleep(ulong t) {
+    usleep((__useconds_t)t * 1000);
+}
+
+inline bool fexists (const std::string & name) {
+    struct stat buffer = {0};
+    return (stat (name.c_str(), &buffer) == 0);
+}
 
 #endif //LXSCRABBLE_MIMICS_H

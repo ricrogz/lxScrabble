@@ -2,10 +2,10 @@
 // Created by invik on 17/10/17.
 //
 
-#include "lxScrabble.h"
-
 #ifndef WSCRABBLE_IRC_H
 #define WSCRABBLE_IRC_H
+
+#include "lxScrabble.h"
 
 #define IRC_BOLD "\x002"
 #define IRC_COLOR "\x003"
@@ -57,10 +57,5 @@ void irc_send(const string & text);
 void irc_send(char ch);
 
 void irc_send(int value);
-
-extern bool irc_blackAndWhite;
-extern string channel;
-extern string owner;
-extern bool anyoneCanStop;
 
 #endif //WSCRABBLE_IRC_H

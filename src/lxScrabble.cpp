@@ -5,19 +5,11 @@
 
 #include "lxScrabble.h"
 
-#include <signal.h>
+#include <csignal>
 
 #include "dict_handler.h"
 #include "scores_handler.h"
 #include "game.h"
-
-/*
- * TODO: cambiar de ini parser. inih no escribe.
- *
- * Probar inicpp https://github.com/SemaiCZE/inicpp
- *
- */
-
 
 size_t wordlen;
 ulong bonus;
@@ -32,18 +24,40 @@ size_t maxWordLen;
 size_t dispMaxWords;
 char dispMaxWordsString[1024];
 run_state cur_state;
+config cfgp;
+string servername;
+int port;
+string server_pass;
+string altnickname;
+string ident;
+string fullname;
+string channelkey;
+string perform;
+vector<string> owner;
+uint cfg_clock;
+uint cfg_warning;
+uint cfg_after;
+uint autostop;
+bool autovoice;
 
 void halt(int stat_code) {
     exit(stat_code);
 }
 
 template<class T> T cfg(const string & section, const string & option, const T & default_value) {
-    static config cfgp = parser::load_file(INI_FILE);
     if (! cfgp.contains(section))
         cfgp.add_section(section);
     if (! cfgp[section].contains(option))
         cfgp[section].add_option(option, (T) default_value);
     return cfgp[section][option].get<T>();
+}
+
+template<class T> vector<T> cfg_get_list(const string &section, const string &option, const T &default_value) {
+    if (! cfgp.contains(section))
+        cfgp.add_section(section);
+    if (! cfgp[section].contains(option))
+        cfgp[section].add_option(option, default_value);
+    return cfgp[section][option].get_list<T>();
 }
 
 void readIni() {
@@ -54,6 +68,7 @@ void readIni() {
         cerr << endl << endl;
         halt(1);
     }
+    cfgp = parser::load_file(INI_FILE);
 
     // Game settings
     wordlen = cfg<size_t>("Settings", "wordlen", 12);
@@ -64,6 +79,40 @@ void readIni() {
                          "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOO"
                                  "PPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ");
     dict_file = cfg<string>("Settings", "dictionary", "english.dic");
+
+    /* Read cfg with global reader */
+
+    // Connection data
+    servername = cfg<string>("IRC", "Server", DEFAULT_SERVER);
+    if (strcmp(servername.c_str(), "<IRC SERVER HOSTNAME>") == 0) {
+        cerr << endl << "Configure lxScrabble.ini first !!" << endl;
+        halt(2);
+    }
+    port = (int) cfg<unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
+
+    // IRC parameters
+    bot_nick = cfg<string>("IRC", "Nick", DEFAULT_NICK);
+    server_pass = cfg<string>("IRC", "Password", "");
+    altnickname = cfg<string>("IRC", "ANick", DEFAULT_ANICK);
+    ident = cfg<string>("IRC", "Ident", DEFAULT_IDENT);
+    fullname = cfg<string>("IRC", "Fullname", BOTFULLNAME);
+
+    // Channel
+    channel = cfg<string>("IRC", "Channel", DEFAULT_CHANNEL);
+    channelkey = cfg<string>("IRC", "ChannelKey", DEFAULT_CHANNEL_KEY);
+
+    // Other configs
+    irc_blackAndWhite = (bool) cfg<unsigned_ini_t>("IRC", "BlackAndWhite", 0);
+    anyoneCanStop = (bool) cfg<unsigned_ini_t>("IRC", "AnyoneCanStop", 0);
+    perform = cfg<string>("IRC", "Perform", "");
+    owner = cfg_get_list<string>("IRC", "Owner", "");
+
+    // Game parameters
+    cfg_clock = (uint) cfg<unsigned_ini_t>("Delay", "max", 40) * 10;
+    cfg_warning = (uint) cfg<unsigned_ini_t>("Delay", "warning", 30) * 10;
+    cfg_after = (uint) cfg<unsigned_ini_t>("Delay", "after", 30) * 10;
+    autostop = (uint) cfg<unsigned_ini_t>("Settings", "autostop", 3);
+    autovoice = (bool) cfg<unsigned_ini_t>("Settings", "autovoice", 1);
 }
 
 void gentle_terminator(int) {

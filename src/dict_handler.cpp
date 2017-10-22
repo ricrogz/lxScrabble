@@ -4,24 +4,14 @@
 
 #include "dict_handler.h"
 
+inline int compare_char(const void* a, const void* b) {
+    return *(u_char*)a - *(u_char*)b;
+}
 
-void sortLetters(const char *letters, char *sortedLetters) {
-    char *scan = sortedLetters;
-    char ch;
-    sortedLetters[0] = (unsigned char)255;
-
-    // TODO: improve this, use quicksort
-    while ((ch = *letters++) != '\0') {
-        scan = sortedLetters;
-        while ((int)ch >= (int)*scan) scan++;
-        char ch2;
-        do {
-            ch2 = *scan;
-            *scan++ = ch;
-        } while ((int)(ch = ch2) != 255);
-        *scan = (unsigned char)255;
-    }
-    *scan = 0;
+inline void sortLetters(const char *letters, char *sortedLetters) {
+    size_t len = strlen(letters);
+    strncpy(sortedLetters, letters, len);
+    qsort((void*)sortedLetters, len, sizeof(char), compare_char);
 }
 
 void addWord(const string &word) {
@@ -67,6 +57,15 @@ void readDictionary(const string &filename) {
     string word;
     while (!stream.eof()) {
         getline(stream, word);
+
+        // Remove whitespace at end
+        char forbidden[] = " \r\n";
+        size_t l = word.length();
+        for (auto c : forbidden)
+            while (*&word[l - 1] == c)
+                *&word[l--] = '\0';
+
+        // Skip if word is empty or too long
         if (0 == word.length()) continue;
         if (wordlen < word.length()) continue;
         strupr(&word[0]);

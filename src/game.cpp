@@ -108,14 +108,9 @@ bool checkWord(const char *availableLetters, const char *word) {
 }
 
 bool is_owner(const string &nickname) {
-    const char *scan = strcasestr(owner.c_str(), nickname.c_str());
-    if (scan != nullptr) {
-        if ((scan == owner) || (scan[-1] == ',')) {
-            scan += nickname.length();
-            if ((*scan == '\0') || (*scan == ','))
-                return true;
-        }
-    }
+    for (auto & o : owner)
+        if (strcasecmp(&o[0], &nickname[0]) == 0)
+            return true;
     return false;
 }
 
@@ -201,13 +196,6 @@ void run_game() {
 
     cur_state = RUNNING;
     uint noWinner = 0;
-
-    // Use global cfg reader to read cfg
-    uint cfg_clock = (uint) cfg<unsigned_ini_t>("Delay", "max", 40) * 10;
-    uint cfg_warning = (uint) cfg<unsigned_ini_t>("Delay", "warning", 30) * 10;
-    uint cfg_after = (uint) cfg<unsigned_ini_t>("Delay", "after", 30) * 10;
-    uint autostop = (uint) cfg<unsigned_ini_t>("Settings", "autostop", 3);
-    bool autovoice = (bool) cfg<unsigned_ini_t>("Settings", "autovoice", 1);
 
     while (cur_state != HALTING) {
         char letters[wordlen], sortedLetters[wordlen];

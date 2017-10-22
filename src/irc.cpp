@@ -8,7 +8,6 @@
 #include <sys/ioctl.h>
 #include <netinet/in.h>
 #include <netdb.h>
-#include <unistd.h>
 #include <cstdarg>
 
 int irc_socket;
@@ -16,7 +15,6 @@ char irc_buffer[8193];
 size_t irc_bufLen = 0;
 bool irc_blackAndWhite;
 bool anyoneCanStop;
-string owner;
 string channel;
 string bot_nick;
 
@@ -277,34 +275,6 @@ void irc_sendnotice(const string &dest) {
 
 void irc_connect() {
 
-    /* Read cfg with global reader */
-
-    // Connection data
-    string servername = cfg<string>("IRC", "Server", DEFAULT_SERVER);
-    // TODO: is this really necessary? -- remove it
-    if (strcmp(servername.c_str(), "<IRC SERVER HOSTNAME>") == 0) {
-        cerr << endl << "Configure lxScrabble.ini first !!" << endl;
-        halt(2);
-    }
-    int port = (int) cfg<unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
-
-    // IRC parameters
-    bot_nick = cfg<string>("IRC", "Nick", DEFAULT_NICK);
-    string server_pass = cfg<string>("IRC", "Password", "");
-    string altnickname = cfg<string>("IRC", "ANick", DEFAULT_ANICK);
-    string ident = cfg<string>("IRC", "Ident", DEFAULT_IDENT);
-    string fullname = cfg<string>("IRC", "Fullname", BOTFULLNAME);
-
-    // Channel
-    channel = cfg<string>("IRC", "Channel", DEFAULT_CHANNEL);
-    string channelkey = cfg<string>("IRC", "ChannelKey", DEFAULT_CHANNEL_KEY);
-
-    // Other configs
-    irc_blackAndWhite = (bool) cfg<unsigned_ini_t>("IRC", "BlackAndWhite", 0);
-    anyoneCanStop = (bool) cfg<unsigned_ini_t>("IRC", "AnyoneCanStop", 0);
-    string perform = cfg<string>("IRC", "Perform", "");
-    owner = cfg<string>("IRC", "Owner", "");
-
     // Prepare socket & connect
     init_socket();
     irc_connect(servername, port, server_pass, bot_nick, altnickname, ident, "localhost", fullname);
@@ -332,7 +302,7 @@ void irc_stripcodes(char *text) {
         } else if (is_valid_char(ch))
             *text++ = ch;
     }
-    *text++ = 0;
+    *text++ = 0;  // Set null terminator
 }
 
 void irc_disconnect() {

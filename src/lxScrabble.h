@@ -50,6 +50,23 @@ extern size_t dispMaxWords;
 extern char dispMaxWordsString[];
 extern run_state cur_state;
 extern string bot_nick;
+extern bool irc_blackAndWhite;
+extern string channel;
+extern vector<string> owner;
+extern bool anyoneCanStop;
+extern string servername;
+extern int port;
+extern string server_pass;
+extern string altnickname;
+extern string ident;
+extern string fullname;
+extern string channelkey;
+extern string perform;
+extern uint cfg_clock;
+extern uint cfg_warning;
+extern uint cfg_after;
+extern uint autostop;
+extern bool autovoice;
 
 void halt(int stat_code);
 
