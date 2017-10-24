@@ -6,6 +6,9 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall")
 # add_definitions(-DCHEAT)
 # add_definitions(-DOFFLINE)
 
+# Statically link libraries
+SET(CMAKE_FIND_LIBRARY_SUFFIXES ".a")
+
 set(SOURCE_FILES
         src/lxScrabble.cpp
         src/dict_handler.cpp
@@ -18,11 +21,12 @@ set(SOURCE_FILES
 
 add_executable(lxScrabble ${SOURCE_FILES})
 
+
 #################################
 
 find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIRS})
-target_link_libraries(lxScrabble libncursesw.a)
+target_link_libraries(lxScrabble ${CURSES_LIBRARY_DIR})
 
 #################################
 
