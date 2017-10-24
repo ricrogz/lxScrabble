@@ -109,7 +109,7 @@ bool update_top(Top *top, const string & nickname, u_long score) {
             break;
 
     // Push tops down to make space
-    for (; index >= newPos; index--) {
+    for (; index > newPos; index--) {
         top[index + 1].nick = top[index].nick;
         top[index + 1].score = top[index].score;
     }
