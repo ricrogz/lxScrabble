@@ -91,6 +91,7 @@ Any of the options, except **Server**, can be disabled by putting a semicolon ('
     * **max**: maximum total duration, in seconds, of each game (the game may finish early if any player finds a word of the maximum possible length).
     * **warning**: Show a warning about time running out this time after a game's start.
     * **after**: time to wait after a game finishes to start next one.
+    * **reannounce**: after this number of secons without channel messages, the bot reannounces itself when someone joins the channel. Disable with 0 or negative values.
 
 1. **Section \[Strings\]**
 The options and strings in this section enumerate the format strings that will be used by the program to signal different events. Customize these strings i.e. to translate the game into other languages. Please respect these two rules, or the game may not work properly:

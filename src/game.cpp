@@ -337,7 +337,6 @@ void run_game() {
                 } else if (reannounce > 0 && (strcmp(cmd, "JOIN") == 0) && (strcasecmp(paramtext, &channel[0]) == 0)) {
                     time_t now = time(nullptr);
                     if (now - last_msg > reannounce) show_about();
-                    last_msg = now;
                 }
             }
         } while (((cur_state == RUNNING) && tclock--) || (tclock = 0, cur_state == STOPPED));
