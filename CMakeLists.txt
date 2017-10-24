@@ -1,4 +1,3 @@
-# cmake_minimum_required(VERSION <specify CMake version here>)
 cmake_minimum_required(VERSION 2.5)
 project(lxScrabble)
 
@@ -23,12 +22,12 @@ add_executable(lxScrabble ${SOURCE_FILES})
 
 find_package(Curses REQUIRED)
 include_directories(${CURSES_INCLUDE_DIRS})
-target_link_libraries(lxScrabble ${CURSES_LIBRARIES})
+target_link_libraries(lxScrabble libncursesw.a)
 
 #################################
 
 include_directories(dependencies/inicpp/include)
-target_link_libraries(lxScrabble inicpp)
+target_link_libraries(lxScrabble inicpp_static)
 add_subdirectory(dependencies/inicpp)
 
 #################################

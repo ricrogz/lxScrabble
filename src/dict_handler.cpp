@@ -29,7 +29,7 @@ void addWord(const string &word) {
     while (ch) {
         len++;
         for (;;) {
-            if ((*cell == nullptr) || ((*cell)->letter > ch)) {
+            if ((*cell == nullptr) || ((u_char)(*cell)->letter > (u_char)ch)) {
                 auto *newcell = (struct Cell *) malloc(sizeof(struct Cell));
                 newcell->other = *cell;
                 newcell->longer = nullptr;
@@ -56,7 +56,7 @@ void readDictionary(const string &filename) {
         halt(3);
     }
     string word;
-    struct dict_stats words;
+    struct dict_stats words = {0};
     while (!stream.eof()) {
         getline(stream, word);
 
@@ -75,7 +75,7 @@ void readDictionary(const string &filename) {
         // Skip too long words
         if (wordlen < word.length()) {
             if (list_failed_words)
-                printf("%s -- word is too long for configured wordlen (%lu)\n", &word[0], wordlen);
+                printf("%s -- word is too long for configured wordlen (%lu)\n", &word[0], (u_long)wordlen);
             words.too_long++;
             continue;
         }
@@ -95,10 +95,10 @@ void readDictionary(const string &filename) {
     stream.close();
 
     // Report imported words
-    printf("Read %lu words:\n", words.total);
-    printf("  %8lu too long (> %lu letters).\n", words.too_long, wordlen);
-    printf("  %8lu with invalid symbols.\n", words.wrong_symbols);
-    printf("  %8lu valid words.\n", words.loaded);
+    printf("Read %lu words:\n", (u_long)words.total);
+    printf("  %8lu too long (> %lu letters).\n", (u_long)words.too_long, (u_long)wordlen);
+    printf("  %8lu with invalid symbols.\n", (u_long)words.wrong_symbols);
+    printf("  %8lu valid words.\n", (u_long)words.loaded);
     if (! list_failed_words)
         cout << "To list invalid words, execute with --list parameter.";
     cout << endl;
@@ -111,36 +111,44 @@ void readDictionary(const string &filename) {
 }
 
 void findWords(const struct Cell *cell, const char *letters, size_t len) {
+
+    // Get next letter
     char ch = *letters++;
-    while (cell && (cell->letter < ch)) cell = cell->other;
-    if (cell) {
-        if (cell->letter == ch) {
-            if (cell->wordsCount) {
-                if (dispMaxWords) {
-                    if (len == dispMaxWords) {
-                        maxWordLen = len;
-                        for (size_t index = 0; index < cell->wordsCount; index++) {
-                            strcat(dispMaxWordsString, " - ");
-                            strcat(dispMaxWordsString, cell->words + (len + 1) * index);
-                        }
+
+    // Advance to the cell matching current letter
+    while (cell && ((u_char)cell->letter < (u_char)ch))
+        cell = cell->other;
+
+    // If no cell, exit
+    if (! cell) return;
+
+    // Explore cell
+    if (cell->letter == ch) {
+        if (cell->wordsCount) {
+            if (dispMaxWords) {
+                if (len == dispMaxWords) {
+                    maxWordLen = len;
+                    for (size_t index = 0; index < cell->wordsCount; index++) {
+                        strcat(dispMaxWordsString, " - ");
+                        strcat(dispMaxWordsString, cell->words + (len + 1) * index);
                     }
-                } else {
-                    foundWords += cell->wordsCount;
-                    if (len > maxWordLen) {
-                        foundMaxWords = cell->wordsCount;
-                        maxWordLen = len;
-                    } else if (len == maxWordLen)
-                        foundMaxWords += cell->wordsCount;
                 }
+            } else {
+                foundWords += cell->wordsCount;
+                if (len > maxWordLen) {
+                    foundMaxWords = cell->wordsCount;
+                    maxWordLen = len;
+                } else if (len == maxWordLen)
+                    foundMaxWords += cell->wordsCount;
             }
-            if ((*letters != 0) && cell->longer) {
-                findWords(cell->longer, letters, len + 1);
-            }
-            while (*letters == ch) letters++;
         }
-        if (*letters != 0)
-            findWords(cell, letters, len);
+        if ((*letters != '\0') && cell->longer) {
+            findWords(cell->longer, letters, len + 1);
+        }
+        while (*letters == ch) letters++;
     }
+    if (*letters != '\0')
+        findWords(cell, letters, len);
 }
 
 void findWords(const char *letters) {

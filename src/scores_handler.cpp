@@ -95,15 +95,26 @@ void write_tops() {
 
 bool update_top(Top *top, const string & nickname, u_long score) {
     int newPos, index;
+    // Find where to insert new score
     for (newPos = 0; newPos < TOP_MAX; newPos++)
         if (score >= top[newPos].score)
             break;
-    if (newPos == TOP_MAX) return false; // le score n'entre pas dans le top
+
+    // Score did not make it into the top
+    if (newPos == TOP_MAX) return false;
+
+    // Check if player was already in the top, or top is not filled
     for (index = newPos; index < TOP_MAX - 1; index++)
         if (top[index].nick == nickname || top[index].nick == "---")
-            break; // le nom etait déjà dans le top
-    // 0 1 2 3 4 5 6 7 8 9
-    memmove(&top[newPos + 1], &top[newPos], (index - newPos) * sizeof(Top));
+            break;
+
+    // Push tops down to make space
+    for (; index >= newPos; index--) {
+        top[index + 1].nick = top[index].nick;
+        top[index + 1].score = top[index].score;
+    }
+
+    // Finally, insert new top score
     top[newPos].nick = nickname;
     top[newPos].score = score;
     return true;
