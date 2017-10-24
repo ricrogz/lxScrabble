@@ -68,6 +68,7 @@ extern u_int cfg_warning;
 extern u_int cfg_after;
 extern u_int autostop;
 extern bool autovoice;
+extern long reannounce;
 
 void halt(int stat_code);
 

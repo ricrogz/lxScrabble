@@ -39,6 +39,7 @@ u_int cfg_warning;
 u_int cfg_after;
 u_int autostop;
 bool autovoice;
+long reannounce;
 
 void halt(int stat_code) {
     exit(stat_code);
@@ -113,6 +114,7 @@ void readIni() {
     cfg_after = (u_int) cfg<unsigned_ini_t>("Delay", "after", 30) * 10;
     autostop = (u_int) cfg<unsigned_ini_t>("Settings", "autostop", 3);
     autovoice = (bool) cfg<unsigned_ini_t>("Settings", "autovoice", 1);
+    reannounce = (long) cfg<unsigned_ini_t>("Delay", "reannounce", 300);
 }
 
 void gentle_terminator(int) {

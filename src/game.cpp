@@ -9,6 +9,8 @@
 
 string lastWinner;
 u_long winInARow;
+time_t last_msg;  // Updates on last channel msg, when not playing
+
 
 void show_about() {
     char buffer[sizeof(ADVERTISE)];
@@ -175,6 +177,7 @@ bool scrabbleCmd(const char *nickname, char *command) {
         if (cur_state == RUNNING) {
             irc_sendmsg(channel);
             irc_sendformat(true, "Stop", "%s has stopped the game.", nickname);
+            last_msg = time(nullptr);
         }
         cur_state = STOPPED;
     } else if (isOwner) {
@@ -245,6 +248,7 @@ void run_game() {
                     irc_sendmsg(channel);
                     irc_sendformat(true, "GameOver", "[Game is over. Type !start to restart it.]");
                     cur_state = STOPPED;
+                    last_msg = time(nullptr);
                 }
                 break;
             }
@@ -323,10 +327,17 @@ void run_game() {
                 char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1, &param2, &paramtext);
                 if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, &channel[0]) == 0)) {
+                    last_msg = time(nullptr);
                     irc_stripcodes(paramtext);
                     while (isspace(*paramtext)) paramtext++;
                     if (*paramtext == 0) continue;
                     scrabbleCmd(nickname, paramtext);
+
+                // Reanounce on JOIN after x time without noone talking
+                } else if (reannounce > 0 && (strcmp(cmd, "JOIN") == 0) && (strcasecmp(paramtext, &channel[0]) == 0)) {
+                    time_t now = time(nullptr);
+                    if (now - last_msg > reannounce) show_about();
+                    last_msg = now;
                 }
             }
         } while (((cur_state == RUNNING) && tclock--) || (tclock = 0, cur_state == STOPPED));
