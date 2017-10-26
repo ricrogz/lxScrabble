@@ -311,6 +311,8 @@ void run_game() {
                     }
                 }
             }
+
+            // Keep alive
             if (!PINGed && (clock() - lastRecvTicks > 15000)) {
                 sprintf(line, "%.8X", (rand() << 16) | rand());
                 irc_sendline("PING :" + (string) line);
@@ -321,9 +323,13 @@ void run_game() {
             }
         } while ((cur_state == RUNNING) && tclock);
         tclock = cfg_after;
+        lastRecvTicks = clock();
+        PINGed = false;
         do {
             msleep(100);
             while (irc_recv(line)) {
+                lastRecvTicks = clock();
+                PINGed = false;
                 char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1, &param2, &paramtext);
                 if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, &channel[0]) == 0)) {
@@ -338,6 +344,16 @@ void run_game() {
                     time_t now = time(nullptr);
                     if (now - last_msg > reannounce) show_about();
                 }
+            }
+
+            // Keep alive
+            if (!PINGed && (clock() - lastRecvTicks > 15000)) {
+                sprintf(line, "%.8X", (rand() << 16) | rand());
+                irc_sendline("PING :" + (string) line);
+                PINGed = true;
+            } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
+                irc_disconnect();
+                game_loop();
             }
         } while (((cur_state == RUNNING) && tclock--) || (tclock = 0, cur_state == STOPPED));
     }
