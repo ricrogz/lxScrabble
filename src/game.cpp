@@ -76,7 +76,7 @@ bool isWord(const char *letters, const char *word) {
     char ch = *letters++;
     const struct Cell *cell = dictionary;
     do {
-        while (cell && (cell->letter < ch)) cell = cell->other;
+        while (cell && ((u_char)cell->letter < (u_char)ch)) cell = cell->other;
         if (!cell) return false;
         if (cell->letter == ch) {
             ch = *letters++;

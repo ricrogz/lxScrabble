@@ -18,7 +18,6 @@ inline bool is_valid_char(char c) {
     return  isascii(c) || strchr(NONLATIN_LCASE, c) || strchr(NONLATIN_UCASE, c);
 }
 
-
 inline char* strupr(char* s) {
     char *pch;
     char *tmp = s;
