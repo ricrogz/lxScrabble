@@ -7,6 +7,7 @@
 
 #define INI_FILE "lxScrabble.ini"
 
+#include <stdlib.h>
 #include <cstddef>
 #include <string>
 #include <iostream>

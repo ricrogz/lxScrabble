@@ -177,7 +177,7 @@ bool scrabbleCmd(const char *nickname, char *command) {
         if (cur_state == RUNNING) {
             irc_sendmsg(channel);
             irc_sendformat(true, "Stop", "%s has stopped the game.", nickname);
-            last_msg = time(nullptr);
+             time(&last_msg);
         }
         cur_state = STOPPED;
     } else if (isOwner) {
@@ -220,7 +220,8 @@ void run_game() {
         displayMaxWords(sortedLetters, maxWordLen);
         cout << dispMaxWordsString + 3 << endl;
 #endif
-        time_t t = time(nullptr);
+        time_t t;
+        time(&t);
         struct tm *systemTime = localtime(&t);
         int lastDayOfWeek = systemTime->tm_wday;
         int lastHour = systemTime->tm_hour;
@@ -248,14 +249,32 @@ void run_game() {
                     irc_sendmsg(channel);
                     irc_sendformat(true, "GameOver", "[Game is over. Type !start to restart it.]");
                     cur_state = STOPPED;
-                    last_msg = time(nullptr);
+                    time(&last_msg);
                 }
                 break;
             }
             msleep(100);
 
-            t = time(nullptr);
+            time(&t);
+
+            /*
+             * SIGSEGV here:
+             * Program received signal SIGSEGV, Segmentation fault.
+             * __GI_getenv (name=0x7fb7dd7c9a "", name@entry=0x7fb7dd7c98 "TZ") at getenv.c:84
+             * 84      getenv.c: No such file or directory.
+             * (gdb) where
+             * #0  __GI_getenv (name=0x7fb7dd7c9a "", name@entry=0x7fb7dd7c98 "TZ") at getenv.c:84
+             * #1  0x0000007fb7d4a5e0 in tzset_internal (always=<optimized out>, explicit=explicit@entry=1) at tzset.c:407
+             * #2  0x0000007fb7d4a990 in __tz_convert (timer=0x7fffffe3b0, use_localtime=1, tp=0x7fb7e02df0 <_tmbuf>) at tzset.c:621
+             * #3  0x00000000004ca514 in run_game () at /home/invik/lxScrabble/lxScrabble_git/src/game.cpp:258
+             * #4  0x00000000004cb258 in game_loop () at /home/invik/lxScrabble/lxScrabble_git/src/game.cpp:369
+             * #5  0x00000000004c006c in std::vector<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >, std::allocator<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > > >::emplace_back<std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> > >(std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >&&) (this=<error reading variable: Cannot access memory at address 0x7f00000078>,
+             *     __args#0=<unknown type in /home/invik/lxScrabble/lxScrabble_git/build_dbg/lxScrabble, CU 0x0, DIE 0x1966f>) at /usr/include/c++/6/bits/vector.tcc:96
+             * Backtrace stopped: previous frame inner to this frame (corrupt stack?)
+             */
+
             systemTime = localtime(&t);
+
             if (systemTime->tm_wday != lastDayOfWeek) {
                 if (systemTime->tm_wday == 1) { // we are now monday
                     irc_sendmsg(channel);
@@ -333,7 +352,7 @@ void run_game() {
                 char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1, &param2, &paramtext);
                 if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, &channel[0]) == 0)) {
-                    last_msg = time(nullptr);
+                    time(&last_msg);
                     irc_stripcodes(paramtext);
                     while (isspace(*paramtext)) paramtext++;
                     if (*paramtext == 0) continue;
@@ -341,7 +360,8 @@ void run_game() {
 
                 // Reanounce on JOIN after x time without noone talking
                 } else if (reannounce > 0 && (strcmp(cmd, "JOIN") == 0) && (strcasecmp(paramtext, &channel[0]) == 0)) {
-                    time_t now = time(nullptr);
+                    time_t now;
+                    time(&now);
                     if (now - last_msg > reannounce) show_about();
                 }
             }
