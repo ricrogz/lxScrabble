@@ -337,7 +337,7 @@ void run_game() {
                 irc_sendline("PING :" + (string) line);
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
-                irc_disconnect();
+                irc_close();
                 game_loop();
             }
         } while ((cur_state == RUNNING) && tclock);
@@ -372,7 +372,7 @@ void run_game() {
                 irc_sendline("PING :" + (string) line);
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
-                irc_disconnect();
+                irc_close();
                 game_loop();
             }
         } while (((cur_state == RUNNING) && tclock--) || (tclock = 0, cur_state == STOPPED));

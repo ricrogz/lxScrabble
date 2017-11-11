@@ -58,4 +58,6 @@ void irc_send(char ch);
 
 void irc_send(int value);
 
+void irc_close();
+
 #endif //WSCRABBLE_IRC_H

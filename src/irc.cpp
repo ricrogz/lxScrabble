@@ -333,3 +333,7 @@ void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDe
         send(irc_socket, "\n", 1, 0);
 #endif
 }
+
+void irc_close() {
+    close(irc_socket);
+}
