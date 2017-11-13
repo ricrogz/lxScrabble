@@ -140,7 +140,7 @@ void clear_week_scores() {
     for (auto & player : scorep["Scores"]) {
         string score = player.get<string>();
         u_long len = score.find(' ');
-        player.set<string>(score.substr(0, len) + ' 0');
+        player.set<string>(score.substr(0, len + 1) + '0');
     }
     clear_top(topWeek);
     write_tops();
