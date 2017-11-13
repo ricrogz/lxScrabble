@@ -275,6 +275,7 @@ void run_game() {
 
             systemTime = localtime(&t);
 
+            // Weekly score reset
             if (systemTime->tm_wday != lastDayOfWeek) {
                 if (systemTime->tm_wday == 1) { // we are now monday
                     irc_sendmsg(channel);
@@ -283,6 +284,8 @@ void run_game() {
                 }
                 lastDayOfWeek = systemTime->tm_wday;
             }
+
+            // Announce bot banner
             if (systemTime->tm_hour != lastHour) {
                 show_about();
                 lastHour = systemTime->tm_hour;
