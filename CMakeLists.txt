@@ -24,7 +24,7 @@ add_executable(lxScrabble ${SOURCE_FILES})
 
 #################################
 
-find_package(Curses REQUIRED)
+find_package(Curses)
 include_directories(${CURSES_INCLUDE_DIRS})
 target_link_libraries(lxScrabble ${CURSES_LIBRARY_DIR})
 
