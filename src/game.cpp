@@ -262,6 +262,8 @@ void run_game() {
 
         } while (((cur_state == RUNNING) && tclock--) || (tclock = 0, cur_state == STOPPED));
 
+        // Check if quitting
+        if (cur_state == QUITTING) return;
 
         /*
          * Start a new round: pick letters, find words, print letters & stats
