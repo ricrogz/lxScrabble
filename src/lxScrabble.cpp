@@ -123,13 +123,13 @@ void gentle_terminator(int) {
 }
 
 void setup_interrupt_catcher() {
-    struct sigaction sigIntHandler = {nullptr};
+    struct sigaction sigTermHandler = {nullptr};
 
-    sigIntHandler.sa_handler = gentle_terminator;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
+    sigTermHandler.sa_handler = gentle_terminator;
+    sigemptyset(&sigTermHandler.sa_mask);
+    sigTermHandler.sa_flags = 0;
 
-    sigaction(SIGINT, &sigIntHandler, nullptr);
+    sigaction(SIGTERM, &sigTermHandler, nullptr);
 }
 
 int main(int argc, char *argv[]) {
