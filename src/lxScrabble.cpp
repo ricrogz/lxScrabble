@@ -119,7 +119,7 @@ void readIni() {
 
 void gentle_terminator(int) {
     cout << endl << "Terminating gently..." << endl;
-    cur_state = HALTING;
+    cur_state = QUITTING;
 }
 
 void setup_interrupt_catcher() {

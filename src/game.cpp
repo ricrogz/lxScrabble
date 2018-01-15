@@ -186,7 +186,7 @@ bool scrabbleCmd(const char *nickname, char *command) {
             irc_sendformat(true, "NewWeek", "A new week is beginning ! Resetting all week scores...");
             clear_week_scores();
         } else if (strncasecmp(command, &((string)"!quit " + bot_nick)[0], 6 + bot_nick.length()) == 0) {
-            cur_state = HALTING;
+            cur_state = QUITTING;
         } else if (strcasecmp(command, "!op") == 0) {
             irc_sendline("MODE " + channel + " +o " + nickname);
         } else
@@ -198,10 +198,75 @@ bool scrabbleCmd(const char *nickname, char *command) {
 
 void run_game() {
 
-    cur_state = RUNNING;
+    cur_state = STOPPED;
     u_int noWinner = 0;
 
-    while (cur_state != HALTING) {
+    while (cur_state != QUITTING) {
+
+        char line[1024];
+
+        int tclock = cfg_after;
+        bool PINGed = false;
+        clock_t lastRecvTicks = clock();
+
+        time_t t;
+        time(&t);
+        struct tm *systemTime = localtime(&t);
+        int lastDayOfWeek = systemTime->tm_wday;
+
+        do {
+            msleep(100);
+            while (irc_recv(line)) {
+                lastRecvTicks = clock();
+                PINGed = false;
+                char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;
+                irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1, &param2, &paramtext);
+                if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, &channel[0]) == 0)) {
+                    time(&last_msg);
+                    irc_stripcodes(paramtext);
+                    while (isspace(*paramtext)) paramtext++;
+                    if (*paramtext == 0) continue;
+                    scrabbleCmd(nickname, paramtext);
+
+                    // Reanounce on JOIN after x time without noone talking
+                } else if (reannounce > 0 && (strcmp(cmd, "JOIN") == 0) && (strcasecmp(paramtext, &channel[0]) == 0)) {
+                    time_t now;
+                    time(&now);
+                    if (now - last_msg > reannounce) show_about();
+                }
+            }
+
+            // Keep alive
+            if (!PINGed && (clock() - lastRecvTicks > 15000)) {
+                sprintf(line, "%.8X", (rand() << 16) | rand());
+                irc_sendline("PING :" + (string) line);
+                PINGed = true;
+            } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
+                irc_close();
+                game_loop();
+            }
+
+            // Reset weekly scores on monday 00:00
+            time(&t);
+            systemTime = localtime(&t);
+
+            // Weekly score reset
+            if (systemTime->tm_wday != lastDayOfWeek) {
+                if (systemTime->tm_wday == 1) { // we are now monday
+                    irc_sendmsg(channel);
+                    irc_sendformat(true, "NewWeek", "A new week is beginning ! Resetting all week scores...");
+                    clear_week_scores();
+                }
+                lastDayOfWeek = systemTime->tm_wday;
+            }
+
+        } while (((cur_state == RUNNING) && tclock--) || (tclock = 0, cur_state == STOPPED));
+
+
+        /*
+         * Start a new round: pick letters, find words, print letters & stats
+         */
+
         char letters[wordlen + 1], sortedLetters[wordlen + 1];
         do {
             pickLetters(letters, sortedLetters);
@@ -214,22 +279,20 @@ void run_game() {
                 irc_sendformat(true, "Found", "[I've found %d words, including %d which contain %d letters.]",
                                foundWords, foundMaxWords, maxWordLen);
         } while (foundWords == 0);
-        int tclock = cfg_clock;
+        tclock = cfg_clock;
         int warning = tclock - cfg_warning;
 #ifdef CHEAT
         displayMaxWords(sortedLetters, maxWordLen);
         cout << dispMaxWordsString + 3 << endl;
 #endif
-        time_t t;
         time(&t);
-        struct tm *systemTime = localtime(&t);
-        int lastDayOfWeek = systemTime->tm_wday;
+        systemTime = localtime(&t);
+        lastDayOfWeek = systemTime->tm_wday;
         int lastHour = systemTime->tm_hour;
-        char line[1024];
         char winningNick[128];                /////////////////////// revisar esto ¿String?
         size_t winningWordLen = 0;
-        clock_t lastRecvTicks = clock();
-        bool PINGed = false;
+        lastRecvTicks = clock();
+        PINGed = false;
         do {
             tclock--;
             if (tclock == warning) { // plus que 10 sec
@@ -344,56 +407,6 @@ void run_game() {
                 game_loop();
             }
         } while ((cur_state == RUNNING) && tclock);
-        tclock = cfg_after;
-        lastRecvTicks = clock();
-        PINGed = false;
-        do {
-            msleep(100);
-            while (irc_recv(line)) {
-                lastRecvTicks = clock();
-                PINGed = false;
-                char *nickname, *ident, *hostname, *cmd, *param1, *param2, *paramtext;
-                irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1, &param2, &paramtext);
-                if ((strcmp(cmd, "PRIVMSG") == 0) && (strcasecmp(param1, &channel[0]) == 0)) {
-                    time(&last_msg);
-                    irc_stripcodes(paramtext);
-                    while (isspace(*paramtext)) paramtext++;
-                    if (*paramtext == 0) continue;
-                    scrabbleCmd(nickname, paramtext);
-
-                // Reanounce on JOIN after x time without noone talking
-                } else if (reannounce > 0 && (strcmp(cmd, "JOIN") == 0) && (strcasecmp(paramtext, &channel[0]) == 0)) {
-                    time_t now;
-                    time(&now);
-                    if (now - last_msg > reannounce) show_about();
-                }
-            }
-
-            // Keep alive
-            if (!PINGed && (clock() - lastRecvTicks > 15000)) {
-                sprintf(line, "%.8X", (rand() << 16) | rand());
-                irc_sendline("PING :" + (string) line);
-                PINGed = true;
-            } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
-                irc_close();
-                game_loop();
-            }
-
-            // Reset weekly scores on monday 00:00
-            time(&t);
-            systemTime = localtime(&t);
-
-            // Weekly score reset
-            if (systemTime->tm_wday != lastDayOfWeek) {
-                if (systemTime->tm_wday == 1) { // we are now monday
-                    irc_sendmsg(channel);
-                    irc_sendformat(true, "NewWeek", "A new week is beginning ! Resetting all week scores...");
-                    clear_week_scores();
-                }
-                lastDayOfWeek = systemTime->tm_wday;
-            }
-
-        } while (((cur_state == RUNNING) && tclock--) || (tclock = 0, cur_state == STOPPED));
     }
 }
 

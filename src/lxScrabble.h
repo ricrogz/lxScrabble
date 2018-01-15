@@ -34,7 +34,7 @@ struct Top {
 };
 
 enum run_state {
-    RUNNING, STOPPED, HALTING
+    RUNNING, STOPPED, QUITTING
 };
 
 extern bool list_failed_words;
