@@ -9,7 +9,7 @@
 #define NONLATIN_UCASE "ัว"
 
 #include <string>
-#include <cstring>
+#include <iostream>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -30,6 +30,23 @@ inline char* strupr(char* s) {
         }
     }
     return s;
+}
+
+inline void log(const char *message, std::ostream& stream) {
+    char timestamp[25];
+    struct tm *sTm;
+    time_t now = time(0);
+    sTm = gmtime (&now);
+    strftime(timestamp, 25, "%Y-%m-%d %H:%M:%S --- ", sTm);
+    stream << timestamp << message << std::endl;
+}
+
+inline void log_stdout(const char *message) {
+    log(message, std::cout);
+}
+
+inline void log_stderr(const char *message) {
+    log(message, std::cerr);
 }
 
 inline void msleep(u_long t) {

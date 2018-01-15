@@ -65,8 +65,7 @@ void readIni() {
 
     // Check that the config file exists
     if (! fexists(INI_FILE)) {
-        cerr  << endl << endl << "Configuration file not found. Please put 'lxScrabble.ini' into this directory!" ;
-        cerr << endl << endl;
+        log_stderr("\n\nConfiguration file not found. Please put 'lxScrabble.ini' into this directory!\n\n");
         halt(1);
     }
     cfgp = parser::load_file(INI_FILE);
@@ -86,7 +85,7 @@ void readIni() {
     // Connection data
     servername = cfg<string>("IRC", "Server", DEFAULT_SERVER);
     if (strcmp(&servername[0], "<IRC SERVER HOSTNAME>") == 0) {
-        cerr << endl << "Configure lxScrabble.ini first !!" << endl;
+        log_stderr("\nConfigure lxScrabble.ini first !!");
         halt(2);
     }
     port = (int) cfg<unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
@@ -118,7 +117,8 @@ void readIni() {
 }
 
 void gentle_terminator(int) {
-    cout << endl << "Terminating gently..." << endl;
+    log_stdout("");
+    log_stdout("Terminating gently...");
     cur_state = QUITTING;
 }
 
@@ -134,7 +134,7 @@ void setup_interrupt_catcher() {
 
 int main(int argc, char *argv[]) {
     // Show banner, initialize random number generator
-    cout << BOTFULLNAME << endl;
+    log_stdout(BOTFULLNAME);
     srand((unsigned) time(nullptr));
 
     // Detect --list parameter

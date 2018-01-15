@@ -38,7 +38,7 @@ void pickLetters(char *letters, char *sortedLetters) {
     }
     letters[wordlen] = 0;
 #ifdef CHEAT
-    cout << "[CHEATING] Input letters" << endl;
+    log("[CHEATING] Input letters");
     cin >> letters;
 #endif
     sortLetters((const char*)letters, sortedLetters);
@@ -285,7 +285,9 @@ void run_game() {
         int warning = tclock - cfg_warning;
 #ifdef CHEAT
         displayMaxWords(sortedLetters, maxWordLen);
-        cout << dispMaxWordsString + 3 << endl;
+        char text[16];
+        snprintf(text, 16, "%d", dispMaxWordsString + 3);
+        log(text);
 #endif
         time(&t);
         systemTime = localtime(&t);
@@ -414,7 +416,7 @@ void run_game() {
 
 void game_loop() {
     // Connect to irc
-    cout << "Connecting to IRC..." << endl;
+    log_stdout("Connecting to IRC...");
     irc_connect();
 
     // Init execution

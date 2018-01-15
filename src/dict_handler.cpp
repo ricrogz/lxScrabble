@@ -52,7 +52,7 @@ void addWord(const string &word) {
 void readDictionary(const string &filename) {
     ifstream stream(filename);
     if (stream.fail()) {
-        cerr << "Could not open dictionary file" << endl;
+        log_stderr("Could not open dictionary file");
         halt(3);
     }
     string word;
@@ -100,12 +100,12 @@ void readDictionary(const string &filename) {
     printf("  %8lu with invalid symbols.\n", (u_long)words.wrong_symbols);
     printf("  %8lu valid words.\n", (u_long)words.loaded);
     if (! list_failed_words)
-        cout << "To list invalid words, execute with --list parameter.";
-    cout << endl;
+        log_stdout("To list invalid words, execute with --list parameter.");
+    log_stdout("");
 
     // Exit if no words could be imported
     if (words.loaded == 0) {
-        cerr << "ERROR: No words were imported, game cannot continue." << endl;
+        log_stderr("ERROR: No words were imported, game cannot continue.");
         halt(1);
     }
 }

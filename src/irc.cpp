@@ -23,37 +23,37 @@ void init_socket() {
 #ifndef OFFLINE
     irc_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (irc_socket < 0) {
-        cout << "Cannot create a socket." << endl;
+        log_stderr("Cannot create a socket.");
         halt(irc_socket);
     }
 #endif
 }
 
 void irc_send(const string &text) {
-    cout << text;
+    log_stdout(text.c_str());
 #ifndef OFFLINE
     send(irc_socket, &text[0], text.length(), 0);
 #endif
 }
 
 void irc_send(char ch) {
-    cout << ch;
+    log_stdout(&ch);
 #ifndef OFFLINE
     send(irc_socket, &ch, 1, 0);
 #endif
 }
 
 void irc_send(int value) {
-    cout << value;
     char text[32];
     snprintf(text, 32, "%d", value);
+    log_stdout(text);
 #ifndef OFFLINE
     send(irc_socket, text, (int) strlen(text), 0);
 #endif
 }
 
 void irc_sendline(const string &line) {
-    cout << line << endl;
+    log_stdout(line.c_str());
 #ifndef OFFLINE
     send(irc_socket, &line[0], line.length(), 0);
     send(irc_socket, "\n", 1, 0);
@@ -150,7 +150,7 @@ void irc_connect(const string &servername, int port, const string &password, str
 #else
     struct hostent *host = gethostbyname(&servername[0]);
     if (!host) {
-        cerr << "Could not resolve server name" << endl;
+        log_stdout("Could not resolve server name");
         halt(2);
     }
 
@@ -189,7 +189,7 @@ void irc_connect(const string &servername, int port, const string &password, str
                 // Numerics indicating the nick is busy; use alternate
             } else if ((strcmp(cmd, "432") == 0) || (strcmp(cmd, "433") == 0)) {
                 if (nickname == altnickname) {
-                    cerr << "Nicknames already in use" << endl;
+                    log_stderr("Nicknames already in use");
                     halt(6);
                 }
                 nickname = altnickname;
@@ -200,7 +200,7 @@ void irc_connect(const string &servername, int port, const string &password, str
     }
 
     // Time out: we were not able to connect
-    cerr << "Problem during connection" << endl;
+    log_stderr("Problem during connection");
     halt(7);
 #endif
 }
@@ -215,7 +215,9 @@ void do_perform(const string &perform) {
         strupr(token);
         if ((strcmp(token, "MSG") == 0) || (strcmp(token, "NOTICE") == 0)) {
             if (!scan) {
-                cerr << "Missing argument for " << token << " on Perform= setting" << endl;
+                char text[128];
+                snprintf(text, 128, "Missing argument for %s on Perform= setting", token);
+                log_stderr(text);
                 halt(2);
             }
             if (strcmp(token, "MSG") == 0)
@@ -324,9 +326,8 @@ void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDe
     va_start(arguments, lpDefault);
     vsnprintf(text, 8192, &buffer[0], arguments);
     va_end(arguments);
-    cout << text;
-    if (set_endl)
-        cout << endl;
+    log_stdout(text);
+    if (set_endl) log_stdout("");
 #ifndef OFFLINE
     send(irc_socket, text, (int) strlen(text), 0);
     if (set_endl)
