@@ -378,6 +378,21 @@ void run_game() {
                 irc_close();
                 game_loop();
             }
+
+            // Reset weekly scores on monday 00:00
+            time(&t);
+            systemTime = localtime(&t);
+
+            // Weekly score reset
+            if (systemTime->tm_wday != lastDayOfWeek) {
+                if (systemTime->tm_wday == 1) { // we are now monday
+                    irc_sendmsg(channel);
+                    irc_sendformat(true, "NewWeek", "A new week is beginning ! Resetting all week scores...");
+                    clear_week_scores();
+                }
+                lastDayOfWeek = systemTime->tm_wday;
+            }
+
         } while (((cur_state == RUNNING) && tclock--) || (tclock = 0, cur_state == STOPPED));
     }
 }
