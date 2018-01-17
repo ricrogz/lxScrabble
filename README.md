@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ricrogz/lxScrabble.svg?branch=master)](https://travis-ci.org/ricrogz/lxScrabble)
+
 # lxScrabble
 
 lxScrabble is an automated bot to play Scrabble in an IRC channel. It is implemented as an autonomous program, not an add-on, and therefore, does not require any external IRC client to be used. The program can be run in a terminal, and does not require an X windows installation.

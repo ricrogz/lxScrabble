@@ -1,0 +1,46 @@
+language: cpp
+sudo: false
+os: linux
+
+matrix:
+  include:
+    - addons:
+        apt:
+          sources:
+          - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+          - gcc-5
+          - g++-5
+          - libncurses5-dev
+      env:
+        - MATRIX_EVAL="CC=gcc-5 && CXX=g++-5"
+
+    - addons:
+        apt:
+          sources:
+          - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+          - gcc-6
+          - g++-6
+          - libncurses5-dev
+      env:
+        - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6"
+
+    - addons:
+        apt:
+          sources:
+          - sourceline: 'ppa:ubuntu-toolchain-r/test'
+          packages:
+          - gcc-7
+          - g++-7
+          - libncurses5-dev
+      env:
+        - MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+
+before_script:
+  - eval "${MATRIX_EVAL}"
+
+script:
+  - git submodule init && git submodule update
+  - cd dependencies/inicpp/ && git submodule init && git submodule update && cd ../..
+  - mkdir build && cd build/ && cmake .. $(COMPS) -DCMAKE_BUILD_TYPE=Release && make lxScrabble
