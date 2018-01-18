@@ -295,9 +295,11 @@ void irc_stripcodes(char *text) {
 void irc_disconnect_msg(const string & msg) {
     irc_sendline(msg);
 #ifndef OFFLINE
+    int timeout = 5000;
     do {
-        msleep(500);
-    } while (!irc_want("ERROR"));
+        msleep(100);
+        timeout -= 100;
+    } while (!irc_want("ERROR") && timeout > 0);
     close(irc_socket);
 #endif
 }
