@@ -43,8 +43,6 @@ void irc_sendnotice(const string & dest);
 
 void irc_stripcodes(char *text);
 
-void irc_disconnect();
-
 void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDefault, ...);
 
 void irc_analyze(char *line, char **nickname, char **ident, char **hostname, char **cmd, char **param1, char **param2,
@@ -54,10 +52,8 @@ bool irc_recv(char line[]);
 
 void irc_send(const string & text);
 
-void irc_send(char ch);
+void irc_disconnect_msg(const string & msg);
 
-void irc_send(int value);
-
-void irc_close();
+void irc_disconnect();
 
 #endif //WSCRABBLE_IRC_H

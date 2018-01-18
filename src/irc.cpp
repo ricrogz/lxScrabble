@@ -36,22 +36,6 @@ void irc_send(const string &text) {
 #endif
 }
 
-void irc_send(char ch) {
-    log_stdout(&ch);
-#ifndef OFFLINE
-    send(irc_socket, &ch, 1, 0);
-#endif
-}
-
-void irc_send(int value) {
-    char text[32];
-    snprintf(text, 32, "%d", value);
-    log_stdout(text);
-#ifndef OFFLINE
-    send(irc_socket, text, (int) strlen(text), 0);
-#endif
-}
-
 void irc_sendline(const string &line) {
     log_stdout(line.c_str());
 #ifndef OFFLINE
@@ -308,14 +292,18 @@ void irc_stripcodes(char *text) {
     *text++ = 0;  // Set null terminator
 }
 
-void irc_disconnect() {
-    irc_sendline("QUIT :Game Over");
+void irc_disconnect_msg(const string & msg) {
+    irc_sendline(msg);
 #ifndef OFFLINE
     do {
         msleep(500);
     } while (!irc_want("ERROR"));
     close(irc_socket);
 #endif
+}
+
+void irc_disconnect() {
+    irc_disconnect_msg("QUIT :Game Over");
 }
 
 void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDefault, ...) {
@@ -333,8 +321,4 @@ void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDe
     if (set_endl)
         send(irc_socket, "\n", 1, 0);
 #endif
-}
-
-void irc_close() {
-    close(irc_socket);
 }

@@ -13,8 +13,6 @@
 
 void clear_top(Top *top);
 
-void read_top(Top *top, string & value);
-
 void read_tops();
 
 void get_scores(const string & nickname, u_long *year, u_long *week);
