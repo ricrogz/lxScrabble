@@ -2,13 +2,14 @@
 // Created by invik on 17/10/17.
 //
 
-#ifndef WSCRABBLE_NEWSCRABBLE_H
-#define WSCRABBLE_NEWSCRABBLE_H
+#ifndef LXSCRABBLE_NEWSCRABBLE_H
+#define LXSCRABBLE_NEWSCRABBLE_H
 
 #define INI_FILE "lxScrabble.ini"
 
-#include <stdlib.h>
+#include <cstdlib>
 #include <cstddef>
+#include <random>
 #include <string>
 #include <iostream>
 
@@ -70,9 +71,10 @@ extern u_int cfg_after;
 extern u_int autostop;
 extern bool autovoice;
 extern long reannounce;
+extern minstd_rand *simple_rand;  // simple random generator
 
 void halt(int stat_code);
 
 template<class T> T cfg(const string & section, const string & option, const T & default_value);
 
-#endif //WSCRABBLE_NEWSCRABBLE_H
+#endif //LXSCRABBLE_NEWSCRABBLE_H

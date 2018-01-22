@@ -3,8 +3,8 @@
 //
 
 
-#ifndef WSCRABBLE_DICT_HANDLER_H
-#define WSCRABBLE_DICT_HANDLER_H
+#ifndef LXSCRABBLE_DICT_HANDLER_H
+#define LXSCRABBLE_DICT_HANDLER_H
 
 #include "lxScrabble.h"
 
@@ -25,4 +25,4 @@ void findWords(const char *letters);
 
 void displayMaxWords(const char *letters, size_t len);
 
-#endif //WSCRABBLE_DICT_HANDLER_H
+#endif //LXSCRABBLE_DICT_HANDLER_H

@@ -5,10 +5,9 @@
 #include "lxScrabble.h"
 #include "irc.h"
 
-#ifndef WSCRABBLE_GAME_H
-#define WSCRABBLE_GAME_H
-
+#ifndef LXSCRABBLE_GAME_H
+#define LXSCRABBLE_GAME_H
 
 void game_loop();
 
-#endif //WSCRABBLE_GAME_H
+#endif //LXSCRABBLE_GAME_H

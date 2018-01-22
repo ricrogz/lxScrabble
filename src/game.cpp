@@ -11,7 +11,6 @@ string lastWinner;
 u_long winInARow;
 time_t last_msg;  // Updates on last channel msg, when not playing
 
-
 void show_about() {
     char buffer[sizeof(ADVERTISE)];
     strcpy(buffer, ADVERTISE);
@@ -31,7 +30,7 @@ void pickLetters(char *letters, char *sortedLetters) {
     for (size_t index = 0; index < wordlen; index++) {
         u_long value;
         do {
-            value = ((u_long) rand()) * count / RAND_MAX;
+            value = ((u_long) (*simple_rand)()) * count / simple_rand->max();
         } while (availableLetters[value] == 0);
         letters[index] = availableLetters[value];
         availableLetters[value] = 0;
@@ -238,7 +237,7 @@ void run_game() {
 
             // Keep alive
             if (!PINGed && (clock() - lastRecvTicks > 15000)) {
-                sprintf(line, "%.8X", (rand() << 16) | rand());
+                sprintf(line, "%.8X", (u_int)(((*simple_rand)() << 16) | (*simple_rand)()));
                 irc_sendline("PING :" + (string) line);
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
@@ -285,8 +284,8 @@ void run_game() {
         int warning = tclock - cfg_warning;
 #ifdef CHEAT
         displayMaxWords(sortedLetters, maxWordLen);
-        char text[16];
-        snprintf(text, 16, "%d", dispMaxWordsString + 3);
+        char text[maxWordLen + 2];
+        snprintf(text, maxWordLen + 2, "%s", (char*)&dispMaxWordsString + 3);
         log_stdout(text);
 #endif
         time(&t);
@@ -383,7 +382,7 @@ void run_game() {
 
             // Keep alive
             if (!PINGed && (clock() - lastRecvTicks > 15000)) {
-                sprintf(line, "%.8X", (rand() << 16) | rand());
+                sprintf(line, "%.8X", (u_int)(((*simple_rand)() << 16) | (*simple_rand)()));
                 irc_sendline("PING :" + (string) line);
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > 20000)) {

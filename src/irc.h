@@ -2,8 +2,8 @@
 // Created by invik on 17/10/17.
 //
 
-#ifndef WSCRABBLE_IRC_H
-#define WSCRABBLE_IRC_H
+#ifndef LXSCRABBLE_IRC_H
+#define LXSCRABBLE_IRC_H
 
 #include "lxScrabble.h"
 
@@ -56,4 +56,4 @@ void irc_disconnect_msg(const string & msg);
 
 void irc_disconnect();
 
-#endif //WSCRABBLE_IRC_H
+#endif //LXSCRABBLE_IRC_H

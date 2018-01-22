@@ -41,6 +41,7 @@ u_int cfg_after;
 u_int autostop;
 bool autovoice;
 long reannounce;
+minstd_rand *simple_rand;
 
 void halt(int stat_code) {
     exit(stat_code);
@@ -136,7 +137,8 @@ void setup_interrupt_catcher() {
 int main(int argc, char *argv[]) {
     // Show banner, initialize random number generator
     log_stdout(BOTFULLNAME);
-    srand((unsigned) time(nullptr));
+    simple_rand = new minstd_rand();
+    simple_rand->seed((unsigned) time(nullptr));
 
     // Detect --list parameter
     for (int i = 0; i < argc; i++) {
@@ -160,6 +162,7 @@ int main(int argc, char *argv[]) {
     // Connect and start game
     game_loop();
 
+    delete simple_rand;
     delete scorep;
     delete cfgp;
     return 0;
