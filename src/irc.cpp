@@ -49,7 +49,7 @@ bool irc_recv(char line[1024]) {
     u_long value = 0;
     ioctl(irc_socket, FIONREAD, &value);
     if (value) {
-        irc_bufLen += recv(irc_socket, irc_buffer + irc_bufLen, min(value, sizeof(irc_buffer) - irc_bufLen), 0);
+        irc_bufLen += recv(irc_socket, irc_buffer + irc_bufLen, min<u_long>(value, sizeof(irc_buffer) - irc_bufLen), 0);
         irc_buffer[irc_bufLen] = 0;
         irc_bufLen = strlen(irc_buffer);
     }
@@ -117,13 +117,15 @@ void irc_analyze(char *line, char **nickname, char **ident, char **hostname, cha
 
 void irc_connect(const string &servername, int port, const string &password, string &nickname,
                  const string &altnickname, const string &ident, const string &localhost, const string &fullname) {
-    struct hostent *host = gethostbyname(&servername[0]);
-    if (!host) {
+
+    struct hostent *host;
+    struct sockaddr_in serv_addr = {0};
+
+    if ((host = gethostbyname(&servername[0])) == nullptr) {
         log_stderr("Could not resolve server name");
         halt(2);
     }
 
-    struct sockaddr_in serv_addr = {0};
     serv_addr.sin_addr = *(struct in_addr *) host->h_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons((u_short) port);
@@ -269,7 +271,7 @@ void irc_stripcodes(char *text) {
         } else if (is_valid_char(ch))
             *text++ = ch;
     }
-    *text++ = 0;  // Set null terminator
+    *text = 0;  // Set null terminator
 }
 
 void irc_disconnect_msg(const string & msg) {
@@ -291,7 +293,7 @@ void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDe
     if (irc_blackAndWhite) irc_stripcodes(&buffer[0]);
     va_list arguments;
     char text[8192];
-    va_start(arguments, lpDefault);
+    va_start(arguments, &lpDefault);
     vsnprintf(text, 8192, &buffer[0], arguments);
     va_end(arguments);
     send(irc_socket, text, (int) strlen(text), 0);
