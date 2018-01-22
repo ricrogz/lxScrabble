@@ -25,7 +25,8 @@ size_t maxWordLen;
 size_t dispMaxWords;
 char dispMaxWordsString[1024];
 run_state cur_state;
-config cfgp;
+config *cfgp;
+config *scorep;
 string servername;
 int port;
 string server_pass;
@@ -46,19 +47,19 @@ void halt(int stat_code) {
 }
 
 template<class T> T cfg(const string & section, const string & option, const T & default_value) {
-    if (! cfgp.contains(section))
-        cfgp.add_section(section);
-    if (! cfgp[section].contains(option))
-        cfgp[section].add_option(option, (T) default_value);
-    return cfgp[section][option].get<T>();
+    if (! cfgp->contains(section))
+        cfgp->add_section(section);
+    if (! (*cfgp)[section].contains(option))
+        (*cfgp)[section].add_option(option, (T) default_value);
+    return (*cfgp)[section][option].get<T>();
 }
 
 template<class T> vector<T> cfg_get_list(const string &section, const string &option, const T &default_value) {
-    if (! cfgp.contains(section))
-        cfgp.add_section(section);
-    if (! cfgp[section].contains(option))
-        cfgp[section].add_option(option, default_value);
-    return cfgp[section][option].get_list<T>();
+    if (! cfgp->contains(section))
+        cfgp->add_section(section);
+    if (! (*cfgp)[section].contains(option))
+        (*cfgp)[section].add_option(option, default_value);
+    return (*cfgp)[section][option].get_list<T>();
 }
 
 void readIni() {
@@ -68,7 +69,7 @@ void readIni() {
         log_stderr("\n\nConfiguration file not found. Please put 'lxScrabble.ini' into this directory!\n\n");
         halt(1);
     }
-    cfgp = parser::load_file(INI_FILE);
+    *cfgp = parser::load_file(INI_FILE);
 
     // Game settings
     wordlen = cfg<size_t>("Settings", "wordlen", 12);
@@ -146,17 +147,21 @@ int main(int argc, char *argv[]) {
     setup_interrupt_catcher();
 
     // Read ini file
+    cfgp = new config();
     readIni();
 
     // ReadDictionary
     readDictionary(dict_file);
 
     // Read top scores
+    scorep = new config();
     read_tops();
 
     // Connect and start game
     game_loop();
 
+    delete scorep;
+    delete cfgp;
     return 0;
 }
 

@@ -64,10 +64,10 @@ void readDictionary(const string &filename) {
         char forbidden[] = " \r\n";
         size_t l = word.length();
         for (auto c : forbidden)
-            while (*&word[l - 1] == c)
-                *&word[l--] = '\0';
+            while (l && *&word[--l] == c)
+                *&word[l] = '\0';
 
-        // Skip if line is empty
+        // Skip if line is empty -- length recalculated after whitespace removal
         if (0 == word.length()) continue;
 
         words.total++;

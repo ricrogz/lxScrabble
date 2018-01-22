@@ -4,37 +4,35 @@
 
 #include "scores_handler.h"
 
-config scorep;
-
 template<class T> void score_add(const string &section, const string &option, const T &value) {
-    if (!scorep.contains(section))
-        scorep.add_section(section);
-    if (!scorep[section].contains(option))
-        scorep[section].add_option(option, value);
+    if (!scorep->contains(section))
+        scorep->add_section(section);
+    if (! (*scorep)[section].contains(option))
+        (*scorep)[section].add_option(option, value);
     else
-        scorep[section][option].set<T>(value);
+        (*scorep)[section][option].set<T>(value);
 }
 
 template<class T> T score_get(const string & section, const string & option, const T & default_value) {
-    if (! scorep.contains(section))
-        scorep.add_section(section);
-    if (! scorep[section].contains(option))
-        scorep[section].add_option(option, (T) default_value);
-    return scorep[section][option].get<T>();
+    if (! scorep->contains(section))
+        scorep->add_section(section);
+    if (! (*scorep)[section].contains(option))
+        (*scorep)[section].add_option(option, (T) default_value);
+    return (*scorep)[section][option].get<T>();
 }
 
 template<class T> vector<T> score_get_list(const string &section, const string &option, const T &default_value) {
-    if (!scorep.contains(section))
-        scorep.add_section(section);
-    if (!scorep[section].contains(option))
-        scorep[section].add_option(option, default_value);
-    return scorep[section][option].get_list<T>();
+    if (!scorep->contains(section))
+        scorep->add_section(section);
+    if (! (*scorep)[section].contains(option))
+        (*scorep)[section].add_option(option, default_value);
+    return (*scorep)[section][option].get_list<T>();
 }
 
 void save_scores() {
     ofstream outfs;
     outfs.open(SCORE_FILE);
-    outfs << scorep;
+    outfs << *scorep;
     outfs.close();
 }
 
@@ -59,8 +57,9 @@ void read_top(Top *top, vector<string> &value) {
 void read_tops() {
 
     // Create score parser
-    if (!fexists(SCORE_FILE)) save_scores();
-    scorep = parser::load_file(SCORE_FILE);
+    if (!fexists(SCORE_FILE))
+        save_scores();
+    *scorep = parser::load_file(SCORE_FILE);
 
     vector<string> value;
 
@@ -137,7 +136,7 @@ void set_scores(const string & nickname, u_long year, u_long week) {
 }
 
 void clear_week_scores() {
-    for (auto & player : scorep["Scores"]) {
+    for (auto & player : (*scorep)["Scores"]) {
         string score = player.get<string>();
         u_long len = score.find(' ');
         player.set<string>(score.substr(0, len + 1) + '0');

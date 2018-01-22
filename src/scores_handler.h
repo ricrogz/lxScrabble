@@ -10,6 +10,7 @@
 #define SCORE_FILE "scores.ini"
 #define TOP_MAX 10
 
+extern config* scorep;
 
 void clear_top(Top *top);
 

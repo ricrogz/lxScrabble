@@ -372,9 +372,6 @@ void run_game() {
                     else if (!scrabbleCmd(nickname, paramtext)) {
                         while ((*paramtext != 0) && !is_valid_char(*paramtext)) paramtext++;
                         if (*paramtext == 0) continue;
-                        char *wordEnd = paramtext + 1;
-                        while (is_valid_char(*wordEnd)) wordEnd++;
-                        *wordEnd = 0;
                         if (strlen(paramtext) > winningWordLen) {
                             strupr(paramtext);
                             if (checkWord(sortedLetters, paramtext)) {
