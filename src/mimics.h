@@ -36,7 +36,7 @@ inline void log(const char *message, std::ostream& stream) {
     char timestamp[25];
     struct tm *sTm;
     time_t now = time(nullptr);
-    sTm = gmtime (&now);
+    sTm = localtime(&now);
     strftime(timestamp, 25, "%Y-%m-%d %H:%M:%S --- ", sTm);
     stream << timestamp << message << std::endl;
 }
