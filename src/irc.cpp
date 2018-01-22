@@ -20,30 +20,20 @@ string bot_nick;
 vector<string> owner;
 
 void init_socket() {
-#ifndef OFFLINE
     irc_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (irc_socket < 0) {
         log_stderr("Cannot create a socket.");
         halt(irc_socket);
     }
-#endif
 }
 
 void irc_send(const string &text) {
-#ifdef OFFLINE
-    log_stdout(text.c_str());
-#else
     send(irc_socket, &text[0], text.length(), 0);
-#endif
 }
 
 void irc_sendline(const string &line) {
-#ifdef OFFLINE
-    log_stdout(line.c_str());
-#else
     send(irc_socket, &line[0], line.length(), 0);
     send(irc_socket, "\n", 1, 0);
-#endif
 }
 
 bool irc_handlestd(char line[1024]) {
@@ -56,7 +46,6 @@ bool irc_handlestd(char line[1024]) {
 }
 
 bool irc_recv(char line[1024]) {
-#ifndef OFFLINE
     u_long value = 0;
     ioctl(irc_socket, FIONREAD, &value);
     if (value) {
@@ -78,9 +67,6 @@ bool irc_recv(char line[1024]) {
         } else
             return false;
     }
-#else
-    return false;
-#endif
 }
 
 void irc_flushrecv() {
@@ -131,9 +117,6 @@ void irc_analyze(char *line, char **nickname, char **ident, char **hostname, cha
 
 void irc_connect(const string &servername, int port, const string &password, string &nickname,
                  const string &altnickname, const string &ident, const string &localhost, const string &fullname) {
-#ifdef OFFLINE
-    return;
-#else
     struct hostent *host = gethostbyname(&servername[0]);
     if (!host) {
         log_stderr("Could not resolve server name");
@@ -188,7 +171,6 @@ void irc_connect(const string &servername, int port, const string &password, str
     // Time out: we were not able to connect
     log_stderr("Problem during connection");
     halt(7);
-#endif
 }
 
 void do_perform(const string &perform) {
@@ -227,9 +209,6 @@ void do_perform(const string &perform) {
 }
 
 bool irc_want(const char *wantCmd, u_int timeout = 15000) {
-#ifdef OFFLINE
-    return true;
-#else
     char line[1024];
     clock_t ticks = clock();
     while (clock() - ticks < timeout) {
@@ -242,7 +221,6 @@ bool irc_want(const char *wantCmd, u_int timeout = 15000) {
             msleep(100);
     }
     return false;
-#endif
 }
 
 void irc_join(const string &channel, const string &channelkey = nullptr) {
@@ -296,14 +274,12 @@ void irc_stripcodes(char *text) {
 
 void irc_disconnect_msg(const string & msg) {
     irc_sendline(msg);
-#ifndef OFFLINE
     int timeout = 5000;
     do {
         msleep(100);
         timeout -= 100;
     } while (!irc_want("ERROR") && timeout > 0);
     close(irc_socket);
-#endif
 }
 
 void irc_disconnect() {
@@ -318,12 +294,7 @@ void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDe
     va_start(arguments, lpDefault);
     vsnprintf(text, 8192, &buffer[0], arguments);
     va_end(arguments);
-#ifdef OFFLINE
-    log_stdout(text);
-    if (set_endl) log_stdout("");
-#else
     send(irc_socket, text, (int) strlen(text), 0);
     if (set_endl)
         send(irc_socket, "\n", 1, 0);
-#endif
 }
