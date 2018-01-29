@@ -70,10 +70,9 @@ bool irc_recv(char line[1024]) {
 }
 
 void irc_flushrecv() {
-    char line[1024];
+    char line[1024] = {0};
     do {
-        while (irc_recv(line));
-        msleep(500);
+        log_stdout(line);
     } while (irc_recv(line));
 }
 
@@ -157,7 +156,7 @@ void irc_connect(const string &servername, int port, const string &password, str
                 irc_flushrecv();
                 return;
 
-                // Numerics indicating the nick is busy; use alternate
+            // Numerics indicating the nick is busy; use alternate
             } else if ((strcmp(cmd, "432") == 0) || (strcmp(cmd, "433") == 0)) {
                 if (nickname == altnickname) {
                     log_stderr("Nicknames already in use");
@@ -276,11 +275,7 @@ void irc_stripcodes(char *text) {
 
 void irc_disconnect_msg(const string & msg) {
     irc_sendline(msg);
-    int timeout = 5000;
-    do {
-        msleep(100);
-        timeout -= 100;
-    } while (!irc_want("ERROR") && timeout > 0);
+    irc_want("ERROR", 5000);
     close(irc_socket);
 }
 
