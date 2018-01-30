@@ -241,6 +241,7 @@ void run_game() {
                 irc_sendline("PING :" + (string) line);
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
+                log_stdout("***** Timeout detected, reconnecting. *****");
                 irc_disconnect_msg("Timeout detected, reconnecting.");
                 game_loop();
             }
@@ -386,6 +387,7 @@ void run_game() {
                 irc_sendline("PING :" + (string) line);
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
+                log_stdout("***** Timeout detected, reconnecting. *****");
                 irc_disconnect_msg("Timeout detected, reconnecting.");
                 game_loop();
             }
@@ -402,5 +404,6 @@ void game_loop() {
     show_about();
     run_game();
 
+    log_stdout("Quitting...");
     irc_disconnect();
 }
