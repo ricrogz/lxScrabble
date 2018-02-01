@@ -103,7 +103,7 @@ bool update_top(Top *top, const string & nickname, u_long score) {
     if (newPos == TOP_MAX) return false;
 
     // Check if player was already in the top, or top is not filled
-    for (index = newPos; index < TOP_MAX; index++)
+    for (index = newPos; index < TOP_MAX - 1; index++)
         if (top[index].nick == nickname || top[index].nick == "---")
             break;
 
