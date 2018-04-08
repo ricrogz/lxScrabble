@@ -103,7 +103,7 @@ bool checkWord(const char *availableLetters, const char *word) {
     while (len--) {
         do {
             if (scan == 0) return false;
-        } while (availableLetters[--scan] > letters[len]);
+        } while ((u_char)availableLetters[--scan] > (u_char)letters[len]);
         if (availableLetters[scan] != letters[len]) return false;
     }
     return isWord(letters, word);
