@@ -209,7 +209,7 @@ void do_perform(const string &perform) {
 
 }
 
-bool irc_want(const char *wantCmd, u_int timeout = 15000) {
+bool irc_want(const char *wantCmd, int timeout = 15000) {
     char line[1024];
     clock_t ticks = clock();
     while (clock() - ticks < timeout) {
