@@ -184,7 +184,7 @@ bool scrabbleCmd(const char *nickname, char *command) {
             irc_sendmsg(channel);
             irc_sendformat(true, "NewWeek", "A new week is beginning ! Resetting all week scores...");
             clear_week_scores();
-        } else if (strncasecmp(command, &((string)"!quit " + bot_nick)[0], 6 + bot_nick.length()) == 0) {
+        } else if (strncasecmp(command, &((string)"!quit " + public_nick)[0], 6 + public_nick.length()) == 0) {
             cur_state = QUITTING;
         } else if (strcasecmp(command, "!op") == 0) {
             irc_sendline("MODE " + channel + " +o " + nickname);

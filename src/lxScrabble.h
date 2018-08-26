@@ -53,6 +53,7 @@ extern size_t dispMaxWords;
 extern char dispMaxWordsString[];
 extern run_state cur_state;
 extern string bot_nick;
+extern string public_nick;
 extern bool irc_blackAndWhite;
 extern string channel;
 extern vector<string> owner;

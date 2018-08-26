@@ -17,6 +17,7 @@ bool irc_blackAndWhite;
 bool anyoneCanStop;
 string channel;
 string bot_nick;
+string public_nick;
 vector<string> owner;
 
 void init_socket() {

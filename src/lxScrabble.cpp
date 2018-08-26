@@ -63,6 +63,15 @@ template<class T> vector<T> cfg_get_list(const string &section, const string &op
     return (*cfgp)[section][option].get_list<T>();
 }
 
+std::string strip_passwd(const std::string& nick) {
+
+    auto split1 = std::find(nick.begin(), nick.end(), ':');
+    auto split2 = std::find(nick.begin(), split1, '!');
+
+    return std::string(nick.begin(), split2);
+
+};
+
 void readIni() {
 
     // Check that the config file exists
@@ -98,6 +107,8 @@ void readIni() {
     altnickname = cfg<string>("IRC", "ANick", DEFAULT_ANICK);
     ident = cfg<string>("IRC", "Ident", DEFAULT_IDENT);
     fullname = cfg<string>("IRC", "Fullname", BOTFULLNAME);
+
+    public_nick = strip_passwd(bot_nick);
 
     // Channel
     channel = cfg<string>("IRC", "Channel", DEFAULT_CHANNEL);

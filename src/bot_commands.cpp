@@ -6,6 +6,8 @@
 
 #include "irc.h"
 
+
+
 void help_cmd(const string &dest, bool is_owner) {
 
     string user_commands[] = {
@@ -24,7 +26,7 @@ void help_cmd(const string &dest, bool is_owner) {
 
     string owner_commands[] = {
             "\002!newweek\002: Reset the weekly scores, and start a new week.",
-            "\002!quit " + bot_nick + "\002: Quit. WARNING: this will stop the bot, and you will have to start the program again.",
+            "\002!quit " + public_nick  + "\002: Quit. WARNING: this will stop the bot, and you will have to start the program again.",
             "\002!op\002: get op'ed by the bot (the bot must have 'op' itself)."
     };
 
