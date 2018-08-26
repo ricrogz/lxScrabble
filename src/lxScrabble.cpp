@@ -73,8 +73,8 @@ void readIni() {
     *cfgp = parser::load_file(INI_FILE);
 
     // Game settings
-    wordlen = cfg<size_t>("Settings", "wordlen", 12);
-    bonus = cfg<unsigned_ini_t >("Settings", "bonus", 10);
+    wordlen = cfg<unsigned_ini_t>("Settings", "wordlen", 12);
+    bonus = cfg<unsigned_ini_t>("Settings", "bonus", 10);
 
     // Dictionary settings
     distrib = cfg<string>("Settings", "distribution",
