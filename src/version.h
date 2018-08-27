@@ -5,7 +5,7 @@
 #ifndef LXSCRABBLE_VERSION_H
 #define LXSCRABBLE_VERSION_H
 
-#define BOTNAME "lxScrabble 0.122b"
+#define BOTNAME "lxScrabble 0.125b"
 
 
 #endif //LXSCRABBLE_VERSION_H
