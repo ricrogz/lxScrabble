@@ -57,7 +57,7 @@ bool irc_recv(char line[1024]) {
     for (;;) {
         char *scan = strchr(irc_buffer, '\n');
         if (scan) {
-            auto lineLen = (size_t) (scan - irc_buffer);
+            auto lineLen = static_cast<size_t>(scan - irc_buffer);
             if (lineLen > 1024) lineLen = 1024;
             strncpy(line, irc_buffer, lineLen - 1);
             line[lineLen - 1] = 0;
@@ -292,7 +292,7 @@ void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDe
     va_start(arguments, &lpDefault);
     vsnprintf(text, 8192, &buffer[0], arguments);
     va_end(arguments);
-    send(irc_socket, text, (int) strlen(text), 0);
+    send(irc_socket, text, static_cast<int>(strlen(text)), 0);
     if (set_endl)
         send(irc_socket, "\n", 1, 0);
 }

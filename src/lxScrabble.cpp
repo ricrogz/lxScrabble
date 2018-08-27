@@ -99,7 +99,7 @@ void readIni() {
         log_stderr("\nConfigure lxScrabble.ini first !!");
         halt(2);
     }
-    port = (int) cfg<unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
+    port = static_cast<int>(cfg<unsigned_ini_t>("IRC", "Port", DEFAULT_PORT));
 
     // IRC parameters
     bot_nick = cfg<string>("IRC", "Nick", DEFAULT_NICK);
@@ -115,18 +115,18 @@ void readIni() {
     channelkey = cfg<string>("IRC", "ChannelKey", DEFAULT_CHANNEL_KEY);
 
     // Other configs
-    irc_blackAndWhite = (bool) cfg<unsigned_ini_t>("IRC", "BlackAndWhite", 0);
-    anyoneCanStop = (bool) cfg<unsigned_ini_t>("IRC", "AnyoneCanStop", 0);
+    irc_blackAndWhite = static_cast<bool>(cfg<unsigned_ini_t>("IRC", "BlackAndWhite", 0));
+    anyoneCanStop = static_cast<bool>(cfg<unsigned_ini_t>("IRC", "AnyoneCanStop", 0));
     perform = cfg<string>("IRC", "Perform", "");
     owner = cfg_get_list<string>("IRC", "Owner", "");
 
     // Game parameters
-    cfg_clock = (u_int) cfg<unsigned_ini_t>("Delay", "max", 40) * 10;
-    cfg_warning = (u_int) cfg<unsigned_ini_t>("Delay", "warning", 30) * 10;
-    cfg_after = (u_int) cfg<unsigned_ini_t>("Delay", "after", 30) * 10;
-    autostop = (u_int) cfg<unsigned_ini_t>("Settings", "autostop", 3);
-    autovoice = (bool) cfg<unsigned_ini_t>("Settings", "autovoice", 1);
-    reannounce = (long) cfg<unsigned_ini_t>("Delay", "reannounce", 300);
+    cfg_clock = static_cast<u_int>(cfg<unsigned_ini_t>("Delay", "max", 40)) * 10;
+    cfg_warning = static_cast<u_int>(cfg<unsigned_ini_t>("Delay", "warning", 30)) * 10;
+    cfg_after = static_cast<u_int>(cfg<unsigned_ini_t>("Delay", "after", 30)) * 10;
+    autostop = static_cast<u_int>(cfg<unsigned_ini_t>("Settings", "autostop", 3));
+    autovoice = static_cast<bool>(cfg<unsigned_ini_t>("Settings", "autovoice", 1));
+    reannounce = static_cast<long>(cfg<unsigned_ini_t>("Delay", "reannounce", 300));
 }
 
 void gentle_terminator(int) {
@@ -149,7 +149,7 @@ int main(int argc, char *argv[]) {
     // Show banner, initialize random number generator
     log_stdout(BOTFULLNAME);
     simple_rand = new minstd_rand();
-    simple_rand->seed((unsigned) time(nullptr));
+    simple_rand->seed(static_cast<u_long>(time(nullptr)));
 
     // Detect --list parameter
     for (int i = 0; i < argc; i++) {

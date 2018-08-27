@@ -49,7 +49,7 @@ void read_top(Top *top, vector<string> &value) {
         if (row.empty()) break;
         u_long separator = row.find(' ');
         top->nick = row.substr(0, separator);
-        top->score = (u_long) strtol(row.substr(separator + 1).c_str(), nullptr, 10);
+        top->score = static_cast<u_long>(strtol(row.substr(separator + 1).c_str(), nullptr, 10));
         top++;
     }
 }

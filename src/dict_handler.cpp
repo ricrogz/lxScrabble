@@ -75,7 +75,7 @@ void readDictionary(const string &filename) {
         // Skip too long words
         if (wordlen < word.length()) {
             if (list_failed_words)
-                printf("%s -- word is too long for configured wordlen (%lu)\n", &word[0], (u_long)wordlen);
+                printf("%s -- word is too long for configured wordlen (%lu)\n", &word[0], static_cast<u_long>(wordlen));
             words.too_long++;
             continue;
         }
@@ -95,10 +95,10 @@ void readDictionary(const string &filename) {
     stream.close();
 
     // Report imported words
-    printf("Read %lu words:\n", (u_long)words.total);
-    printf("  %8lu too long (> %lu letters).\n", (u_long)words.too_long, (u_long)wordlen);
-    printf("  %8lu with invalid symbols.\n", (u_long)words.wrong_symbols);
-    printf("  %8lu valid words.\n", (u_long)words.loaded);
+    printf("Read %lu words:\n", static_cast<u_long>(words.total));
+    printf("  %8lu too long (> %lu letters).\n", static_cast<u_long>(words.too_long), static_cast<u_long>(wordlen));
+    printf("  %8lu with invalid symbols.\n", static_cast<u_long>(words.wrong_symbols));
+    printf("  %8lu valid words.\n", static_cast<u_long>(words.loaded));
     if (! list_failed_words)
         log_stdout("To list invalid words, execute with --list parameter.");
     log_stdout("");

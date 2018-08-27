@@ -30,7 +30,7 @@ void pickLetters(char *letters, char *sortedLetters) {
     for (size_t index = 0; index < wordlen; index++) {
         u_long value;
         do {
-            value = ((u_long) (*simple_rand)()) * count / simple_rand->max();
+            value = static_cast<float>((*simple_rand)()) * count / simple_rand->max();
         } while (availableLetters[value] == 0);
         letters[index] = availableLetters[value];
         availableLetters[value] = 0;
@@ -75,7 +75,7 @@ bool isWord(const char *letters, const char *word) {
     char ch = *letters++;
     const struct Cell *cell = dictionary;
     do {
-        while (cell && ((u_char)cell->letter < (u_char)ch)) cell = cell->other;
+        while (cell && (static_cast<u_char>(cell->letter) < static_cast<u_char>(ch))) cell = cell->other;
         if (!cell) return false;
         if (cell->letter == ch) {
             ch = *letters++;
@@ -103,7 +103,7 @@ bool checkWord(const char *availableLetters, const char *word) {
     while (len--) {
         do {
             if (scan == 0) return false;
-        } while ((u_char)availableLetters[--scan] > (u_char)letters[len]);
+        } while (static_cast<u_char>(availableLetters[--scan]) > static_cast<u_char>(letters[len]));
         if (availableLetters[scan] != letters[len]) return false;
     }
     return isWord(letters, word);
@@ -237,7 +237,7 @@ void run_game() {
 
             // Keep alive
             if (!PINGed && (clock() - lastRecvTicks > 15000)) {
-                sprintf(line, "%.8X", (u_int)(((*simple_rand)() << 16) | (*simple_rand)()));
+                sprintf(line, "%.8X", static_cast<u_int>(((*simple_rand)() << 16) | (*simple_rand)()));
                 irc_sendline("PING :" + (string) line);
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
@@ -360,7 +360,7 @@ void run_game() {
                             if (checkWord(sortedLetters, paramtext)) {
                                 irc_sendmsg(channel);
                                 strcpy(winningNick, nickname);
-                                winningWordLen = (int) strlen(paramtext);
+                                winningWordLen = static_cast<int>(strlen(paramtext));
                                 if (winningWordLen == maxWordLen) {
                                     irc_sendformat(false, "Win",
                                                    "Congratulations %s ! There's not better [%s] !! You get %d points + %d bonus !",
@@ -373,7 +373,7 @@ void run_game() {
                                 } else {
                                     irc_sendformat(true, "Word",
                                                    "Not bad %s... I keep your word [%s] ! Who can say better than %d letters ?",
-                                                   paramtext, nickname, (int) strlen(paramtext));
+                                                   paramtext, nickname, static_cast<int>(strlen(paramtext)));
                                 }
                             }
                         }
@@ -383,7 +383,7 @@ void run_game() {
 
             // Keep alive
             if (!PINGed && (clock() - lastRecvTicks > 15000)) {
-                sprintf(line, "%.8X", (u_int)(((*simple_rand)() << 16) | (*simple_rand)()));
+                sprintf(line, "%.8X", static_cast<u_int>(((*simple_rand)() << 16) | (*simple_rand)()));
                 irc_sendline("PING :" + (string) line);
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
