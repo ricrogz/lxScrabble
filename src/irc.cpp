@@ -2,25 +2,26 @@
 // Created by invik on 17/10/17.
 //
 
-#include "irc.h"
+#include "irc.hpp"
 
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <netinet/in.h>
-#include <netdb.h>
 #include <cstdarg>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 
 int irc_socket;
 char irc_buffer[8193];
-size_t irc_bufLen = 0;
+std::size_t irc_bufLen = 0;
 bool irc_blackAndWhite;
 bool anyoneCanStop;
-string channel;
-string bot_nick;
-string public_nick;
-vector<string> owner;
+std::string channel;
+std::string bot_nick;
+std::string public_nick;
+std::vector<std::string> owner;
 
-void init_socket() {
+void init_socket()
+{
     irc_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (irc_socket < 0) {
         log_stderr("Cannot create a socket.");
@@ -28,16 +29,19 @@ void init_socket() {
     }
 }
 
-void irc_send(const string &text) {
-    send(irc_socket, &text[0], text.length(), 0);
+void irc_send(const std::string& text)
+{
+    send(irc_socket, text.c_str(), text.length(), 0);
 }
 
-void irc_sendline(const string &line) {
-    send(irc_socket, &line[0], line.length(), 0);
+void irc_sendline(const std::string& line)
+{
+    send(irc_socket, line.c_str(), line.length(), 0);
     send(irc_socket, "\n", 1, 0);
 }
 
-bool irc_handlestd(char line[1024]) {
+bool irc_handlestd(char line[1024])
+{
     if (strncmp(line, "PING :", 6) == 0) {
         irc_send("PONG :");
         irc_sendline(line + 6);
@@ -46,19 +50,23 @@ bool irc_handlestd(char line[1024]) {
     return false;
 }
 
-bool irc_recv(char line[1024]) {
+bool irc_recv(char line[1024])
+{
     u_long value = 0;
     ioctl(irc_socket, FIONREAD, &value);
     if (value) {
-        irc_bufLen += recv(irc_socket, irc_buffer + irc_bufLen, min<u_long>(value, sizeof(irc_buffer) - irc_bufLen), 0);
+        irc_bufLen +=
+            recv(irc_socket, irc_buffer + irc_bufLen,
+                 std::min<u_long>(value, sizeof(irc_buffer) - irc_bufLen), 0);
         irc_buffer[irc_bufLen] = 0;
         irc_bufLen = strlen(irc_buffer);
     }
     for (;;) {
-        char *scan = strchr(irc_buffer, '\n');
+        char* scan = strchr(irc_buffer, '\n');
         if (scan) {
-            auto lineLen = static_cast<size_t>(scan - irc_buffer);
-            if (lineLen > 1024) lineLen = 1024;
+            std::size_t lineLen = scan - irc_buffer;
+            if (lineLen > 1024)
+                lineLen = 1024;
             strncpy(line, irc_buffer, lineLen - 1);
             line[lineLen - 1] = 0;
             irc_bufLen -= lineLen + 1;
@@ -70,16 +78,18 @@ bool irc_recv(char line[1024]) {
     }
 }
 
-void irc_flushrecv() {
+void irc_flushrecv()
+{
     char line[1024] = {0};
     do {
         log_stdout(line);
     } while (irc_recv(line));
 }
 
-void irc_analyze(char *line, char **nickname, char **ident, char **hostname, char **cmd, char **param1, char **param2,
-                 char **paramtext) {
-    char *scan;
+void irc_analyze(char* line, char** nickname, char** ident, char** hostname,
+                 char** cmd, char** param1, char** param2, char** paramtext)
+{
+    char* scan;
     *nickname = *ident = *hostname = nullptr;
     if (line[0] == ':') {
         scan = strchr(line, ' ');
@@ -101,8 +111,10 @@ void irc_analyze(char *line, char **nickname, char **ident, char **hostname, cha
     *param1 = *param2 = nullptr;
     *paramtext = strchr(scan, '\0');
     while (*scan != ':') {
-        if (!*param1) *param1 = scan;
-        else if (!*param2) *param2 = scan;
+        if (!*param1)
+            *param1 = scan;
+        else if (!*param2)
+            *param2 = scan;
         else {
             scan--;
             break;
@@ -115,21 +127,24 @@ void irc_analyze(char *line, char **nickname, char **ident, char **hostname, cha
     *paramtext = scan + 1;
 }
 
-void irc_connect(const string &servername, int port, const string &password, string &nickname,
-                 const string &altnickname, const string &ident, const string &localhost, const string &fullname) {
+void irc_connect(const std::string& servername, int port,
+                 const std::string& password, std::string& nickname,
+                 const std::string& altnickname, const std::string& ident,
+                 const std::string& localhost, const std::string& fullname)
+{
 
-    struct hostent *host;
-    struct sockaddr_in serv_addr = {0};
+    struct hostent* host;
+    struct sockaddr_in serv_addr;
 
-    if ((host = gethostbyname(&servername[0])) == nullptr) {
+    if ((host = gethostbyname(servername.c_str())) == nullptr) {
         log_stderr("Could not resolve server name");
         halt(2);
     }
 
-    serv_addr.sin_addr = *(struct in_addr *) host->h_addr;
+    serv_addr.sin_addr = *(struct in_addr*) host->h_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons((u_short) port);
-    connect(irc_socket, (sockaddr *) &serv_addr, sizeof(serv_addr));
+    connect(irc_socket, (sockaddr*) &serv_addr, sizeof(serv_addr));
 
     msleep(500);
     irc_flushrecv();
@@ -140,7 +155,8 @@ void irc_connect(const string &servername, int port, const string &password, str
     }
 
     irc_sendline("NICK " + nickname);
-    irc_sendline("USER " + ident + " " + localhost + " " + servername + " :" + fullname);
+    irc_sendline("USER " + ident + " " + localhost + " " + servername + " :" +
+                 fullname);
 
     // All connection data has been send. Now, analyze answers for 45 secs
     char line[1024];
@@ -150,14 +166,15 @@ void irc_connect(const string &servername, int port, const string &password, str
             char *cmd, *dummy;
 
             // Get response text
-            irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy, &dummy);
+            irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy,
+                        &dummy);
 
             // We got a numeric indicating success
             if (strcmp(cmd, "001") == 0) {
                 irc_flushrecv();
                 return;
 
-            // Numerics indicating the nick is busy; use alternate
+                // Numerics indicating the nick is busy; use alternate
             } else if ((strcmp(cmd, "432") == 0) || (strcmp(cmd, "433") == 0)) {
                 if (nickname == altnickname) {
                     log_stderr("Nicknames already in use");
@@ -175,18 +192,22 @@ void irc_connect(const string &servername, int port, const string &password, str
     halt(7);
 }
 
-void do_perform(const string &perform) {
-    char *token = strtok((char *)&perform[0], "|");
+void do_perform(const std::string& perform)
+{
+    char* token = strtok((char*) perform.c_str(), "|");
     while (token != nullptr) {
         token = token + strspn(token, " ");
-        if (*token == '/') token++;
-        char *scan = strchr(token, ' ');
-        if (scan) *scan++ = '\0';
-        strupr(token);
+        if (*token == '/')
+            token++;
+        char* scan = strchr(token, ' ');
+        if (scan)
+            *scan++ = '\0';
+        non_ascii_strupr(token);
         if ((strcmp(token, "MSG") == 0) || (strcmp(token, "NOTICE") == 0)) {
             if (!scan) {
                 char text[128];
-                snprintf(text, 128, "Missing argument for %s on Perform= setting", token);
+                snprintf(text, 128,
+                         "Missing argument for %s on Perform= setting", token);
                 log_stderr(text);
                 halt(2);
             }
@@ -202,21 +223,23 @@ void do_perform(const string &perform) {
             irc_send(" :");
             irc_sendline(scan);
         } else {
-            if (scan) *--scan = ' ';
+            if (scan)
+                *--scan = ' ';
             irc_sendline(token);
         }
         token = strtok(nullptr, "|");
     }
-
 }
 
-bool irc_want(const char *wantCmd, int timeout = 15000) {
+bool irc_want(const char* wantCmd, int timeout = 15000)
+{
     char line[1024];
     clock_t ticks = clock();
     while (clock() - ticks < timeout) {
         if (irc_recv(line)) {
             char *cmd, *dummy;
-            irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy, &dummy);
+            irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy,
+                        &dummy);
             if (strcmp(cmd, wantCmd) == 0)
                 return true;
         } else
@@ -225,7 +248,9 @@ bool irc_want(const char *wantCmd, int timeout = 15000) {
     return false;
 }
 
-void irc_join(const string &channel, const string &channelkey = nullptr) {
+void irc_join(const std::string& channel,
+              const std::string& channelkey = nullptr)
+{
     irc_send("JOIN ");
     if (!channelkey.empty()) {
         irc_sendline(channel + " " + channelkey);
@@ -234,19 +259,23 @@ void irc_join(const string &channel, const string &channelkey = nullptr) {
     irc_want("JOIN");
 }
 
-void irc_sendmsg(const string &dest) {
+void irc_sendmsg(const std::string& dest)
+{
     irc_send("PRIVMSG " + dest + " :");
 }
 
-void irc_sendnotice(const string &dest) {
+void irc_sendnotice(const std::string& dest)
+{
     irc_send("NOTICE " + dest + " :");
 }
 
-void irc_connect() {
+void irc_connect()
+{
 
     // Prepare socket & connect
     init_socket();
-    irc_connect(servername, port, server_pass, bot_nick, altnickname, ident, "localhost", fullname);
+    irc_connect(servername, port, server_pass, bot_nick, altnickname, ident,
+                "localhost", fullname);
 
     // Perform actions (identify registered nick, etc)
     do_perform(perform);
@@ -256,43 +285,55 @@ void irc_connect() {
     irc_join(channel, channelkey);
 }
 
-void irc_stripcodes(char *text) {
-    char *scan = text;
+void irc_stripcodes(char* text)
+{
+    char* scan = text;
     char ch;
     while ((ch = *scan++) != 0) {
-        if (ch == 3) {  // couleur CTRL-K
-            if (isdigit(*scan)) {  // suivi d'un chiffre
-                if (isdigit(*++scan)) scan++; // eventuellement un 2eme chiffre
-                if ((*scan == ',') && isdigit(*(scan + 1))) {  // eventellement une virgule suivie d'un chiffre
+        if (ch == 3) {            // couleur CTRL-K
+            if (isdigit(*scan)) { // suivi d'un chiffre
+                if (isdigit(*++scan))
+                    scan++; // eventuellement un 2eme chiffre
+                if ((*scan == ',') &&
+                    isdigit(*(
+                        scan +
+                        1))) { // eventellement une virgule suivie d'un chiffre
                     scan += 2;
-                    if (isdigit(*scan)) scan++; // eventuellement un 2eme chiffre
+                    if (isdigit(*scan))
+                        scan++; // eventuellement un 2eme chiffre
                 }
             }
         } else if (is_valid_char(ch))
             *text++ = ch;
     }
-    *text = 0;  // Set null terminator
+    *text = 0; // Set null terminator
 }
 
-void irc_disconnect_msg(const string & msg) {
+void irc_disconnect_msg(const std::string& msg)
+{
     irc_sendline(msg);
     irc_want("ERROR", 5000);
     close(irc_socket);
 }
 
-void irc_disconnect() {
+void irc_disconnect()
+{
     irc_disconnect_msg("QUIT :Game Over");
 }
 
-void irc_sendformat(bool set_endl, const string & lpKeyName, const string & lpDefault, ...) {
-    string buffer = cfg<string_ini_t>("Strings", lpKeyName, lpDefault);
-    if (irc_blackAndWhite) irc_stripcodes(&buffer[0]);
+void irc_sendformat(bool set_endl, const std::string& lpKeyName,
+                    const std::string& lpDefault, ...)
+{
+    std::string buffer =
+        cfg<inicpp::string_ini_t>("Strings", lpKeyName, lpDefault);
+    if (irc_blackAndWhite)
+        irc_stripcodes(&buffer[0]);
     va_list arguments;
     char text[8192];
     va_start(arguments, &lpDefault);
-    vsnprintf(text, 8192, &buffer[0], arguments);
+    vsnprintf(text, 8192, buffer.c_str(), arguments);
     va_end(arguments);
-    send(irc_socket, text, static_cast<int>(strlen(text)), 0);
+    send(irc_socket, text, strlen(text), 0);
     if (set_endl)
         send(irc_socket, "\n", 1, 0);
 }

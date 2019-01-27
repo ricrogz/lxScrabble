@@ -2,141 +2,154 @@
 // Created by invik on 17/10/17.
 //
 
-
-#include "lxScrabble.h"
+#include "lxScrabble.hpp"
 
 #include <csignal>
 
-#include "dict_handler.h"
-#include "scores_handler.h"
-#include "game.h"
+#include "dict_handler.hpp"
+#include "game.hpp"
+#include "scores_handler.hpp"
 
 bool list_failed_words = false;
-size_t wordlen;
+std::size_t wordlen;
 u_long bonus;
-string distrib;
-string dict_file;
-struct Cell *dictionary = nullptr;
+std::string distrib;
+std::string dict_file;
+cellPtr dictionary = nullptr;
 struct Top topWeek[TOP_MAX];
 struct Top topYear[TOP_MAX];
-size_t foundWords;
-size_t foundMaxWords;
-size_t maxWordLen;
-size_t dispMaxWords;
+std::size_t foundWords;
+std::size_t foundMaxWords;
+std::size_t maxWordLen;
+std::size_t dispMaxWords;
 char dispMaxWordsString[1024];
 run_state cur_state;
-config *cfgp;
-config *scorep;
-string servername;
+std::unique_ptr<inicpp::config> cfgp;
+std::unique_ptr<inicpp::config> scorep;
+std::string servername;
 int port;
-string server_pass;
-string altnickname;
-string ident;
-string fullname;
-string channelkey;
-string perform;
+std::string server_pass;
+std::string altnickname;
+std::string ident;
+std::string fullname;
+std::string channelkey;
+std::string perform;
 u_int cfg_clock;
 u_int cfg_warning;
 u_int cfg_after;
 u_int autostop;
 bool autovoice;
 long reannounce;
-minstd_rand *simple_rand;
 
-void halt(int stat_code) {
+void halt(int stat_code)
+{
     exit(stat_code);
 }
 
-template<class T> T cfg(const string & section, const string & option, const T & default_value) {
-    if (! cfgp->contains(section))
+template <class T>
+T cfg(const std::string& section, const std::string& option,
+      const T& default_value)
+{
+    if (!cfgp->contains(section))
         cfgp->add_section(section);
-    if (! (*cfgp)[section].contains(option))
+    if (!(*cfgp)[section].contains(option))
         (*cfgp)[section].add_option(option, (T) default_value);
     return (*cfgp)[section][option].get<T>();
 }
 
-template<class T> vector<T> cfg_get_list(const string &section, const string &option, const T &default_value) {
-    if (! cfgp->contains(section))
+template <class T>
+std::vector<T> cfg_get_list(const std::string& section,
+                            const std::string& option, const T& default_value)
+{
+    if (!cfgp->contains(section))
         cfgp->add_section(section);
-    if (! (*cfgp)[section].contains(option))
+    if (!(*cfgp)[section].contains(option))
         (*cfgp)[section].add_option(option, default_value);
     return (*cfgp)[section][option].get_list<T>();
 }
 
-std::string strip_passwd(const std::string& nick) {
+std::string strip_passwd(const std::string& nick)
+{
 
     auto split1 = std::find(nick.begin(), nick.end(), ':');
     auto split2 = std::find(nick.begin(), split1, '!');
 
     return std::string(nick.begin(), split2);
+}
 
-};
-
-void readIni() {
+void readIni()
+{
 
     // Check that the config file exists
-    if (! fexists(INI_FILE)) {
-        log_stderr("\n\nConfiguration file not found. Please put 'lxScrabble.ini' into this directory!\n\n");
+    if (!fexists(INI_FILE)) {
+        log_stderr("\n\nConfiguration file not found. Please put "
+                   "'lxScrabble.ini' into this directory!\n\n");
         halt(1);
     }
-    *cfgp = parser::load_file(INI_FILE);
+    cfgp = std::make_unique<inicpp::config>(
+        std::move(inicpp::parser::load_file(INI_FILE)));
 
     // Game settings
-    wordlen = cfg<unsigned_ini_t>("Settings", "wordlen", 12);
-    bonus = cfg<unsigned_ini_t>("Settings", "bonus", 10);
+    wordlen = cfg<inicpp::unsigned_ini_t>("Settings", "wordlen", 12);
+    bonus = cfg<inicpp::unsigned_ini_t>("Settings", "bonus", 10);
 
     // Dictionary settings
-    distrib = cfg<string>("Settings", "distribution",
-                         "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOO"
-                                 "PPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ");
-    dict_file = cfg<string>("Settings", "dictionary", "english.dic");
+    distrib = cfg<std::string>(
+        "Settings", "distribution",
+        "AAAAAAAAABBCCDDDDEEEEEEEEEEEEFFGGGHHIIIIIIIIIJKLLLLMMNNNNNNOOOOOOOO"
+        "PPQRRRRRRSSSSTTTTTTUUUUVVWWXYYZ");
+    std::sort(distrib.begin(), distrib.end());
+
+    dict_file = cfg<std::string>("Settings", "dictionary", "english.dic");
 
     /* Read cfg with global reader */
 
     // Connection data
-    servername = cfg<string>("IRC", "Server", DEFAULT_SERVER);
-    if (strcmp(&servername[0], "<IRC SERVER HOSTNAME>") == 0) {
+    servername = cfg<std::string>("IRC", "Server", DEFAULT_SERVER);
+    if (servername == "<IRC SERVER HOSTNAME>") {
         log_stderr("\nConfigure lxScrabble.ini first !!");
         halt(2);
     }
-    port = static_cast<int>(cfg<unsigned_ini_t>("IRC", "Port", DEFAULT_PORT));
+    port = cfg<inicpp::unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
 
     // IRC parameters
-    bot_nick = cfg<string>("IRC", "Nick", DEFAULT_NICK);
-    server_pass = cfg<string>("IRC", "Password", "");
-    altnickname = cfg<string>("IRC", "ANick", DEFAULT_ANICK);
-    ident = cfg<string>("IRC", "Ident", DEFAULT_IDENT);
-    fullname = cfg<string>("IRC", "Fullname", BOTFULLNAME);
+    bot_nick = cfg<std::string>("IRC", "Nick", DEFAULT_NICK);
+    server_pass = cfg<std::string>("IRC", "Password", "");
+    altnickname = cfg<std::string>("IRC", "ANick", DEFAULT_ANICK);
+    ident = cfg<std::string>("IRC", "Ident", DEFAULT_IDENT);
+    fullname = cfg<std::string>("IRC", "Fullname", BOTFULLNAME);
 
     public_nick = strip_passwd(bot_nick);
 
     // Channel
-    channel = cfg<string>("IRC", "Channel", DEFAULT_CHANNEL);
-    channelkey = cfg<string>("IRC", "ChannelKey", DEFAULT_CHANNEL_KEY);
+    channel = cfg<std::string>("IRC", "Channel", DEFAULT_CHANNEL);
+    channelkey = cfg<std::string>("IRC", "ChannelKey", DEFAULT_CHANNEL_KEY);
 
     // Other configs
-    irc_blackAndWhite = static_cast<bool>(cfg<unsigned_ini_t>("IRC", "BlackAndWhite", 0));
-    anyoneCanStop = static_cast<bool>(cfg<unsigned_ini_t>("IRC", "AnyoneCanStop", 0));
-    perform = cfg<string>("IRC", "Perform", "");
-    owner = cfg_get_list<string>("IRC", "Owner", "");
+    irc_blackAndWhite = cfg<inicpp::unsigned_ini_t>("IRC", "BlackAndWhite", 0);
+    anyoneCanStop = cfg<inicpp::unsigned_ini_t>("IRC", "AnyoneCanStop", 0);
+    perform = cfg<std::string>("IRC", "Perform", "");
+    owner = cfg_get_list<std::string>("IRC", "Owner", "");
 
     // Game parameters
-    cfg_clock = static_cast<u_int>(cfg<unsigned_ini_t>("Delay", "max", 40)) * 10;
-    cfg_warning = static_cast<u_int>(cfg<unsigned_ini_t>("Delay", "warning", 30)) * 10;
-    cfg_after = static_cast<u_int>(cfg<unsigned_ini_t>("Delay", "after", 30)) * 10;
-    autostop = static_cast<u_int>(cfg<unsigned_ini_t>("Settings", "autostop", 3));
-    autovoice = static_cast<bool>(cfg<unsigned_ini_t>("Settings", "autovoice", 1));
-    reannounce = static_cast<long>(cfg<unsigned_ini_t>("Delay", "reannounce", 300));
+    cfg_clock = cfg<inicpp::unsigned_ini_t>("Delay", "max", 40) * 10;
+    cfg_warning = cfg<inicpp::unsigned_ini_t>("Delay", "warning", 30) * 10;
+    cfg_after = cfg<inicpp::unsigned_ini_t>("Delay", "after", 30) * 10;
+    autostop = cfg<inicpp::unsigned_ini_t>("Settings", "autostop", 3);
+    autovoice = cfg<inicpp::unsigned_ini_t>("Settings", "autovoice", 1);
+    reannounce = cfg<inicpp::unsigned_ini_t>("Delay", "reannounce", 300);
 }
 
-void gentle_terminator(int) {
+void gentle_terminator(int)
+{
     log_stdout("");
     log_stdout("Terminating gently...");
     cur_state = QUITTING;
 }
 
-void setup_interrupt_catcher() {
-    struct sigaction sigTermHandler = {nullptr};
+void setup_interrupt_catcher()
+{
+    struct sigaction sigTermHandler;
 
     sigTermHandler.sa_handler = gentle_terminator;
     sigemptyset(&sigTermHandler.sa_mask);
@@ -145,11 +158,10 @@ void setup_interrupt_catcher() {
     sigaction(SIGTERM, &sigTermHandler, nullptr);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char* argv[])
+{
     // Show banner, initialize random number generator
     log_stdout(BOTFULLNAME);
-    simple_rand = new minstd_rand();
-    simple_rand->seed(static_cast<u_long>(time(nullptr)));
 
     // Detect --list parameter
     for (int i = 0; i < argc; i++) {
@@ -160,22 +172,17 @@ int main(int argc, char *argv[]) {
     setup_interrupt_catcher();
 
     // Read ini file
-    cfgp = new config();
     readIni();
 
     // ReadDictionary
     readDictionary(dict_file);
 
     // Read top scores
-    scorep = new config();
     read_tops();
 
     // Connect and start game
     game_loop();
 
-    delete simple_rand;
-    delete scorep;
-    delete cfgp;
+    delete dictionary;
     return 0;
 }
-

@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 2.5)
 project(lxScrabble)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall")
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsigned-char")
 
+# For debugging purposes
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra")
+#set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 #add_definitions(-DCHEAT)
 
 # Statically link libraries
@@ -15,8 +19,8 @@ set(SOURCE_FILES
         src/irc.cpp
         src/game.cpp
         src/bot_commands.cpp
-        src/mimics.h
-        src/version.h)
+        src/mimics.hpp
+        src/version.hpp)
 
 add_executable(lxScrabble ${SOURCE_FILES})
 

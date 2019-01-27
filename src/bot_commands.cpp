@@ -2,38 +2,37 @@
 // Created by invik on 20/10/17.
 //
 
-#include "bot_commands.h"
+#include "bot_commands.hpp"
 
-#include "irc.h"
+#include "irc.hpp"
 
+void help_cmd(const std::string& dest, bool is_owner)
+{
 
+    std::string user_commands[] = {
+        "\002!start\002: Start a game (works only when the bot is stopped).",
+        "\002!score\002: Show your current score.",
+        "\002!score <nick>\002: Show <nick>'s current score.",
+        "\002!top10\002: Show this week's 10 best scores.",
+        "\002!top\002: Alias of \002!top10\002.",
+        "\002!top10year\002: Show this year's 10 best scores.",
+        "\002!top3\002: Show this week's 3 best scores.",
+        "\002!top3year\002: Show this year's 3 best scores.",
+        "\002!r\002: Show again the letters for the ongoing game."};
 
-void help_cmd(const string &dest, bool is_owner) {
+    std::string stop_cmd = "\002!stop\002: Stop the bot.";
 
-    string user_commands[] = {
-            "\002!start\002: Start a game (works only when the bot is stopped).",
-            "\002!score\002: Show your current score.",
-            "\002!score <nick>\002: Show <nick>'s current score.",
-            "\002!top10\002: Show this week's 10 best scores.",
-            "\002!top\002: Alias of \002!top10\002.",
-            "\002!top10year\002: Show this year's 10 best scores.",
-            "\002!top3\002: Show this week's 3 best scores.",
-            "\002!top3year\002: Show this year's 3 best scores.",
-            "\002!r\002: Show again the letters for the ongoing game."
-    };
-
-    string stop_cmd = "\002!stop\002: Stop the bot.";
-
-    string owner_commands[] = {
-            "\002!newweek\002: Reset the weekly scores, and start a new week.",
-            "\002!quit " + public_nick  + "\002: Quit. WARNING: this will stop the bot, and you will have to start the program again.",
-            "\002!op\002: get op'ed by the bot (the bot must have 'op' itself)."
-    };
+    std::string owner_commands[] = {
+        "\002!newweek\002: Reset the weekly scores, and start a new week.",
+        "\002!quit " + public_nick +
+            "\002: Quit. WARNING: this will stop the bot, and you will have to "
+            "start the program again.",
+        "\002!op\002: get op'ed by the bot (the bot must have 'op' itself)."};
 
     // User commands
     irc_sendmsg(dest);
     irc_sendline("User commands:");
-    for (auto & cmd : user_commands) {
+    for (auto& cmd : user_commands) {
         irc_sendmsg(dest);
         irc_sendline(cmd);
     }
@@ -46,7 +45,7 @@ void help_cmd(const string &dest, bool is_owner) {
     if (is_owner) {
         irc_sendmsg(dest);
         irc_sendline("Owner commands:");
-        for (auto & cmd : owner_commands) {
+        for (auto& cmd : owner_commands) {
             irc_sendmsg(dest);
             irc_sendline(cmd);
         }
