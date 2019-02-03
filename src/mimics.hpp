@@ -5,43 +5,44 @@
 #ifndef LXSCRABBLE_MIMICS_H
 #define LXSCRABBLE_MIMICS_H
 
-#include <climits>
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <vector>
+#include <unordered_map>
 
-/*                               ñ    ç   0 */
-const std::vector<char> NON_ASCII_LCASE({-15, -25});
-const std::vector<char> NON_ASCII_UCASE({-47, -57});
+const std::unordered_map<char, char> NON_ASCII_CONVERSIONS = {
+    {241, 209}, // ñ >> Ñ
+    {231, 199}, // ç >> Ç
+};
 
 inline bool is_valid_char(char c)
 {
-    return isascii(c) ||
-           NON_ASCII_LCASE.end() !=
-               std::find(NON_ASCII_LCASE.begin(), NON_ASCII_LCASE.end(), c) ||
-           NON_ASCII_UCASE.end() !=
-               std::find(NON_ASCII_UCASE.begin(), NON_ASCII_UCASE.end(), c);
+    auto is_match = [c](const std::pair<char, char>& p) {
+        return c == p.first || c == p.second;
+    };
+    return isascii(c) || std::any_of(NON_ASCII_CONVERSIONS.begin(),
+                                     NON_ASCII_CONVERSIONS.end(), is_match);
 }
 
 inline char* non_ascii_strupr(char* s)
 {
     char* tmp = s;
-    auto pch = NON_ASCII_LCASE.end();
     for (; *tmp; ++tmp) {
-        if (isalpha(*tmp))
+        if (isalpha(*tmp)) {
             *tmp = toupper(*tmp);
-        else if (NON_ASCII_LCASE.end() !=
-                 (pch = std::find(NON_ASCII_LCASE.begin(),
-                                  NON_ASCII_LCASE.end(), *tmp))) {
-            *tmp = NON_ASCII_UCASE[pch - NON_ASCII_LCASE.begin()];
+        } else {
+            auto found = NON_ASCII_CONVERSIONS.find(*tmp);
+            if (found != NON_ASCII_CONVERSIONS.end()) {
+                *tmp = found->second;
+            }
         }
     }
     return s;
 }
 
-inline void log(const char* message, std::ostream& stream)
+inline void log(const std::string& message, std::ostream& stream)
 {
     char timestamp[25];
     struct tm* sTm;
@@ -51,17 +52,17 @@ inline void log(const char* message, std::ostream& stream)
     stream << timestamp << message << std::endl;
 }
 
-inline void log_stdout(const char* message)
+inline void log_stdout(const std::string& message)
 {
     log(message, std::cout);
 }
 
-inline void log_stderr(const char* message)
+inline void log_stderr(const std::string& message)
 {
     log(message, std::cerr);
 }
 
-inline void msleep(u_long t)
+inline void msleep(unsigned long t)
 {
     usleep((__useconds_t) t * 1000);
 }

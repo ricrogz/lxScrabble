@@ -3,6 +3,13 @@
 //
 
 #include "scores_handler.hpp"
+#include "mimics.hpp"
+
+const std::string SCORE_FILE = "scores.ini";
+const std::size_t TOP_MAX = 10;
+
+Top topWeek[TOP_MAX];
+Top topYear[TOP_MAX];
 
 template <class T>
 void score_add(const std::string& section, const std::string& option,
@@ -48,7 +55,7 @@ void save_scores()
 
 void clear_top(Top* top)
 {
-    for (int index = 0; index < TOP_MAX; index++) {
+    for (std::size_t index = 0; index < TOP_MAX; ++index) {
         top[index].nick = "---";
         top[index].score = 0;
     }
@@ -60,7 +67,7 @@ void read_top(Top* top, std::vector<std::string>& value)
     for (auto& row : value) {
         if (row.empty())
             break;
-        u_long separator = row.find(' ');
+        unsigned long separator = row.find(' ');
         top->nick = row.substr(0, separator);
         top->score = strtol(row.substr(separator + 1).c_str(), nullptr, 10);
         top++;
@@ -90,7 +97,7 @@ void read_tops()
 
 void write_top(Top* top, std::string& value)
 {
-    for (int index = 0; index < TOP_MAX; index++) {
+    for (std::size_t index = 0; index < TOP_MAX; index++) {
         if (top[index].score == 0)
             break;
         if (index > 0)
@@ -112,9 +119,10 @@ void write_tops()
     score_add<std::string>("Top", "Year", value);
 }
 
-bool update_top(Top* top, const std::string& nickname, u_long score)
+bool update_top(Top* top, const std::string& nickname, unsigned long score)
 {
-    int newPos, index;
+    std::size_t newPos;
+    std::size_t index;
     // Find where to insert new score
     for (newPos = 0; newPos < TOP_MAX && score < top[newPos].score; newPos++)
         ;
@@ -141,7 +149,8 @@ bool update_top(Top* top, const std::string& nickname, u_long score)
     return true;
 }
 
-void get_scores(const std::string& nickname, u_long* year, u_long* week)
+void get_scores(const std::string& nickname, unsigned long* year,
+                unsigned long* week)
 {
     char* scan;
     std::string value = score_get<std::string>("Scores", "x" + nickname, "0 0");
@@ -149,7 +158,8 @@ void get_scores(const std::string& nickname, u_long* year, u_long* week)
     *week = strtoul(scan, &scan, 10);
 }
 
-void set_scores(const std::string& nickname, u_long year, u_long week)
+void set_scores(const std::string& nickname, unsigned long year,
+                unsigned long week)
 {
     std::string value = std::to_string(year) + " " + std::to_string(week);
     score_add<std::string>("Scores", "x" + nickname, value);
@@ -164,7 +174,7 @@ void clear_week_scores()
 {
     for (auto& player : (*scorep)["Scores"]) {
         std::string score = player.get<std::string>();
-        u_long len = score.find(' ');
+        unsigned long len = score.find(' ');
         player.set<std::string>(score.substr(0, len + 1) + '0');
     }
     clear_top(topWeek);

@@ -3,12 +3,17 @@
 //
 
 #include "dict_handler.hpp"
+#include "mimics.hpp"
 
-void addWord(std::string&& word)
+#include <cstring>
+#include <fstream>
+#include <sstream>
+
+void addWord(Cell*& dictionary, std::string&& word)
 {
     std::string letters(word);
     std::sort(letters.begin(), letters.end());
-    cellPtr* cell = &dictionary;
+    Cell** cell = &dictionary;
     auto scan = letters.begin();
     while (scan != letters.end()) {
         char ch = *scan;
@@ -16,18 +21,22 @@ void addWord(std::string&& word)
             if ((*cell == nullptr) || ((*cell)->letter > ch)) {
                 *cell = new Cell(ch, std::move(*cell));
                 break;
-            } else if ((*cell)->letter == ch)
+            } else if ((*cell)->letter == ch) {
                 break;
+            }
             cell = &(*cell)->other;
         }
-        if (++scan != letters.end())
+        if (++scan != letters.end()) {
             cell = &(*cell)->longer;
+        }
     }
     (*cell)->addWord(std::move(word));
 }
 
-void readDictionary(const std::string& filename)
+Cell const* readDictionary(const std::string& filename)
 {
+    Cell* dictionary = nullptr;
+
     std::ifstream stream(filename);
     if (stream.fail()) {
         log_stderr("Could not open dictionary file");
@@ -77,7 +86,7 @@ void readDictionary(const std::string& filename)
             ++words.wrong_symbols;
             continue;
         }
-        addWord(std::move(word));
+        addWord(dictionary, std::move(word));
         ++words.loaded;
     }
     stream.close();
@@ -101,12 +110,16 @@ void readDictionary(const std::string& filename)
         log_stderr("ERROR: No words were imported, game cannot continue.");
         halt(1);
     }
+
+    return dictionary;
 }
 
-void findWords(cellPtr cell, const char* letters, std::size_t len)
+void findWords(FoundWords& found, Cell const* cell, const std::string& letters,
+               std::size_t len)
 {
     // Get next letter
-    char ch = *letters++;
+    auto pos = letters.begin() + len;
+    char ch = *pos++;
 
     // Advance to the cell matching current letter
     while (cell && cell->letter < ch) {
@@ -121,49 +134,32 @@ void findWords(cellPtr cell, const char* letters, std::size_t len)
     // Explore cell
     if (cell->letter == ch) {
         if (!cell->empty()) {
-            if (dispMaxWords) {
-                if (len == dispMaxWords) {
-                    maxWordLen = len;
-                    for (const auto& w : cell->words) {
-                        strcat(dispMaxWordsString, " - ");
-                        strcat(dispMaxWordsString, w.c_str());
-                    }
-                }
-            } else {
-                foundWords += cell->size();
-                if (len > maxWordLen) {
-                    foundMaxWords = cell->size();
-                    maxWordLen = len;
-                } else if (len == maxWordLen) {
-                    foundMaxWords += cell->size();
-                }
+            std::size_t word_len = cell->words[0].size();
+            found.totalWords += cell->size();
+            if (word_len > found.lenBestWords) {
+                found.lenBestWords = word_len;
+                found.bestWords.assign(cell->words.begin(), cell->words.end());
+            } else if (word_len == found.lenBestWords) {
+                found.bestWords.insert(found.bestWords.end(),
+                                       cell->words.begin(), cell->words.end());
             }
         }
-        if ((*letters != '\0') && cell->longer) {
-            findWords(cell->longer, letters, len + 1);
+
+        if (pos != letters.end() && cell->longer) {
+            findWords(found, cell->longer, letters, pos - letters.begin());
         }
-        while (*letters == ch)
-            letters++;
+        while (pos != letters.end() && *pos == ch) {
+            ++pos;
+        }
     }
-    if (*letters != '\0')
-        findWords(cell, letters, len);
+    if (pos != letters.end()) {
+        findWords(found, cell, letters, pos - letters.begin());
+    }
 }
 
-void findWords(const char* letters)
+FoundWords findWords(Cell const*& dictionary, const std::string& letters)
 {
-    dispMaxWords = 0;
-    foundWords = 0;
-    foundMaxWords = 0;
-    maxWordLen = 0;
-    findWords(dictionary, letters, 1);
-}
-
-void displayMaxWords(const char* letters, std::size_t len)
-{
-    dispMaxWordsString[0] = '\0';
-    dispMaxWords = len;
-    foundWords = 0;
-    foundMaxWords = 0;
-    maxWordLen = 0;
-    findWords(dictionary, letters, 1);
+    FoundWords found;
+    findWords(found, dictionary, letters, 0);
+    return std::move(found);
 }

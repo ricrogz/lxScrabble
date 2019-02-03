@@ -145,6 +145,7 @@ Also take care that the ini and dictionary files are stored in the proper encodi
     - Formatting placeholders ('%...') format strings in lxScrabble have been replaced by proper *printf* placeholders ('%s', '%d').
     - Player scores in score.ini do no longer start with an underscore ('_').
 * Current source code allows for incorporation of non-ascii characters.
+* Incremental replacement of C code with C++.
 
 # Potential future improvements
 

@@ -5,31 +5,39 @@
 #ifndef LXSCRABBLE_IRC_H
 #define LXSCRABBLE_IRC_H
 
-#include "lxScrabble.hpp"
+#include "version.hpp"
+#include <string>
 
-#define IRC_BOLD "\x002"
-#define IRC_COLOR "\x003"
+const std::string IRC_BOLD = "\x002";
+const std::string IRC_COLOR = "\x003";
 
-#define BOT_URL "https://github.com/ricrogz/lxScrabble"
-#define BOTFULLNAME BOTNAME " by invik"
-#define ADVERTISE                                                              \
-    IRC_BOLD                                                                   \
-    IRC_COLOR "9,2 ~" IRC_COLOR "8,2*" IRC_COLOR "9,2~ " IRC_COLOR             \
-              "00" BOTNAME " " IRC_COLOR "15<+> " IRC_COLOR                    \
-              "00" BOT_URL IRC_COLOR "9,2 ~" IRC_COLOR "8,2*" IRC_COLOR        \
-              "9,2~ "
+const std::string BOT_URL = "https://github.com/ricrogz/lxScrabble";
 
-#define DEFAULT_SERVER "irc.chathispano.com"
-#define DEFAULT_PORT 6667
+const std::string BOTFULLNAME = BOTNAME + " by invik";
+const std::string ADVERTISE =
+    IRC_BOLD + IRC_COLOR + "9,2 ~" + IRC_COLOR + "8,2*" + IRC_COLOR + "9,2~ " +
+    IRC_COLOR + "00" + BOTNAME + " " + IRC_COLOR + "15<+> " + IRC_COLOR + "00" +
+    BOT_URL + IRC_COLOR + "9,2 ~" + IRC_COLOR + "8,2*" + IRC_COLOR + "9,2~ ";
 
-#define DEFAULT_NICK "Scrabblor"
-#define DEFAULT_ANICK "Scrabbl0r"
-#define DEFAULT_IDENT "lxScrabble"
+const std::string DEFAULT_SERVER = "irc.chathispano.com";
+const unsigned int DEFAULT_PORT = 6667;
 
-#define DEFAULT_CHANNEL "#scrabble"
-#define DEFAULT_CHANNEL_KEY ""
+const std::string DEFAULT_NICK = "Scrabblor";
+const std::string DEFAULT_ANICK = "Scrabbl0r";
+const std::string DEFAULT_IDENT = "lxScrabble";
 
-#define CONNECT_TIMEOUT (45 * 1000) // 45 s
+const std::string DEFAULT_CHANNEL = "#scrabble";
+const std::string DEFAULT_CHANNEL_KEY = "";
+constexpr clock_t TIMEOUT = 60 * 1000; // 45 s
+
+extern std::string servername;
+extern int port;
+extern std::string server_pass;
+extern std::string altnickname;
+extern std::string ident;
+extern std::string fullname;
+extern std::string channelkey;
+extern std::string perform;
 
 void irc_connect();
 
@@ -39,7 +47,7 @@ void irc_sendmsg(const std::string& dest);
 
 void irc_sendnotice(const std::string& dest);
 
-void irc_stripcodes(char* text);
+std::string irc_stripcodes(const std::string& text);
 
 void irc_sendformat(bool set_endl, const std::string& lpKeyName,
                     const std::string& lpDefault, ...);

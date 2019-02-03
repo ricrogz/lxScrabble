@@ -7,67 +7,61 @@
 #include "bot_commands.hpp"
 #include "dict_handler.hpp"
 #include "game.hpp"
+#include "mimics.hpp"
 #include "scores_handler.hpp"
 
+#include <algorithm>
+
+using RandGenerator = std::default_random_engine;
+
+run_state cur_state;
 std::string lastWinner;
-u_long winInARow;
+std::size_t winInARow;
 time_t last_msg; // Updates on last channel msg, when not playing
 
 void show_about()
 {
-    char buffer[sizeof(ADVERTISE)];
-    strcpy(buffer, ADVERTISE);
+    std::string buffer(ADVERTISE);
     irc_sendmsg(channel);
-    if (irc_blackAndWhite)
-        irc_stripcodes(buffer);
+    if (irc_blackAndWhite) {
+        buffer = irc_stripcodes(ADVERTISE);
+    }
     irc_sendline(buffer);
-
     irc_sendmsg(channel);
-    if (irc_blackAndWhite)
-        irc_stripcodes(buffer);
     irc_sendformat(true, "Help",
                    "Use '!help' to ask the bot for available commands");
 }
 
-void pickLetters(std::minstd_rand& get_rand_int, char* letters,
-                 char* sortedLetters)
+std::string pickLetters(RandGenerator& get_rand_int,
+                        const std::string& availableLetters)
 {
-    std::size_t count = distrib.length();
-    char availableLetters[count + 1];
-    strcpy(availableLetters, distrib.c_str());
-    for (std::size_t index = 0; index < wordlen; index++) {
-        u_long value;
-        do {
-            value =
-                static_cast<float>(get_rand_int()) * count / get_rand_int.max();
-        } while (availableLetters[value] == 0);
-        letters[index] = availableLetters[value];
-        availableLetters[value] = 0;
-    }
-    letters[wordlen] = 0;
 #ifdef CHEAT
+    std::string letters;
     log_stdout("[CHEATING] Input letters");
     std::cin >> letters;
+#else
+    std::string letters(availableLetters);
+    std::shuffle(letters.begin(), letters.end(), get_rand_int);
+    letters.resize(wordlen);
 #endif
-    strcpy(sortedLetters, letters);
-    std::sort(sortedLetters, sortedLetters + wordlen);
+    return std::move(letters);
 }
 
-void displayLetters(const char* letters)
+void displayLetters(const std::string& letters)
 {
     irc_sendmsg(channel);
-    char s_letters[wordlen * 2];
-    for (std::size_t i = 0; i < wordlen; i++) {
-        s_letters[i * 2] = letters[i];
-        s_letters[i * 2 + 1] = ' ';
+    std::ostringstream ss;
+    ss << ' ';
+    for (const auto& l : letters) {
+        ss << l << ' ';
     }
-    s_letters[wordlen * 2 - 1] = '\0';
-    irc_sendformat(true, "Letters", "[Mixed Letters]  - %s -", s_letters);
+    irc_sendformat(true, "Letters", "[Mixed Letters]  - %s -",
+                   ss.str().c_str());
 }
 
-void send_update_stats(const std::string& nickname, u_long gain)
+void send_update_stats(const std::string& nickname, unsigned long gain)
 {
-    u_long year, week;
+    unsigned long year, week;
     get_scores(nickname, &year, &week);
     year += gain;
     week += gain;
@@ -85,46 +79,54 @@ void send_update_stats(const std::string& nickname, u_long gain)
     lastWinner = nickname;
 }
 
-bool isWord(const char* letters, const char* word)
+bool isWord(Cell const* dictionary, const std::string& letters,
+            const std::string& word)
 {
-    char ch = *letters++;
-    cellPtr cell = dictionary;
+    auto char_ptr = letters.begin();
+    Cell const* cell = dictionary;
     do {
-        while (cell && cell->letter < ch)
+        while (cell && cell->letter < *char_ptr) {
             cell = cell->other;
-        if (!cell)
+        }
+        if (!cell) {
             return false;
-        if (cell->letter == ch) {
-            ch = *letters++;
-            if (ch == 0) {
+        }
+        if (cell->letter == *char_ptr) {
+            if (++char_ptr == letters.end()) {
                 return cell->words.end() !=
                        std::find(cell->words.begin(), cell->words.end(), word);
-            } else
+            } else {
                 cell = cell->longer;
-        } else
+            }
+        } else {
             return false;
+        }
     } while (cell);
     return false;
 }
 
-bool checkWord(const char* availableLetters, const char* word)
+bool isPossible(std::size_t wordlen, const std::string& availableLetters,
+                const std::string& sortedWord)
 {
-    std::string letters(word);
-    std::size_t len = letters.size();
-    if (len > wordlen) {
+    if (sortedWord.size() > wordlen) {
         return false;
     }
-    std::sort(letters.begin(), letters.end());
-    std::size_t scan = wordlen;
-    while (--len) {
-        do {
-            if (scan == 0)
+
+    auto available = availableLetters.begin();
+    for (auto l = sortedWord.begin(); l != sortedWord.end();) {
+        while (*l > *available) {
+            if (++available == availableLetters.end()) {
                 return false;
-        } while (availableLetters[--scan] > letters[len]);
-        if (availableLetters[scan] != letters[len])
+            }
+        }
+        if (*l < *available) {
             return false;
+        }
+        if (++l != sortedWord.end() && ++available == availableLetters.end()) {
+            return false;
+        }
     }
-    return isWord(letters.c_str(), word);
+    return true;
 }
 
 bool is_owner(const std::string& nickname)
@@ -137,7 +139,7 @@ bool is_owner(const std::string& nickname)
 
 void replyScore(const char* nickname, const char* dest)
 {
-    u_long year, week;
+    unsigned long year, week;
     get_scores(nickname, &year, &week);
     irc_sendnotice(dest);
     if (year == 0)
@@ -234,13 +236,13 @@ bool scrabbleCmd(const char* nickname, char* command)
     return true; // commande reconnue
 }
 
-void run_game()
+void run_game(Cell const* dictionary)
 {
 
     cur_state = STOPPED;
-    u_int noWinner = 0;
+    std::size_t noWinner = 0;
 
-    std::minstd_rand get_rand_int(time(nullptr));
+    RandGenerator get_rand_int(time(nullptr));
 
     while (cur_state != QUITTING) {
 
@@ -267,11 +269,11 @@ void run_game()
                 if ((strcmp(cmd, "PRIVMSG") == 0) &&
                     (strcasecmp(param1, channel.c_str()) == 0)) {
                     time(&last_msg);
-                    irc_stripcodes(paramtext);
-                    while (isspace(*paramtext))
-                        paramtext++;
-                    if (*paramtext == 0)
+                    std::string ptext(paramtext);
+                    ptext = irc_stripcodes(ptext);
+                    if (ptext.empty()) {
                         continue;
+                    }
                     scrabbleCmd(nickname, paramtext);
 
                     // Reanounce on JOIN after x time without noone talking
@@ -287,14 +289,14 @@ void run_game()
             // Keep alive
             if (!PINGed && (clock() - lastRecvTicks > 15000)) {
                 sprintf(line, "%.8X",
-                        static_cast<u_int>((get_rand_int() << 16) |
-                                           get_rand_int()));
+                        static_cast<unsigned int>((get_rand_int() << 16) |
+                                                  get_rand_int()));
                 irc_sendline("PING :" + std::string(line));
                 PINGed = true;
-            } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
+            } else if (PINGed && (clock() - lastRecvTicks > TIMEOUT)) {
                 log_stdout("***** Timeout detected, reconnecting. *****");
                 irc_disconnect_msg("Timeout detected, reconnecting.");
-                game_loop();
+                game_loop(dictionary);
             }
 
             // Reset weekly scores on monday 00:00
@@ -324,29 +326,37 @@ void run_game()
          * Start a new round: pick letters, find words, print letters & stats
          */
 
-        char letters[wordlen + 1], sortedLetters[wordlen + 1];
+        std::string letters;
+        std::string sortedLetters;
+        FoundWords foundWords;
         do {
-            pickLetters(get_rand_int, letters, sortedLetters);
+            letters = pickLetters(get_rand_int, distrib);
             displayLetters(letters);
-            findWords(sortedLetters);
+
+            sortedLetters = std::string(letters);
+            std::sort(sortedLetters.begin(), sortedLetters.end());
+
+            foundWords = findWords(dictionary, sortedLetters);
             irc_sendmsg(channel);
-            if (foundWords == 0)
+            if (foundWords.totalWords == 0) {
                 irc_sendformat(true, "FoundNone",
                                "[I've found no possible words !! Let's roll "
                                "again ;-)...]");
-            else
+            } else {
                 irc_sendformat(true, "Found",
                                "[I've found %d words, including %d which "
                                "contain %d letters.]",
-                               foundWords, foundMaxWords, maxWordLen);
-        } while (foundWords == 0);
+                               foundWords.totalWords,
+                               foundWords.bestWords.size(),
+                               foundWords.lenBestWords);
+            }
+        } while (foundWords.totalWords == 0);
         tclock = cfg_clock;
         int warning = tclock - cfg_warning;
 #ifdef CHEAT
-        displayMaxWords(sortedLetters, maxWordLen);
-        char text[maxWordLen + 2];
-        snprintf(text, maxWordLen + 2, "%s", (char*) &dispMaxWordsString + 3);
-        log_stdout(text);
+        std::ostringstream ss;
+        ss << "Longest Words :" << foundWords.maxWordsString << std::endl;
+        log_stdout(ss.str());
 #endif
         time(&t);
         systemTime = localtime(&t);
@@ -363,10 +373,15 @@ void run_game()
                 irc_sendformat(true, "Warning", "Warning, time is nearly out!");
             } else if (tclock == 0) {
                 irc_sendmsg(channel);
-                displayMaxWords(sortedLetters, maxWordLen);
+                std::ostringstream ss;
+                ss << foundWords.bestWords.front();
+                for (auto w = foundWords.bestWords.begin() + 1;
+                     w != foundWords.bestWords.end(); ++w) {
+                    ss << " - " << *w;
+                }
                 irc_sendformat(true, "Timeout",
                                "[Time is out.] MAX words were %s",
-                               dispMaxWordsString + 3);
+                               ss.str().c_str());
                 if (winningWordLen) {
                     irc_sendmsg(channel);
                     irc_sendformat(false, "WinSome", "%s gets %d points! ",
@@ -430,11 +445,15 @@ void run_game()
                             continue;
                         if (strlen(paramtext) > winningWordLen) {
                             non_ascii_strupr(paramtext);
-                            if (checkWord(sortedLetters, paramtext)) {
+                            std::string sortedWord(paramtext);
+                            std::sort(sortedWord.begin(), sortedWord.end());
+                            if (isPossible(wordlen, sortedLetters,
+                                           sortedWord) &&
+                                isWord(dictionary, sortedWord, paramtext)) {
                                 irc_sendmsg(channel);
                                 strcpy(winningNick, nickname);
                                 winningWordLen = strlen(paramtext);
-                                if (winningWordLen == maxWordLen) {
+                                if (winningWordLen == foundWords.lenBestWords) {
                                     irc_sendformat(
                                         false, "Win",
                                         "Congratulations %s ! There's not "
@@ -465,20 +484,21 @@ void run_game()
             // Keep alive
             if (!PINGed && (clock() - lastRecvTicks > 15000)) {
                 sprintf(line, "%.8X",
-                        static_cast<u_int>((get_rand_int() << 16) |
-                                           get_rand_int()));
+                        static_cast<unsigned int>((get_rand_int() << 16) |
+                                                  get_rand_int()));
                 irc_sendline("PING :" + std::string(line));
                 PINGed = true;
-            } else if (PINGed && (clock() - lastRecvTicks > 20000)) {
+            } else if (PINGed && (clock() - lastRecvTicks > TIMEOUT)) {
                 log_stdout("***** Timeout detected, reconnecting. *****");
                 irc_disconnect_msg("Timeout detected, reconnecting.");
-                game_loop();
+                game_loop(dictionary);
             }
+
         } while ((cur_state == RUNNING) && tclock);
     }
 }
 
-void game_loop()
+void game_loop(Cell const* dictionary)
 {
     // Connect to irc
     log_stdout("Connecting to IRC...");
@@ -486,7 +506,7 @@ void game_loop()
 
     // Init execution
     show_about();
-    run_game();
+    run_game(dictionary);
 
     log_stdout("Quitting...");
     irc_disconnect();

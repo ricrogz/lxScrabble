@@ -3,43 +3,30 @@
 //
 
 #include "lxScrabble.hpp"
-
-#include <csignal>
-
 #include "dict_handler.hpp"
 #include "game.hpp"
+#include "inicpp/inicpp.h"
+#include "irc.hpp"
+#include "mimics.hpp"
 #include "scores_handler.hpp"
+#include <csignal>
+#include <memory>
 
 bool list_failed_words = false;
 std::size_t wordlen;
-u_long bonus;
+unsigned long bonus;
 std::string distrib;
 std::string dict_file;
-cellPtr dictionary = nullptr;
-struct Top topWeek[TOP_MAX];
-struct Top topYear[TOP_MAX];
-std::size_t foundWords;
-std::size_t foundMaxWords;
-std::size_t maxWordLen;
-std::size_t dispMaxWords;
-char dispMaxWordsString[1024];
-run_state cur_state;
 std::unique_ptr<inicpp::config> cfgp;
 std::unique_ptr<inicpp::config> scorep;
-std::string servername;
-int port;
-std::string server_pass;
-std::string altnickname;
-std::string ident;
-std::string fullname;
-std::string channelkey;
-std::string perform;
-u_int cfg_clock;
-u_int cfg_warning;
-u_int cfg_after;
-u_int autostop;
+unsigned int cfg_clock;
+unsigned int cfg_warning;
+unsigned int cfg_after;
+unsigned int autostop;
 bool autovoice;
 long reannounce;
+
+const std::string INI_FILE("lxScrabble.ini");
 
 void halt(int stat_code)
 {
@@ -175,13 +162,13 @@ int main(int argc, char* argv[])
     readIni();
 
     // ReadDictionary
-    readDictionary(dict_file);
+    auto dictionary = readDictionary(dict_file);
 
     // Read top scores
     read_tops();
 
     // Connect and start game
-    game_loop();
+    game_loop(dictionary);
 
     delete dictionary;
     return 0;

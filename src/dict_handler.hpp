@@ -17,9 +17,9 @@ struct dict_stats {
 class Cell
 {
   public:
-    cellPtr other = nullptr;  // autres lettres possibles (plus grandes dans
-                              // l'ordre alphab�tiques)
-    cellPtr longer = nullptr; // mots plus long disponibles
+    Cell* other = nullptr;  // autres lettres possibles (plus grandes dans
+                            // l'ordre alphab�tiques)
+    Cell* longer = nullptr; // mots plus long disponibles
 
     // succession des mots contenant ces lettres, s�par�s par des
     // \0 et termin� par un autre \0
@@ -27,9 +27,9 @@ class Cell
 
     const char letter = '0'; // la lettre
 
-    Cell() = delete;
-    Cell(const Cell&) = delete;
-    Cell(char& l, cellPtr&& o) : other(std::move(o)), letter(l) {}
+    // Cell() = delete;
+    explicit Cell(const Cell&) = delete;
+    Cell(char& l, Cell*&& o) : other(std::move(o)), letter(l) {}
     ~Cell()
     {
         delete other;
@@ -41,12 +41,16 @@ class Cell
     bool empty() const { return words.empty(); }
 };
 
-void addWord(std::string&& word);
+void addWord(Cell*& dictionary, std::string&& word);
 
-void readDictionary(const std::string& filename);
+Cell const* readDictionary(const std::string& filename);
 
-void findWords(const char* letters);
+struct FoundWords {
+    std::size_t totalWords = 0;
+    std::size_t lenBestWords = 0;
+    std::vector<std::string> bestWords;
+};
 
-void displayMaxWords(const char* letters, std::size_t len);
+FoundWords findWords(Cell const*& dictionary, const std::string& letters);
 
 #endif // LXSCRABBLE_DICT_HANDLER_H

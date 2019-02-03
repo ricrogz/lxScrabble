@@ -3,12 +3,25 @@
 //
 
 #include "irc.hpp"
-
+#include "inicpp/inicpp.h"
+#include "lxScrabble.hpp"
+#include "mimics.hpp"
 #include <cstdarg>
+#include <cstring>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <sstream>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+
+std::string servername;
+int port;
+std::string server_pass;
+std::string altnickname;
+std::string ident;
+std::string fullname;
+std::string channelkey;
+std::string perform;
 
 int irc_socket;
 char irc_buffer[8193];
@@ -52,12 +65,12 @@ bool irc_handlestd(char line[1024])
 
 bool irc_recv(char line[1024])
 {
-    u_long value = 0;
+    unsigned long value = 0;
     ioctl(irc_socket, FIONREAD, &value);
     if (value) {
-        irc_bufLen +=
-            recv(irc_socket, irc_buffer + irc_bufLen,
-                 std::min<u_long>(value, sizeof(irc_buffer) - irc_bufLen), 0);
+        irc_bufLen += recv(
+            irc_socket, irc_buffer + irc_bufLen,
+            std::min<unsigned long>(value, sizeof(irc_buffer) - irc_bufLen), 0);
         irc_buffer[irc_bufLen] = 0;
         irc_bufLen = strlen(irc_buffer);
     }
@@ -161,7 +174,7 @@ void irc_connect(const std::string& servername, int port,
     // All connection data has been send. Now, analyze answers for 45 secs
     char line[1024];
     clock_t ticks = clock();
-    while (clock() - ticks < CONNECT_TIMEOUT) {
+    while (clock() - ticks < TIMEOUT) {
         if (irc_recv(line)) {
             char *cmd, *dummy;
 
@@ -248,14 +261,14 @@ bool irc_want(const char* wantCmd, int timeout = 15000)
     return false;
 }
 
-void irc_join(const std::string& channel,
-              const std::string& channelkey = nullptr)
+void irc_join(const std::string& channel, const std::string& channelkey = "")
 {
     irc_send("JOIN ");
     if (!channelkey.empty()) {
         irc_sendline(channel + " " + channelkey);
-    } else
+    } else {
         irc_sendline(channel);
+    }
     irc_want("JOIN");
 }
 
@@ -285,28 +298,38 @@ void irc_connect()
     irc_join(channel, channelkey);
 }
 
-void irc_stripcodes(char* text)
+std::string irc_stripcodes(const std::string& text)
 {
-    char* scan = text;
-    char ch;
-    while ((ch = *scan++) != 0) {
-        if (ch == 3) {            // couleur CTRL-K
-            if (isdigit(*scan)) { // suivi d'un chiffre
-                if (isdigit(*++scan))
-                    scan++; // eventuellement un 2eme chiffre
-                if ((*scan == ',') &&
-                    isdigit(*(
-                        scan +
-                        1))) { // eventellement une virgule suivie d'un chiffre
-                    scan += 2;
-                    if (isdigit(*scan))
-                        scan++; // eventuellement un 2eme chiffre
-                }
+    std::ostringstream ss;
+    std::size_t expected_digit = 0;
+    for (const auto& ch : text) {
+        if (ch == 2) { // Bold
+            expected_digit = 0;
+            continue;
+        } else if (ch == 3) { // Color marker
+            expected_digit = 1;
+            continue;
+        } else if (expected_digit > 0) {
+
+            // triggers at 3 & 6
+            if (expected_digit % 3 == 0 && ch != ',') {
+                expected_digit = 0;
             }
-        } else if (is_valid_char(ch))
-            *text++ = ch;
+
+            // triggers at 2 & 3
+            else if (expected_digit / 2 == 1 && ch == ',') {
+                expected_digit = 4;
+                continue;
+            } else if (isdigit(ch)) {
+                ++expected_digit;
+                continue;
+            } else {
+                expected_digit = 0;
+            }
+        }
+        ss << ch;
     }
-    *text = 0; // Set null terminator
+    return std::move(ss.str());
 }
 
 void irc_disconnect_msg(const std::string& msg)
@@ -326,14 +349,16 @@ void irc_sendformat(bool set_endl, const std::string& lpKeyName,
 {
     std::string buffer =
         cfg<inicpp::string_ini_t>("Strings", lpKeyName, lpDefault);
-    if (irc_blackAndWhite)
-        irc_stripcodes(&buffer[0]);
+    if (irc_blackAndWhite) {
+        buffer = irc_stripcodes(buffer);
+    }
     va_list arguments;
     char text[8192];
     va_start(arguments, &lpDefault);
     vsnprintf(text, 8192, buffer.c_str(), arguments);
     va_end(arguments);
     send(irc_socket, text, strlen(text), 0);
-    if (set_endl)
+    if (set_endl) {
         send(irc_socket, "\n", 1, 0);
+    }
 }
