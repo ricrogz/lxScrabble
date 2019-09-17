@@ -15,9 +15,9 @@ void help_cmd(const std::string& dest, bool is_owner)
         "\002!score <nick>\002: Show <nick>'s current score.",
         "\002!top10\002: Show this week's 10 best scores.",
         "\002!top\002: Alias of \002!top10\002.",
-        "\002!top10year\002: Show this year's 10 best scores.",
+        "\002!top10total\002: Show all times's 10 best scores.",
         "\002!top3\002: Show this week's 3 best scores.",
-        "\002!top3year\002: Show this year's 3 best scores.",
+        "\002!top3total\002: Show all time's 3 best scores.",
         "\002!r\002: Show again the letters for the ongoing game."};
 
     std::string stop_cmd = "\002!stop\002: Stop the bot.";

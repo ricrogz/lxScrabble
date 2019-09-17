@@ -2,17 +2,20 @@
 // Created by invik on 17/10/17.
 //
 
+#include <algorithm>
+#include <cstring>
 #include <random>
+#include <sstream>
 
 #include "bot_commands.hpp"
 #include "dict_handler.hpp"
 #include "game.hpp"
 #include "mimics.hpp"
-#include "scores_handler.hpp"
-
-#include <algorithm>
+#include "scoreboard.hpp"
 
 using RandGenerator = std::default_random_engine;
+
+extern Scoreboard* scores;
 
 run_state cur_state;
 std::string lastWinner;
@@ -44,7 +47,7 @@ std::string pickLetters(RandGenerator& get_rand_int,
     std::shuffle(letters.begin(), letters.end(), get_rand_int);
     letters.resize(wordlen);
 #endif
-    return std::move(letters);
+    return letters;
 }
 
 void displayLetters(const std::string& letters)
@@ -61,20 +64,18 @@ void displayLetters(const std::string& letters)
 
 void send_update_stats(const std::string& nickname, unsigned long gain)
 {
-    unsigned long year, week;
-    get_scores(nickname, &year, &week);
-    year += gain;
-    week += gain;
-    set_scores(nickname, year, week);
+    scores->add_score(nickname, gain);
+    const auto week = scores->get_score(nickname, Scoreboard::Type::Week);
+    const auto alltime = scores->get_score(nickname, Scoreboard::Type::Total);
 
     if (strcasecmp(lastWinner.c_str(), nickname.c_str()) != 0) {
         winInARow = 1;
-        irc_sendformat(true, "Stats", "( %d pts :  %d pts)", week, year);
+        irc_sendformat(true, "Stats", "( %d pts :  %d pts)", week, alltime);
     } else {
         winInARow++;
         irc_sendformat(true, "StatsCont",
                        "( %d pts :  %d pts) - %d  contiguous won games!",
-                       winInARow, week, year);
+                       winInARow, week, alltime);
     }
     lastWinner = nickname;
 }
@@ -139,46 +140,55 @@ bool is_owner(const std::string& nickname)
 
 void replyScore(const char* nickname, const char* dest)
 {
-    unsigned long year, week;
-    get_scores(nickname, &year, &week);
+    const auto week = scores->get_score(nickname, Scoreboard::Type::Week);
+    const auto alltime = scores->get_score(nickname, Scoreboard::Type::Total);
+
     irc_sendnotice(dest);
-    if (year == 0)
+    if (alltime == 0ul)
         irc_sendformat(true, "ScoreUnknown", "%s has never played with me.",
                        nickname);
     else
-        irc_sendformat(
-            true, "Score",
-            "%s's score is %d point(s) for this week, %d for this year.",
-            nickname, week, year);
+        irc_sendformat(true, "Score",
+                       "%s's score is %d point(s) for this week, %d in total.",
+                       nickname, week, alltime);
 }
 
-void replyTop10(const char* dest, Top* top, const char* whichTop,
-                const char* lpDefault, const char* whichTopMore,
-                const char* lpDefaultMore)
+void sendTop(const char* dest, Scoreboard::Type which, size_t num,
+             const char* lpDefault, const char* lpDefaultMore)
 {
-    irc_sendnotice(dest);
-    irc_sendformat(true, whichTop, lpDefault, &(top[0].nick)[0], top[0].score);
-    irc_sendnotice(dest);
-    irc_sendformat(true, whichTopMore, lpDefaultMore, 2, &(top[1].nick)[0],
-                   top[1].score, 3, &(top[2].nick)[0], top[2].score, 4,
-                   &(top[3].nick)[0], top[3].score);
-    irc_sendnotice(dest);
-    irc_sendformat(true, whichTopMore, lpDefaultMore, 5, &(top[4].nick)[0],
-                   top[4].score, 6, &(top[5].nick)[0], top[5].score, 7,
-                   &(top[6].nick)[0], top[6].score);
-    irc_sendnotice(dest);
-    irc_sendformat(true, whichTopMore, lpDefaultMore, 8, &(top[7].nick)[0],
-                   top[7].score, 9, &(top[8].nick)[0], top[8].score, 10,
-                   &(top[9].nick)[0], top[9].score);
-}
+    if (num != 3) {
+        num = 1 + num - (num % 3);
+    }
 
-void replyTop3(const char* dest, Top* top, const char* whichTop,
-               const char* lpDefault)
-{
+    std::stringstream title;
+    title << "Top" << (which == Scoreboard::Type::Week ? 'W' : 'A') << num;
+    const auto top = scores->get_top(which, num);
+
+    auto top_iter = top.begin();
+
     irc_sendnotice(dest);
-    irc_sendformat(true, whichTop, lpDefault, &(top[0].nick)[0], top[0].score,
-                   &(top[1].nick)[0], top[1].score, &(top[2].nick)[0],
-                   top[2].score);
+    if (num == 3) {
+        auto a = top_iter;
+        auto b = ++top_iter;
+        auto c = ++top_iter;
+        irc_sendformat(true, title.str(), lpDefault, a->first.c_str(),
+                       a->second, b->first.c_str(), b->second, c->first.c_str(),
+                       c->second);
+    } else {
+        irc_sendformat(true, title.str(), lpDefault, top_iter->first.c_str(),
+                       top_iter->second);
+
+        title << "More";
+        for (size_t i = 2; i < num; i += 3) {
+            auto a = ++top_iter;
+            auto b = ++top_iter;
+            auto c = ++top_iter;
+            irc_sendnotice(dest);
+            irc_sendformat(true, title.str(), lpDefaultMore, i,
+                           a->first.c_str(), a->second, i + 1, b->first.c_str(),
+                           b->second, i + 2, c->first.c_str(), c->second);
+        }
+    }
 }
 
 bool scrabbleCmd(const char* nickname, char* command)
@@ -192,21 +202,24 @@ bool scrabbleCmd(const char* nickname, char* command)
         replyScore(command + 7, nickname);
     else if ((strcasecmp(command, "!top") == 0) ||
              (strcasecmp(command, "!top10") == 0))
-        replyTop10(nickname, topWeek, "TopW10",
-                   "The 10 best players of the week: 1. %s (%d)", "TopW10More",
-                   "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
-    else if (strcasecmp(command, "!top10year") == 0)
-        replyTop10(nickname, topYear, "TopY10",
-                   "The 10 best players of the year: 1. %s (%d)", "TopY10More",
-                   "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
+        sendTop(nickname, Scoreboard::Type::Week, 10,
+                "The 10 best players of the week: 1. %s (%d)",
+                "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
+    else if (strcasecmp(command, "!top10total") == 0)
+        sendTop(nickname, Scoreboard::Type::Total, 10,
+                "The 10 best players of the all time: 1. %s (%d)",
+                "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
     else if (strcasecmp(command, "!top3") == 0)
-        replyTop3(nickname, topWeek, "TopW3",
-                  "The 3 best players of the week:  1. %s (%d) - 2. %s (%d) - "
-                  "3. %s (%d)");
-    else if (strcasecmp(command, "!top3year") == 0)
-        replyTop3(nickname, topYear, "TopY3",
-                  "The 3 best players of the year:  1. %s (%d) - 2. %s (%d) - "
-                  "3. %s (%d)");
+        sendTop(nickname, Scoreboard::Type::Week, 3,
+                "The 3 best players of the week:  1. %s (%d) - 2. %s (%d) - "
+                "3. %s (%d)",
+                nullptr);
+    else if (strcasecmp(command, "!top3total") == 0)
+        sendTop(
+            nickname, Scoreboard::Type::Total, 3,
+            "The 3 best players of the all time:  1. %s (%d) - 2. %s (%d) - "
+            "3. %s (%d)",
+            nullptr);
     else if (strcasecmp(command, "!start") == 0)
         cur_state = RUNNING;
     else if ((anyoneCanStop || isOwner) &&
@@ -223,7 +236,7 @@ bool scrabbleCmd(const char* nickname, char* command)
             irc_sendformat(
                 true, "NewWeek",
                 "A new week is beginning ! Resetting all week scores...");
-            clear_week_scores();
+            scores->clear(Scoreboard::Type::Week);
         } else if (strncasecmp(command, &("!quit " + public_nick)[0],
                                6 + public_nick.length()) == 0) {
             cur_state = QUITTING;
@@ -276,7 +289,7 @@ void run_game(Cell const* dictionary)
                     }
                     scrabbleCmd(nickname, paramtext);
 
-                    // Reanounce on JOIN after x time without noone talking
+                    // Reannounce on JOIN after x time without no one talking
                 } else if (reannounce > 0 && (strcmp(cmd, "JOIN") == 0) &&
                            (strcasecmp(paramtext, channel.c_str()) == 0)) {
                     time_t now;
@@ -310,7 +323,7 @@ void run_game(Cell const* dictionary)
                     irc_sendformat(true, "NewWeek",
                                    "A new week is beginning ! Resetting all "
                                    "week scores...");
-                    clear_week_scores();
+                    scores->clear(Scoreboard::Type::Week);
                 }
                 lastDayOfWeek = systemTime->tm_wday;
             }
@@ -411,7 +424,7 @@ void run_game(Cell const* dictionary)
                     irc_sendformat(true, "NewWeek",
                                    "A new week is beginning ! Resetting all "
                                    "week scores...");
-                    clear_week_scores();
+                    scores->clear(Scoreboard::Type::Week);
                 }
                 lastDayOfWeek = systemTime->tm_wday;
             }

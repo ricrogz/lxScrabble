@@ -157,14 +157,16 @@ void irc_connect(const std::string& servername, int port,
     serv_addr.sin_addr = *(struct in_addr*) host->h_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons((u_short) port);
-    connect(irc_socket, (sockaddr*) &serv_addr, sizeof(serv_addr));
+    if (connect(irc_socket, (sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
+        log_stderr("Connection failed.");
+        halt(3);
+    }
 
     msleep(500);
     irc_flushrecv();
 
     if (!password.empty()) {
-        irc_send("PASS ");
-        irc_sendline(password);
+        irc_sendline("PASS " + password);
     }
 
     irc_sendline("NICK " + nickname);
@@ -240,8 +242,12 @@ void do_perform(const std::string& perform)
                 *--scan = ' ';
             irc_sendline(token);
         }
+        msleep(300);
+        irc_flushrecv();
         token = strtok(nullptr, "|");
     }
+    msleep(300);
+    irc_flushrecv();
 }
 
 bool irc_want(const char* wantCmd, int timeout = 15000)
@@ -292,7 +298,6 @@ void irc_connect()
 
     // Perform actions (identify registered nick, etc)
     do_perform(perform);
-    irc_flushrecv();
 
     // Join channel
     irc_join(channel, channelkey);

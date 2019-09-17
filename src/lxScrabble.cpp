@@ -2,15 +2,16 @@
 // Created by invik on 17/10/17.
 //
 
-#include "lxScrabble.hpp"
+#include <csignal>
+#include <memory>
+
 #include "dict_handler.hpp"
 #include "game.hpp"
 #include "inicpp/inicpp.h"
 #include "irc.hpp"
+#include "lxScrabble.hpp"
 #include "mimics.hpp"
-#include "scores_handler.hpp"
-#include <csignal>
-#include <memory>
+#include "scoreboard.hpp"
 
 bool list_failed_words = false;
 std::size_t wordlen;
@@ -18,7 +19,7 @@ unsigned long bonus;
 std::string distrib;
 std::string dict_file;
 std::unique_ptr<inicpp::config> cfgp;
-std::unique_ptr<inicpp::config> scorep;
+Scoreboard* scores;
 unsigned int cfg_clock;
 unsigned int cfg_warning;
 unsigned int cfg_after;
@@ -27,6 +28,8 @@ bool autovoice;
 long reannounce;
 
 const std::string INI_FILE("lxScrabble.ini");
+const std::string SCORE_FILE = "scores.ini";
+const std::size_t TOP_MAX = 10;
 
 void halt(int stat_code)
 {
@@ -165,7 +168,7 @@ int main(int argc, char* argv[])
     auto dictionary = readDictionary(dict_file);
 
     // Read top scores
-    read_tops();
+    scores = Scoreboard::read_scoreboard(SCORE_FILE);
 
     // Connect and start game
     game_loop(dictionary);

@@ -25,11 +25,11 @@ class Cell
     // \0 et termin� par un autre \0
     std::vector<std::string> words;
 
-    const char letter = '0'; // la lettre
+    const char letter; // la lettre
 
-    // Cell() = delete;
+    Cell() = delete;
     explicit Cell(const Cell&) = delete;
-    Cell(char& l, Cell*&& o) : other(std::move(o)), letter(l) {}
+    Cell(char& l, Cell*&& o) noexcept : other(std::move(o)), letter(l) {}
     ~Cell()
     {
         delete other;

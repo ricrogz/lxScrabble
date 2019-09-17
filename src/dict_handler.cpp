@@ -55,7 +55,7 @@ Cell const* readDictionary(const std::string& filename)
                 *&word[l] = '\0';
 
         // Skip if line is empty -- length recalculated after whitespace removal
-        if (0 == word.length())
+        if (word.empty())
             continue;
 
         ++words.total;
@@ -161,5 +161,5 @@ FoundWords findWords(Cell const*& dictionary, const std::string& letters)
 {
     FoundWords found;
     findWords(found, dictionary, letters, 0);
-    return std::move(found);
+    return found;
 }
