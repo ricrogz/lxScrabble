@@ -81,7 +81,16 @@ void Scoreboard::update_top(std::vector<std::string>& top, Type which,
         return score_getter(m_players.at(a)) > score_getter(m_players.at(b));
     };
 
+    auto current_pos = std::find(top.begin(), top.end(), player);
     auto insert_pos = std::lower_bound(top.begin(), top.end(), player, comp);
+
+    if (current_pos != top.end()) {
+        if (current_pos == insert_pos) {
+            return;
+        } else {
+            top.erase(current_pos);
+        }
+    }
 
     if (abs(std::distance(top.begin(), insert_pos)) < TOP_SIZE) {
         top.insert(insert_pos, player);
@@ -155,6 +164,8 @@ void Scoreboard::add_score(const std::string& player, unsigned long score)
 
     update_top(m_week_top, Type::Week, player);
     update_top(m_total_top, Type::Total, player);
+
+    save();
 }
 
 unsigned long Scoreboard::get_score(const std::string& player,

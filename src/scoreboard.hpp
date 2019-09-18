@@ -5,7 +5,7 @@
 #pragma once
 
 #include <functional>
-#include <map>
+#include <unordered_map>
 #include <vector>
 
 const std::size_t TOP_SIZE = 10;
@@ -40,7 +40,7 @@ class Scoreboard
 
   private:
     std::string m_scorefile;
-    std::map<std::string, Scores> m_players;
+    std::unordered_map<std::string, Scores> m_players;
     std::vector<std::string> m_week_top;
     std::vector<std::string> m_total_top;
 
