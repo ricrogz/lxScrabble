@@ -72,7 +72,7 @@ void send_update_stats(const std::string& nickname, unsigned long gain)
         winInARow = 1;
         irc_sendformat(true, "Stats", "( %d pts :  %d pts)", week, alltime);
     } else {
-        winInARow++;
+        ++winInARow;
         irc_sendformat(true, "StatsCont",
                        "( %d pts :  %d pts) - %d  contiguous won games!",
                        winInARow, week, alltime);
@@ -521,6 +521,7 @@ void game_loop(Cell const* dictionary)
     show_about();
     run_game(dictionary);
 
+    scores->save();
     log_stdout("Quitting...");
     irc_disconnect();
 }

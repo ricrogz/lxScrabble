@@ -212,11 +212,13 @@ void do_perform(const std::string& perform)
     char* token = strtok((char*) perform.c_str(), "|");
     while (token != nullptr) {
         token = token + strspn(token, " ");
-        if (*token == '/')
-            token++;
+        if (*token == '/') {
+            ++token;
+        }
         char* scan = strchr(token, ' ');
-        if (scan)
+        if (scan) {
             *scan++ = '\0';
+        }
         non_ascii_strupr(token);
         if ((strcmp(token, "MSG") == 0) || (strcmp(token, "NOTICE") == 0)) {
             if (!scan) {

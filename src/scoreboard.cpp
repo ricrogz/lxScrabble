@@ -151,8 +151,8 @@ void Scoreboard::save() const
     auto total_score_getter = Scores::get_score_getter(Type::Total);
 
     for (const auto& score : m_players) {
-        f_out << score.first << ' ' << weekly_score_getter(score.second) << ' '
-              << total_score_getter(score.second) << '\n';
+        f_out << score.first << ' ' << total_score_getter(score.second) << ' '
+              << weekly_score_getter(score.second) << '\n';
     }
     f_out.close();
 }

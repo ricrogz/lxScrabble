@@ -154,7 +154,7 @@ int main(int argc, char* argv[])
     log_stdout(BOTFULLNAME);
 
     // Detect --list parameter
-    for (int i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; ++i) {
         list_failed_words = strcmp("--list", argv[i]) == 0;
     }
 
