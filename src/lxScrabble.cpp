@@ -145,26 +145,32 @@ int main(int argc, char* argv[])
 {
     // Show banner, initialize random number generator
     log(BOTFULLNAME);
+    try {
 
-    // Detect --list parameter
-    for (int i = 0; i < argc; ++i) {
-        list_failed_words = strcmp("--list", argv[i]) == 0;
+        // Detect --list parameter
+        for (int i = 0; i < argc; ++i) {
+            list_failed_words = strcmp("--list", argv[i]) == 0;
+        }
+
+        // Setup a handler to catch interrupt signals;
+        setup_interrupt_catcher();
+
+        // Read ini file
+        readIni();
+
+        // ReadDictionary
+        auto dictionary = readDictionary(dict_file);
+
+        // Read top scores
+        scores = Scoreboard::read_scoreboard(SCORE_FILE);
+
+        // Connect and start game
+        game_loop(dictionary.get());
+
+    } catch (const std::runtime_error& e) {
+        fmt::print("FATAL ERROR: {}\n", e.what());
+        return 1;
     }
-
-    // Setup a handler to catch interrupt signals;
-    setup_interrupt_catcher();
-
-    // Read ini file
-    readIni();
-
-    // ReadDictionary
-    auto dictionary = readDictionary(dict_file);
-
-    // Read top scores
-    scores = Scoreboard::read_scoreboard(SCORE_FILE);
-
-    // Connect and start game
-    game_loop(dictionary.get());
 
     return 0;
 }

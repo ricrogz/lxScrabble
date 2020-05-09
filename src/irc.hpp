@@ -84,11 +84,10 @@ class Pinger
     bool is_alive();
 
   private:
-    clock_t d_lastRecv = 0;
-    bool d_pinged = false;
-
     RandGenerator& d_generator;
-    std::uniform_int_distribution<unsigned> d_distrib;
+    std::uniform_int_distribution<uint32_t> d_distrib;
+    clock_t d_lastRecv;
+    bool d_pinged = false;
 };
 
 #endif // LXSCRABBLE_IRC_H

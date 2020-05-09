@@ -3,6 +3,7 @@
 //
 #include <cstdarg>
 #include <cstring>
+#include <limits>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <sys/ioctl.h>
@@ -378,7 +379,8 @@ void irc_sendformat(bool set_endl, const std::string& lpKeyName,
 }
 
 Pinger::Pinger(RandGenerator& generator)
-    : d_generator{generator}, d_distrib(0, 1 << 8)
+    : d_generator{generator},
+      d_distrib(0u, std::numeric_limits<uint32_t>::max()), d_lastRecv{clock()}
 {
 }
 
@@ -394,8 +396,7 @@ bool Pinger::is_alive()
     if (d_pinged && delta > TIMEOUT) {
         return false;
     } else if (!d_pinged && delta > PING_INTERVAL) {
-        auto ping = fmt::format("PING: {:04X}{:04X}\n", d_distrib(d_generator),
-                                d_distrib(d_generator));
+        auto ping = fmt::format("PING: {:08X}", d_distrib(d_generator));
         irc_sendline(ping);
         d_pinged = true;
     }
