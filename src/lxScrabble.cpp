@@ -5,9 +5,10 @@
 #include <csignal>
 #include <memory>
 
+#include "inicpp/inicpp.h"
+
 #include "dict_handler.hpp"
 #include "game.hpp"
-#include "inicpp/inicpp.h"
 #include "irc.hpp"
 #include "lxScrabble.hpp"
 #include "mimics.hpp"
@@ -125,8 +126,7 @@ void readIni()
 
 void gentle_terminator(int)
 {
-    log_stdout("");
-    log_stdout("Terminating gently...");
+    log("\nTerminating gently...");
     cur_state = QUITTING;
 }
 
@@ -144,7 +144,7 @@ void setup_interrupt_catcher()
 int main(int argc, char* argv[])
 {
     // Show banner, initialize random number generator
-    log_stdout(BOTFULLNAME);
+    log(BOTFULLNAME);
 
     // Detect --list parameter
     for (int i = 0; i < argc; ++i) {

@@ -1,9 +1,9 @@
 //
 // Created by invik on 17/10/17.
 //
-#include <cstring>
 #include <fstream>
-#include <sstream>
+
+#include "fmt/format.h"
 
 #include "dict_handler.hpp"
 #include "mimics.hpp"
@@ -63,10 +63,10 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
         // Skip too long words
         if (wordlen < word.length()) {
             if (list_failed_words) {
-                std::stringstream ss;
-                ss << word << " -- word is too long for configured wordlen ("
-                   << wordlen << ')';
-                log_stdout(ss.str().c_str());
+                log(fmt::format(
+                    " -- word is too long for configured word length "
+                    "({}): {}",
+                    wordlen, word));
             }
             ++words.too_long;
             continue;
@@ -78,10 +78,9 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
         if ((valid_length = strspn(word.c_str(), distrib.c_str())) !=
             word.length()) {
             if (list_failed_words) {
-                std::stringstream ss;
-                ss << word << " -- word contains invalid character '"
-                   << word.at(valid_length) << '\'';
-                log_stdout(ss.str().c_str());
+                log(fmt::format(
+                    " -- word contains non allowed character '{}': {}",
+                    word.at(valid_length), word));
             }
             ++words.wrong_symbols;
             continue;
@@ -92,18 +91,16 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
     stream.close();
 
     // Report imported words
-    std::stringstream ss;
-    ss << "Read " << words.total << " words:" << std::endl;
-    ss << "  " << words.too_long << " too long (> " << wordlen << " letters)."
-       << std::endl;
-    ss << "  " << words.wrong_symbols << " with invalid symbols." << std::endl;
-    ss << "  " << words.loaded << " valid words." << std::endl;
+    log(fmt::format("Read {} words:", words.total));
+    log(fmt::format(" {} were skipped for being longer than {} chars.",
+                    words.too_long, wordlen));
+    log(fmt::format(" {} were skipped because of disallowed chars.",
+                    words.wrong_symbols));
+    log(fmt::format("Using {} valid words.", words.loaded));
     if (!list_failed_words) {
-        ss << "To list invalid words, execute with --list parameter."
-           << std::endl;
+        log("To print the list of skipped words, rerun with --list "
+            "parameter.");
     }
-    ss << std::endl;
-    log_stdout(ss.str().c_str());
 
     // Exit if no words could be imported
     if (words.loaded == 0) {

@@ -1,18 +1,17 @@
 //
 // Created by invik on 17/10/17.
 //
-
-#include "irc.hpp"
-#include "inicpp/inicpp.h"
-#include "lxScrabble.hpp"
-#include "mimics.hpp"
 #include <cstdarg>
 #include <cstring>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <sstream>
 #include <sys/ioctl.h>
 #include <sys/socket.h>
+
+#include "inicpp/inicpp.h"
+#include "irc.hpp"
+#include "lxScrabble.hpp"
+#include "mimics.hpp"
 
 std::string servername;
 int port;
@@ -97,7 +96,7 @@ void irc_flushrecv()
 {
     line_buffer_t line = {0};
     do {
-        log_stdout(line);
+        log(line);
     } while (irc_recv(line));
 }
 
@@ -308,7 +307,8 @@ void irc_connect()
 
 std::string irc_stripcodes(const std::string& text)
 {
-    std::ostringstream ss;
+    std::string ret;
+    ret.reserve(text.length());
     size_t expected_digit = 0;
     for (const auto& ch : text) {
         if (ch == 2) { // Bold
@@ -335,9 +335,9 @@ std::string irc_stripcodes(const std::string& text)
                 expected_digit = 0;
             }
         }
-        ss << ch;
+        ret.push_back(ch);
     }
-    return std::move(ss.str());
+    return ret;
 }
 
 void irc_disconnect_msg(const std::string& msg)
@@ -361,7 +361,7 @@ void irc_sendformat(bool set_endl, const std::string& lpKeyName,
         buffer = irc_stripcodes(buffer);
     }
     va_list arguments;
-    char text[BUFFER_SIZE];
+    char text[BUFFER_SIZE] = {0};
     va_start(arguments, &lpDefault);
     vsnprintf(text, BUFFER_SIZE, buffer.c_str(), arguments);
     va_end(arguments);

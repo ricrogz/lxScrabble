@@ -4,8 +4,10 @@
 
 #include <algorithm>
 #include <cstring>
+#include <iostream>
 #include <random>
-#include <sstream>
+
+#include "fmt/ranges.h"
 
 #include "bot_commands.hpp"
 #include "dict_handler.hpp"
@@ -15,6 +17,12 @@
 #include "scoreboard.hpp"
 
 using RandGenerator = std::default_random_engine;
+
+#ifdef CHEAT
+const bool cheats_enabled = true;
+#else
+const bool cheats_enabled = false;
+#endif
 
 extern Scoreboard* scores;
 
@@ -39,28 +47,22 @@ void show_about()
 std::string pickLetters(RandGenerator& get_rand_int,
                         const std::string& availableLetters)
 {
-#ifdef CHEAT
-    std::string letters;
-    log_stdout("[CHEATING] Input letters");
-    std::cin >> letters;
-#else
     std::string letters(availableLetters);
-    std::shuffle(letters.begin(), letters.end(), get_rand_int);
-    letters.resize(wordlen);
-#endif
+    if (cheats_enabled) {
+        log("[cheats_enabled] Input letters");
+        std::cin >> letters;
+    } else {
+        std::shuffle(letters.begin(), letters.end(), get_rand_int);
+        letters.resize(wordlen);
+    }
     return letters;
 }
 
 void displayLetters(const std::string& letters)
 {
     irc_sendmsg(channel);
-    std::ostringstream ss;
-    ss << ' ';
-    for (const auto& l : letters) {
-        ss << l << ' ';
-    }
-    irc_sendformat(true, "Letters", "[Mixed Letters]  - %s -",
-                   ss.str().c_str());
+    auto msg = fmt::format(" {} ", fmt::join(letters, " "));
+    irc_sendformat(true, "Letters", "[Mixed Letters]  - %s -", msg.c_str());
 }
 
 void send_update_stats(const std::string& nickname, unsigned long gain)
@@ -161,8 +163,8 @@ void sendTop(const char* dest, Scoreboard::Type which, size_t num,
         num = 1 + num - (num % 3);
     }
 
-    std::stringstream title;
-    title << "Top" << (which == Scoreboard::Type::Week ? 'W' : 'A') << num;
+    auto title = fmt::format("Top {}{}",
+                             which == Scoreboard::Type::Week ? 'W' : 'A', num);
     const auto top = scores->get_top(which, num);
 
     auto top_iter = top.begin();
@@ -172,22 +174,22 @@ void sendTop(const char* dest, Scoreboard::Type which, size_t num,
         auto a = top_iter;
         auto b = ++top_iter;
         auto c = ++top_iter;
-        irc_sendformat(true, title.str(), lpDefault, a->first.c_str(),
-                       a->second, b->first.c_str(), b->second, c->first.c_str(),
+        irc_sendformat(true, title, lpDefault, a->first.c_str(), a->second,
+                       b->first.c_str(), b->second, c->first.c_str(),
                        c->second);
     } else {
-        irc_sendformat(true, title.str(), lpDefault, top_iter->first.c_str(),
+        irc_sendformat(true, title, lpDefault, top_iter->first.c_str(),
                        top_iter->second);
 
-        title << "More";
+        title += "More";
         for (size_t i = 2; i < num; i += 3) {
             auto a = ++top_iter;
             auto b = ++top_iter;
             auto c = ++top_iter;
             irc_sendnotice(dest);
-            irc_sendformat(true, title.str(), lpDefaultMore, i,
-                           a->first.c_str(), a->second, i + 1, b->first.c_str(),
-                           b->second, i + 2, c->first.c_str(), c->second);
+            irc_sendformat(true, title, lpDefaultMore, i, a->first.c_str(),
+                           a->second, i + 1, b->first.c_str(), b->second, i + 2,
+                           c->first.c_str(), c->second);
         }
     }
 }
@@ -309,7 +311,7 @@ void run_game(Cell const* dictionary)
                 irc_sendline("PING :" + std::string(line));
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > TIMEOUT)) {
-                log_stdout("***** Timeout detected, reconnecting. *****");
+                log("***** Timeout detected, reconnecting. *****");
                 irc_disconnect_msg("Timeout detected, reconnecting.");
                 game_loop(dictionary);
             }
@@ -368,11 +370,10 @@ void run_game(Cell const* dictionary)
         } while (foundWords.totalWords == 0);
         tclock = cfg_clock;
         int warning = tclock - cfg_warning;
-#ifdef CHEAT
-        std::ostringstream ss;
-        ss << "Longest Words :" << foundWords.maxWordsString << std::endl;
-        log_stdout(ss.str());
-#endif
+
+        if (cheats_enabled) {
+            log(fmt::format("\nLongest Words :{}\n", foundWords.bestWords));
+        }
         time(&t);
         systemTime = localtime(&t);
         lastDayOfWeek = systemTime->tm_wday;
@@ -382,21 +383,17 @@ void run_game(Cell const* dictionary)
         lastRecvTicks = clock();
         PINGed = false;
         do {
-            tclock--;
-            if (tclock == warning) { // plus que 10 sec
+            --tclock;
+            if (tclock == warning) { // more than 10 s
                 irc_sendmsg(channel);
                 irc_sendformat(true, "Warning", "Warning, time is nearly out!");
             } else if (tclock == 0) {
                 irc_sendmsg(channel);
-                std::ostringstream ss;
-                ss << foundWords.bestWords.front();
-                for (auto w = foundWords.bestWords.begin() + 1;
-                     w != foundWords.bestWords.end(); ++w) {
-                    ss << " - " << *w;
-                }
+                auto words =
+                    fmt::format("{}", fmt::join(foundWords.bestWords, " - "));
                 irc_sendformat(true, "Timeout",
                                "[Time is out.] MAX words were %s",
-                               ss.str().c_str());
+                               words.c_str());
                 if (winningWordLen) {
                     irc_sendmsg(channel);
                     irc_sendformat(false, "WinSome", "%s gets %d points! ",
@@ -511,7 +508,7 @@ void run_game(Cell const* dictionary)
                 irc_sendline("PING :" + std::string(line));
                 PINGed = true;
             } else if (PINGed && (clock() - lastRecvTicks > TIMEOUT)) {
-                log_stdout("***** Timeout detected, reconnecting. *****");
+                log("***** Timeout detected, reconnecting. *****");
                 irc_disconnect_msg("Timeout detected, reconnecting.");
                 game_loop(dictionary);
             }
@@ -523,7 +520,7 @@ void run_game(Cell const* dictionary)
 void game_loop(Cell const* dictionary)
 {
     // Connect to irc
-    log_stdout("Connecting to IRC...");
+    log("Connecting to IRC...");
     irc_connect();
 
     // Init execution
@@ -531,6 +528,6 @@ void game_loop(Cell const* dictionary)
     run_game(dictionary);
 
     scores->save();
-    log_stdout("Quitting...");
+    log("Quitting...");
     irc_disconnect();
 }
