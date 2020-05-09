@@ -208,7 +208,7 @@ void irc_connect(const std::string& servername, int port,
     throw std::runtime_error("Problem during connection");
 }
 
-void do_perform(const std::string& perform)
+void do_perform(std::string perform)
 {
     char* token = strtok((char*) perform.c_str(), "|");
     while (token != nullptr) {
@@ -218,7 +218,8 @@ void do_perform(const std::string& perform)
         }
         char* scan = strchr(token, ' ');
         if (scan) {
-            *(++scan) = '\0';
+            *scan = '\0';
+            ++scan;
         }
         non_ascii_strupr(token);
         if (strcmp(token, "MSG") == 0 || strcmp(token, "NOTICE") == 0) {
@@ -228,20 +229,25 @@ void do_perform(const std::string& perform)
                          "Missing argument for %s on Perform= setting", token);
                 throw std::runtime_error(text);
             }
-            if (strcmp(token, "MSG") == 0)
+            if (strcmp(token, "MSG") == 0) {
                 irc_send("PRIVMSG");
-            else
+            } else {
                 irc_send(token);
+            }
             token = scan;
             scan = strchr(token, ' ');
-            *(--token) = ' ';
-            *(++scan) = '\0';
+            --token;
+            *token = ' ';
+            *scan = '\0';
+            ++scan;
             irc_send(token);
             irc_send(" :");
             irc_sendline(scan);
         } else {
-            if (scan)
-                *(--scan) = ' ';
+            if (scan) {
+                --scan;
+                *scan = ' ';
+            }
             irc_sendline(token);
         }
         msleep(300);
