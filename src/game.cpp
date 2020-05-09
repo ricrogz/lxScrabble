@@ -404,14 +404,15 @@ void run_game(Cell const* dictionary)
                     send_update_stats(winningNick, winningWordLen);
                     noWinner = 0;
                 } else if (++noWinner == autostop) {
-                    noWinner = 0;
                     irc_sendmsg(channel);
                     irc_sendformat(
                         true, "GameOver",
                         "[Game is over. Type !start to restart it.]");
                     cur_state = STOPPED;
                     time(&last_msg);
+                    noWinner = 0;
                 }
+
                 break;
             }
             msleep(100);
@@ -484,6 +485,7 @@ void run_game(Cell const* dictionary)
                                                      " +v " + nickname);
                                     }
                                     tclock = 0;
+                                    noWinner = 0;
                                 } else {
                                     irc_sendformat(
                                         true, "Word",
