@@ -1,3 +1,6 @@
 [submodule "dependencies/inicpp"]
 	path = dependencies/inicpp
 	url = https://github.com/SemaiCZE/inicpp.git
+[submodule "dependencies/fmt"]
+	path = dependencies/fmt
+	url = https://github.com/fmtlib/fmt.git
