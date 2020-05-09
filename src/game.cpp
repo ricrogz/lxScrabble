@@ -377,7 +377,7 @@ void run_game(Cell const* dictionary)
         systemTime = localtime(&t);
         lastDayOfWeek = systemTime->tm_wday;
         int lastHour = systemTime->tm_hour;
-        char winningNick[128];
+        std::string winningNick;
         std::size_t winningWordLen = 0;
         lastRecvTicks = clock();
         PINGed = false;
@@ -400,7 +400,7 @@ void run_game(Cell const* dictionary)
                 if (winningWordLen) {
                     irc_sendmsg(channel);
                     irc_sendformat(false, "WinSome", "%s gets %d points! ",
-                                   winningNick, winningWordLen);
+                                   winningNick.c_str(), winningWordLen);
                     send_update_stats(winningNick, winningWordLen);
                     noWinner = 0;
                 } else if (++noWinner == autostop) {
@@ -412,7 +412,6 @@ void run_game(Cell const* dictionary)
                     time(&last_msg);
                     noWinner = 0;
                 }
-
                 break;
             }
             msleep(100);
@@ -456,10 +455,13 @@ void run_game(Cell const* dictionary)
                     if (strncasecmp(paramtext, "!r", 2) == 0)
                         displayLetters(letters);
                     else if (!scrabbleCmd(nickname, paramtext)) {
-                        while ((*paramtext != 0) && !is_valid_char(*paramtext))
+                        while ((*paramtext != 0) &&
+                               !is_valid_char(*paramtext)) {
                             paramtext++;
-                        if (*paramtext == 0)
+                        }
+                        if (*paramtext == 0) {
                             continue;
+                        }
                         if (strlen(paramtext) > winningWordLen) {
                             non_ascii_strupr(paramtext);
                             std::string sortedWord(paramtext);
@@ -468,7 +470,6 @@ void run_game(Cell const* dictionary)
                                            sortedWord) &&
                                 isWord(dictionary, sortedWord, paramtext)) {
                                 irc_sendmsg(channel);
-                                strcpy(winningNick, nickname);
                                 winningWordLen = strlen(paramtext);
                                 if (winningWordLen == foundWords.lenBestWords) {
                                     irc_sendformat(
@@ -493,6 +494,7 @@ void run_game(Cell const* dictionary)
                                         "Who can say better than %d letters ?",
                                         paramtext, nickname, strlen(paramtext));
                                 }
+                                winningNick = nickname;
                             }
                         }
                     }

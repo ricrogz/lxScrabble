@@ -34,6 +34,7 @@ void addWord(Cell*& dictionary, std::string&& word)
 
 std::unique_ptr<const Cell> readDictionary(const std::string& filename)
 {
+    const std::string whitespace_chars{" \r\n"};
     Cell* dictionary = nullptr;
 
     std::ifstream stream(filename);
@@ -47,15 +48,16 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
         std::getline(stream, word);
 
         // Remove whitespace at end
-        char forbidden[] = " \r\n";
         std::size_t l = word.length();
-        for (auto c : forbidden)
-            while (l && *&word[--l] == c)
+        for (const auto& c : whitespace_chars)
+            while (l && *&word[--l] == c) {
                 *&word[l] = '\0';
+            }
 
         // Skip if line is empty -- length recalculated after whitespace removal
-        if (word.empty())
+        if (word.empty()) {
             continue;
+        }
 
         ++words.total;
 
