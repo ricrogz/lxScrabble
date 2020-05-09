@@ -50,7 +50,8 @@ inline void log(const std::string& message, std::ostream& stream)
     auto sTm = localtime(&now);
 
     std::string timestamp(LOG_TIME_SIZE, ' ');
-    strftime(&timestamp[0], LOG_TIME_SIZE, LOG_TIME_FMT, sTm);
+    auto len = strftime(&timestamp[0], LOG_TIME_SIZE, LOG_TIME_FMT, sTm);
+    timestamp.resize(len);
     stream << timestamp << message << std::endl;
 }
 
