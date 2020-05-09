@@ -5,6 +5,8 @@
 #ifndef LXSCRABBLE_DICT_HANDLER_H
 #define LXSCRABBLE_DICT_HANDLER_H
 
+#include <memory>
+
 #include "lxScrabble.hpp"
 
 struct dict_stats {
@@ -43,7 +45,7 @@ class Cell
 
 void addWord(Cell*& dictionary, std::string&& word);
 
-Cell const* readDictionary(const std::string& filename);
+std::unique_ptr<const Cell> readDictionary(const std::string& filename);
 
 struct FoundWords {
     std::size_t totalWords = 0;

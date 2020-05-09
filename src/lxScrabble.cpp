@@ -171,8 +171,7 @@ int main(int argc, char* argv[])
     scores = Scoreboard::read_scoreboard(SCORE_FILE);
 
     // Connect and start game
-    game_loop(dictionary);
+    game_loop(dictionary.get());
 
-    delete dictionary;
     return 0;
 }

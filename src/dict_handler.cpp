@@ -1,13 +1,12 @@
 //
 // Created by invik on 17/10/17.
 //
-
-#include "dict_handler.hpp"
-#include "mimics.hpp"
-
 #include <cstring>
 #include <fstream>
 #include <sstream>
+
+#include "dict_handler.hpp"
+#include "mimics.hpp"
 
 void addWord(Cell*& dictionary, std::string&& word)
 {
@@ -33,7 +32,7 @@ void addWord(Cell*& dictionary, std::string&& word)
     (*cell)->addWord(std::move(word));
 }
 
-Cell const* readDictionary(const std::string& filename)
+std::unique_ptr<const Cell> readDictionary(const std::string& filename)
 {
     Cell* dictionary = nullptr;
 
@@ -111,7 +110,7 @@ Cell const* readDictionary(const std::string& filename)
         halt(1);
     }
 
-    return dictionary;
+    return std::unique_ptr<const Cell>{dictionary};
 }
 
 void findWords(FoundWords& found, Cell const* cell, const std::string& letters,
