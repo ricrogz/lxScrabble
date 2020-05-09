@@ -39,8 +39,12 @@ class Scoreboard
 
     static Scoreboard* read_scoreboard(const std::string& scores_file);
 
+    Scoreboard() = delete;
     Scoreboard(const Scoreboard&) = delete;
+    Scoreboard(Scoreboard&&) = delete;
     Scoreboard& operator=(const Scoreboard&) = delete;
+    Scoreboard& operator=(Scoreboard&&) = delete;
+    ~Scoreboard() = default;
 
     void add_score(const std::string& player, unsigned long score);
     unsigned long get_score(const std::string& player, Type which) const;

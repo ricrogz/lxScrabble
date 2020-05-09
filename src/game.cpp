@@ -160,7 +160,7 @@ void sendTop(const char* dest, Scoreboard::Type which, size_t num,
         num = 1 + num - (num % 3);
     }
 
-    auto title = fmt::format("Top {}{}",
+    auto title = fmt::format("Top{}{}",
                              which == Scoreboard::Type::Week ? 'W' : 'A', num);
     const auto top = scores->get_top(which, num);
 
@@ -261,7 +261,7 @@ void run_game(Cell const* dictionary)
 
         line_buffer_t line;
 
-        int tclock = cfg_after;
+        auto tclock = cfg_after;
 
         time_t t = 0;
         time(&t);
@@ -359,7 +359,7 @@ void run_game(Cell const* dictionary)
             }
         } while (foundWords.totalWords == 0);
         tclock = cfg_clock;
-        int warning = tclock - cfg_warning;
+        auto warning = tclock - cfg_warning;
 
         if (cheats_enabled) {
             log(fmt::format("\nLongest Words :{}\n", foundWords.bestWords));

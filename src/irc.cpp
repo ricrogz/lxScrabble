@@ -211,7 +211,7 @@ void irc_connect(const std::string& servername, int port,
     throw std::runtime_error("Problem during connection");
 }
 
-void do_perform(std::string perform)
+void do_perform(const std::string& perform)
 {
     char* token = strtok((char*) perform.c_str(), "|");
     while (token != nullptr) {
@@ -363,8 +363,7 @@ void irc_disconnect()
 void irc_sendformat(bool set_endl, const std::string& lpKeyName,
                     const std::string& lpDefault, ...)
 {
-    std::string buffer =
-        cfg<inicpp::string_ini_t>("Strings", lpKeyName, lpDefault);
+    auto buffer = cfg<inicpp::string_ini_t>("Strings", lpKeyName, lpDefault);
     if (irc_blackAndWhite) {
         buffer = irc_stripcodes(buffer);
     }

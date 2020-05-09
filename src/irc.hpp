@@ -30,7 +30,7 @@ const std::string DEFAULT_IDENT = "lxScrabble";
 const std::string DEFAULT_CHANNEL = "#scrabble";
 const std::string DEFAULT_CHANNEL_KEY = "";
 constexpr clock_t PING_INTERVAL = 15 * 1000;
-constexpr clock_t TIMEOUT = 30 * 1000; // default: 90 s
+constexpr clock_t TIMEOUT = 90 * 1000; // default: 90 s
 
 const size_t BUFFER_SIZE = 8192;
 const size_t LINE_BUFFER_SIZE = 1024;
@@ -76,7 +76,10 @@ class Pinger
   public:
     Pinger() = delete;
     Pinger(const Pinger&) = delete;
+    Pinger(Pinger&&) = delete;
     Pinger& operator=(const Pinger&) = delete;
+    Pinger& operator=(Pinger&&) = delete;
+    ~Pinger() = default;
 
     explicit Pinger(RandGenerator& generator);
 
