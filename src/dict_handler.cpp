@@ -17,7 +17,7 @@ void addWord(Cell*& dictionary, std::string&& word)
     while (scan != letters.end()) {
         char ch = *scan;
         while (true) {
-            if ((*cell == nullptr) || ((*cell)->letter > ch)) {
+            if (*cell == nullptr || (*cell)->letter > ch) {
                 *cell = new Cell(ch, *cell);
                 break;
             } else if ((*cell)->letter == ch) {
