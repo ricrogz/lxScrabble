@@ -6,6 +6,6 @@
 #define LXSCRABBLE_VERSION_H
 
 #include <string>
-const std::string BOTNAME = "lxScrabble v0.162b";
+const std::string BOTNAME = "lxScrabble v0.163b";
 
 #endif // LXSCRABBLE_VERSION_H
