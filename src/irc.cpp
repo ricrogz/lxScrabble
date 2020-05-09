@@ -24,7 +24,7 @@ std::string channelkey;
 std::string perform;
 
 int irc_socket;
-char irc_buffer[8193];
+char irc_buffer[BUFFER_SIZE];
 std::size_t irc_bufLen = 0;
 bool irc_blackAndWhite;
 bool anyoneCanStop;
@@ -53,7 +53,7 @@ void irc_sendline(const std::string& line)
     send(irc_socket, "\n", 1, 0);
 }
 
-bool irc_handlestd(char line[1024])
+bool irc_handlestd(line_buffer_t line)
 {
     if (strncmp(line, "PING :", 6) == 0) {
         irc_send("PONG :");
@@ -63,7 +63,7 @@ bool irc_handlestd(char line[1024])
     return false;
 }
 
-bool irc_recv(char line[1024])
+bool irc_recv(line_buffer_t line)
 {
     unsigned long value = 0;
     ioctl(irc_socket, FIONREAD, &value);
@@ -78,8 +78,9 @@ bool irc_recv(char line[1024])
         char* scan = strchr(irc_buffer, '\n');
         if (scan) {
             std::size_t lineLen = scan - irc_buffer;
-            if (lineLen > 1024)
-                lineLen = 1024;
+            if (lineLen > LINE_BUFFER_SIZE) {
+                lineLen = LINE_BUFFER_SIZE;
+            }
             strncpy(line, irc_buffer, lineLen - 1);
             line[lineLen - 1] = 0;
             irc_bufLen -= lineLen + 1;
@@ -93,7 +94,7 @@ bool irc_recv(char line[1024])
 
 void irc_flushrecv()
 {
-    char line[1024] = {0};
+    line_buffer_t line = {0};
     do {
         log_stdout(line);
     } while (irc_recv(line));
@@ -174,7 +175,7 @@ void irc_connect(const std::string& servername, int port,
                  fullname);
 
     // All connection data has been send. Now, analyze answers for 45 secs
-    char line[1024];
+    line_buffer_t line;
     clock_t ticks = clock();
     while (clock() - ticks < TIMEOUT) {
         if (irc_recv(line)) {
@@ -254,7 +255,7 @@ void do_perform(const std::string& perform)
 
 bool irc_want(const char* wantCmd, int timeout = 15000)
 {
-    char line[1024];
+    line_buffer_t line;
     clock_t ticks = clock();
     while (clock() - ticks < timeout) {
         if (irc_recv(line)) {
@@ -360,9 +361,9 @@ void irc_sendformat(bool set_endl, const std::string& lpKeyName,
         buffer = irc_stripcodes(buffer);
     }
     va_list arguments;
-    char text[8192];
+    char text[BUFFER_SIZE];
     va_start(arguments, &lpDefault);
-    vsnprintf(text, 8192, buffer.c_str(), arguments);
+    vsnprintf(text, BUFFER_SIZE, buffer.c_str(), arguments);
     va_end(arguments);
     send(irc_socket, text, strlen(text), 0);
     if (set_endl) {

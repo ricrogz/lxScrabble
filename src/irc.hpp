@@ -30,6 +30,11 @@ const std::string DEFAULT_CHANNEL = "#scrabble";
 const std::string DEFAULT_CHANNEL_KEY = "";
 constexpr clock_t TIMEOUT = 60 * 1000; // 45 s
 
+const size_t BUFFER_SIZE = 8192;
+const size_t LINE_BUFFER_SIZE = 1024;
+
+using line_buffer_t = char[LINE_BUFFER_SIZE];
+
 extern std::string servername;
 extern int port;
 extern std::string server_pass;
@@ -55,7 +60,7 @@ void irc_sendformat(bool set_endl, const std::string& lpKeyName,
 void irc_analyze(char* line, char** nickname, char** ident, char** hostname,
                  char** cmd, char** param1, char** param2, char** paramtext);
 
-bool irc_recv(char line[]);
+bool irc_recv(line_buffer_t line);
 
 void irc_send(const std::string& text);
 

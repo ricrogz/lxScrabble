@@ -10,6 +10,7 @@
 #include "bot_commands.hpp"
 #include "dict_handler.hpp"
 #include "game.hpp"
+#include "irc.hpp"
 #include "mimics.hpp"
 #include "scoreboard.hpp"
 
@@ -259,7 +260,7 @@ void run_game(Cell const* dictionary)
 
     while (cur_state != QUITTING) {
 
-        char line[1024];
+        line_buffer_t line;
 
         int tclock = cfg_after;
         bool PINGed = false;
