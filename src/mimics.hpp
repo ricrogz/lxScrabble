@@ -45,7 +45,7 @@ inline char* non_ascii_strupr(char* s)
 inline void log(const std::string& message, std::ostream& stream)
 {
     char timestamp[25];
-    struct tm* sTm;
+    struct tm* sTm = nullptr;
     time_t now = time(nullptr);
     sTm = localtime(&now);
     strftime(timestamp, 25, "%Y-%m-%d %H:%M:%S --- ", sTm);

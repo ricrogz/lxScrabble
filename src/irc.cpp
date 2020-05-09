@@ -102,7 +102,7 @@ void irc_flushrecv()
 void irc_analyze(char* line, char** nickname, char** ident, char** hostname,
                  char** cmd, char** param1, char** param2, char** paramtext)
 {
-    char* scan;
+    char* scan = nullptr;
     *nickname = *ident = *hostname = nullptr;
     if (line[0] == ':') {
         scan = strchr(line, ' ');
@@ -146,7 +146,7 @@ void irc_connect(const std::string& servername, int port,
                  const std::string& localhost, const std::string& fullname)
 {
 
-    struct hostent* host;
+    struct hostent* host = nullptr;
     struct sockaddr_in serv_addr;
 
     if ((host = gethostbyname(servername.c_str())) == nullptr) {
@@ -178,7 +178,7 @@ void irc_connect(const std::string& servername, int port,
     clock_t ticks = clock();
     while (clock() - ticks < TIMEOUT) {
         if (irc_recv(line)) {
-            char *cmd, *dummy;
+            char *cmd = nullptr, *dummy = nullptr;
 
             // Get response text
             irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy,
@@ -258,7 +258,7 @@ bool irc_want(const char* wantCmd, int timeout = 15000)
     clock_t ticks = clock();
     while (clock() - ticks < timeout) {
         if (irc_recv(line)) {
-            char *cmd, *dummy;
+            char *cmd = nullptr, *dummy = nullptr;
             irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy,
                         &dummy);
             if (strcmp(cmd, wantCmd) == 0)

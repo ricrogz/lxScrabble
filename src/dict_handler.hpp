@@ -29,7 +29,7 @@ class Cell
 
     Cell() = delete;
     explicit Cell(const Cell&) = delete;
-    Cell(char& l, Cell*&& o) noexcept : other(std::move(o)), letter(l) {}
+    Cell(char& l, Cell* o) noexcept : other(o), letter(l) {}
     ~Cell()
     {
         delete other;

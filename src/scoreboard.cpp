@@ -100,12 +100,12 @@ void Scoreboard::update_top(std::vector<std::string>& top, Type which,
     }
 }
 
-Scoreboard* Scoreboard::read_scoreboard(std::string scores_file)
+Scoreboard* Scoreboard::read_scoreboard(const std::string& scores_file)
 {
     static Scoreboard sb{scores_file};
 
     if (sb.m_players.empty()) {
-        auto f_in = std::ifstream{std::move(scores_file)};
+        auto f_in = std::ifstream{scores_file};
         if (!f_in.good()) {
             std::stringstream ss;
             ss << "Unable to open file '" << scores_file << "' to read scores.";

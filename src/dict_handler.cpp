@@ -19,7 +19,7 @@ void addWord(Cell*& dictionary, std::string&& word)
         char ch = *scan;
         while (true) {
             if ((*cell == nullptr) || ((*cell)->letter > ch)) {
-                *cell = new Cell(ch, std::move(*cell));
+                *cell = new Cell(ch, *cell);
                 break;
             } else if ((*cell)->letter == ch) {
                 break;
@@ -74,7 +74,7 @@ Cell const* readDictionary(const std::string& filename)
 
         // Make uppercase and check for invalid characters
         non_ascii_strupr(&word[0]);
-        std::size_t valid_length;
+        std::size_t valid_length = 0;
         if ((valid_length = strspn(word.c_str(), distrib.c_str())) !=
             word.length()) {
             if (list_failed_words) {

@@ -265,7 +265,7 @@ void run_game(Cell const* dictionary)
         bool PINGed = false;
         clock_t lastRecvTicks = clock();
 
-        time_t t;
+        time_t t = 0;
         time(&t);
         struct tm* systemTime = localtime(&t);
         int lastDayOfWeek = systemTime->tm_wday;
@@ -275,8 +275,9 @@ void run_game(Cell const* dictionary)
             while (irc_recv(line)) {
                 lastRecvTicks = clock();
                 PINGed = false;
-                char *nickname, *ident, *hostname, *cmd, *param1, *param2,
-                    *paramtext;
+                char *nickname = nullptr, *ident = nullptr, *hostname = nullptr,
+                     *cmd = nullptr, *param1 = nullptr, *param2 = nullptr,
+                     *paramtext = nullptr;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1,
                             &param2, &paramtext);
                 if ((strcmp(cmd, "PRIVMSG") == 0) &&
@@ -292,7 +293,7 @@ void run_game(Cell const* dictionary)
                     // Reannounce on JOIN after x time without no one talking
                 } else if (reannounce > 0 && (strcmp(cmd, "JOIN") == 0) &&
                            (strcasecmp(paramtext, channel.c_str()) == 0)) {
-                    time_t now;
+                    time_t now = 0;
                     time(&now);
                     if (now - last_msg > reannounce)
                         show_about();
@@ -438,8 +439,9 @@ void run_game(Cell const* dictionary)
             while (irc_recv(line)) {
                 lastRecvTicks = clock();
                 PINGed = false;
-                char *nickname, *ident, *hostname, *cmd, *param1, *param2,
-                    *paramtext;
+                char *nickname = nullptr, *ident = nullptr, *hostname = nullptr,
+                     *cmd = nullptr, *param1 = nullptr, *param2 = nullptr,
+                     *paramtext = nullptr;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1,
                             &param2, &paramtext);
                 if ((strcmp(cmd, "PRIVMSG") == 0) &&

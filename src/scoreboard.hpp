@@ -52,7 +52,7 @@ class Scoreboard
                     const std::string& player);
 
   public:
-    static Scoreboard* read_scoreboard(std::string scores_file);
+    static Scoreboard* read_scoreboard(const std::string& scores_file);
 
     void add_score(const std::string& player, unsigned long score);
     unsigned long get_score(const std::string& player, Type which) const;
