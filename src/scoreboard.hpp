@@ -8,7 +8,7 @@
 #include <unordered_map>
 #include <vector>
 
-const std::size_t TOP_SIZE = 10;
+const size_t TOP_SIZE = 10;
 
 class Scoreboard
 {

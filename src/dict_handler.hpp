@@ -10,10 +10,10 @@
 #include "lxScrabble.hpp"
 
 struct dict_stats {
-    std::size_t too_long = 0;
-    std::size_t wrong_symbols = 0;
-    std::size_t loaded = 0;
-    std::size_t total = 0;
+    size_t too_long = 0;
+    size_t wrong_symbols = 0;
+    size_t loaded = 0;
+    size_t total = 0;
 };
 
 class Cell
@@ -39,7 +39,7 @@ class Cell
     }
 
     void addWord(std::string&& w) { words.push_back(std::move(w)); }
-    std::size_t size() const { return words.size(); }
+    size_t size() const { return words.size(); }
     bool empty() const { return words.empty(); }
 };
 
@@ -48,8 +48,8 @@ void addWord(Cell*& dictionary, std::string&& word);
 std::unique_ptr<const Cell> readDictionary(const std::string& filename);
 
 struct FoundWords {
-    std::size_t totalWords = 0;
-    std::size_t lenBestWords = 0;
+    size_t totalWords = 0;
+    size_t lenBestWords = 0;
     std::vector<std::string> bestWords;
 };
 

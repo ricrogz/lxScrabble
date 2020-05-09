@@ -10,7 +10,7 @@
 #include <vector>
 
 extern bool list_failed_words;
-extern std::size_t wordlen;
+extern size_t wordlen;
 extern unsigned long bonus;
 extern std::string distrib;
 extern std::string dict_file;

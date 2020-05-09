@@ -14,7 +14,7 @@
 #include "scoreboard.hpp"
 
 bool list_failed_words = false;
-std::size_t wordlen;
+size_t wordlen;
 unsigned long bonus;
 std::string distrib;
 std::string dict_file;
@@ -29,7 +29,7 @@ long reannounce;
 
 const std::string INI_FILE("lxScrabble.ini");
 const std::string SCORE_FILE = "scores.ini";
-const std::size_t TOP_MAX = 10;
+const size_t TOP_MAX = 10;
 
 template <class T>
 T cfg(const std::string& section, const std::string& option,

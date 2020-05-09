@@ -20,7 +20,7 @@ extern Scoreboard* scores;
 
 run_state cur_state;
 std::string lastWinner;
-std::size_t winInARow;
+size_t winInARow;
 time_t last_msg; // Updates on last channel msg, when not playing
 
 void show_about()
@@ -107,7 +107,7 @@ bool isWord(Cell const* dictionary, const std::string& letters,
     return false;
 }
 
-bool isPossible(std::size_t wordlen, const std::string& availableLetters,
+bool isPossible(size_t wordlen, const std::string& availableLetters,
                 const std::string& sortedWord)
 {
     if (sortedWord.size() > wordlen) {
@@ -200,7 +200,7 @@ bool scrabbleCmd(const char* nickname, char* command)
     else if (strcasecmp(command, "!score") == 0)
         replyScore(nickname, nickname);
     else if (strncasecmp(command, "!score ", 7) == 0)
-        replyScore(command + 7, nickname);
+        replyScore(&command[7], nickname);
     else if ((strcasecmp(command, "!top") == 0) ||
              (strcasecmp(command, "!top10") == 0))
         sendTop(nickname, Scoreboard::Type::Week, 10,
@@ -254,7 +254,7 @@ void run_game(Cell const* dictionary)
 {
 
     cur_state = STOPPED;
-    std::size_t noWinner = 0;
+    size_t noWinner = 0;
 
     RandGenerator get_rand_int(time(nullptr));
 
@@ -378,7 +378,7 @@ void run_game(Cell const* dictionary)
         lastDayOfWeek = systemTime->tm_wday;
         int lastHour = systemTime->tm_hour;
         std::string winningNick;
-        std::size_t winningWordLen = 0;
+        size_t winningWordLen = 0;
         lastRecvTicks = clock();
         PINGed = false;
         do {
@@ -448,16 +448,18 @@ void run_game(Cell const* dictionary)
                 if ((strcmp(cmd, "PRIVMSG") == 0) &&
                     (strcasecmp(param1, channel.c_str()) == 0)) {
                     irc_stripcodes(paramtext);
-                    while (isspace(*paramtext))
-                        paramtext++;
-                    if (*paramtext == 0)
+                    while (isspace(*paramtext)) {
+                        ++paramtext;
+                    }
+                    if (*paramtext == 0) {
                         continue;
-                    if (strncasecmp(paramtext, "!r", 2) == 0)
+                    }
+                    if (strncasecmp(paramtext, "!r", 2) == 0) {
                         displayLetters(letters);
-                    else if (!scrabbleCmd(nickname, paramtext)) {
+                    } else if (!scrabbleCmd(nickname, paramtext)) {
                         while ((*paramtext != 0) &&
                                !is_valid_char(*paramtext)) {
-                            paramtext++;
+                            ++paramtext;
                         }
                         if (*paramtext == 0) {
                             continue;

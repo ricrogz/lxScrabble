@@ -47,7 +47,7 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
         std::getline(stream, word);
 
         // Remove whitespace at end
-        std::size_t l = word.length();
+        size_t l = word.length();
         for (const auto& c : whitespace_chars)
             while (l && *&word[--l] == c) {
                 *&word[l] = '\0';
@@ -74,7 +74,7 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
 
         // Make uppercase and check for invalid characters
         non_ascii_strupr(&word[0]);
-        std::size_t valid_length = 0;
+        size_t valid_length = 0;
         if ((valid_length = strspn(word.c_str(), distrib.c_str())) !=
             word.length()) {
             if (list_failed_words) {
@@ -115,7 +115,7 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
 }
 
 void findWords(FoundWords& found, Cell const* cell, const std::string& letters,
-               std::size_t len)
+               size_t len)
 {
     // Get next letter
     auto pos = letters.begin() + len;
@@ -134,7 +134,7 @@ void findWords(FoundWords& found, Cell const* cell, const std::string& letters,
     // Explore cell
     if (cell->letter == ch) {
         if (!cell->empty()) {
-            std::size_t word_len = cell->words[0].size();
+            size_t word_len = cell->words[0].size();
             found.totalWords += cell->size();
             if (word_len > found.lenBestWords) {
                 found.lenBestWords = word_len;

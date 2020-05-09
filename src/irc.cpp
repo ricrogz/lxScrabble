@@ -25,7 +25,7 @@ std::string perform;
 
 int irc_socket;
 char irc_buffer[BUFFER_SIZE];
-std::size_t irc_bufLen = 0;
+size_t irc_bufLen = 0;
 bool irc_blackAndWhite;
 bool anyoneCanStop;
 std::string channel;
@@ -64,30 +64,32 @@ bool irc_handlestd(line_buffer_t line)
 
 bool irc_recv(line_buffer_t line)
 {
-    unsigned long value = 0;
+    size_t value = 0;
     ioctl(irc_socket, FIONREAD, &value);
     if (value) {
-        irc_bufLen += recv(
-            irc_socket, irc_buffer + irc_bufLen,
-            std::min<unsigned long>(value, sizeof(irc_buffer) - irc_bufLen), 0);
+        irc_bufLen +=
+            recv(irc_socket, &irc_buffer[irc_bufLen],
+                 std::min<unsigned long>(value, BUFFER_SIZE - irc_bufLen), 0);
         irc_buffer[irc_bufLen] = 0;
         irc_bufLen = strlen(irc_buffer);
     }
-    for (;;) {
+    while (true) {
         char* scan = strchr(irc_buffer, '\n');
         if (scan) {
-            std::size_t lineLen = scan - irc_buffer;
+            size_t lineLen = scan - irc_buffer;
             if (lineLen > LINE_BUFFER_SIZE) {
                 lineLen = LINE_BUFFER_SIZE;
             }
             strncpy(line, irc_buffer, lineLen - 1);
             line[lineLen - 1] = 0;
             irc_bufLen -= lineLen + 1;
-            memmove(irc_buffer, irc_buffer + lineLen + 1, irc_bufLen + 1);
-            if (!irc_handlestd(line))
+            memmove(irc_buffer, &irc_buffer[lineLen + 1], irc_bufLen + 1);
+            if (!irc_handlestd(line)) {
                 return true;
-        } else
+            }
+        } else {
             return false;
+        }
     }
 }
 
@@ -103,13 +105,15 @@ void irc_analyze(char* line, char** nickname, char** ident, char** hostname,
                  char** cmd, char** param1, char** param2, char** paramtext)
 {
     char* scan = nullptr;
-    *nickname = *ident = *hostname = nullptr;
+    *nickname = nullptr;
+    *ident = nullptr;
+    *hostname = nullptr;
     if (line[0] == ':') {
         scan = strchr(line, ' ');
         *scan = 0;
-        *cmd = scan + 1;
-        *nickname = line + 1;
-        scan = strchr(line + 1, '!');
+        *cmd = &scan[1];
+        *nickname = &line[1];
+        scan = strchr(&line[1], '!');
         if (scan) {
             *scan++ = 0;
             *ident = scan;
@@ -117,27 +121,29 @@ void irc_analyze(char* line, char** nickname, char** ident, char** hostname,
             *scan++ = 0;
             *hostname = scan;
         }
-    } else
+    } else {
         *cmd = line;
+    }
     scan = strchr(*cmd, ' ');
     *scan++ = 0;
     *param1 = *param2 = nullptr;
     *paramtext = strchr(scan, '\0');
     while (*scan != ':') {
-        if (!*param1)
+        if (!*param1) {
             *param1 = scan;
-        else if (!*param2)
+        } else if (!*param2) {
             *param2 = scan;
-        else {
-            scan--;
+        } else {
+            --scan;
             break;
         }
         scan = strchr(scan, ' ');
-        if (scan == nullptr)
+        if (scan == nullptr) {
             return;
+        }
         *scan++ = 0;
     }
-    *paramtext = scan + 1;
+    *paramtext = &scan[1];
 }
 
 void irc_connect(const std::string& servername, int port,
@@ -303,7 +309,7 @@ void irc_connect()
 std::string irc_stripcodes(const std::string& text)
 {
     std::ostringstream ss;
-    std::size_t expected_digit = 0;
+    size_t expected_digit = 0;
     for (const auto& ch : text) {
         if (ch == 2) { // Bold
             expected_digit = 0;
