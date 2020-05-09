@@ -9,7 +9,9 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 
+#include "fmt/format.h"
 #include "inicpp/inicpp.h"
+
 #include "irc.hpp"
 #include "lxScrabble.hpp"
 #include "mimics.hpp"
@@ -225,9 +227,8 @@ void do_perform(std::string perform)
         non_ascii_strupr(token);
         if (strcmp(token, "MSG") == 0 || strcmp(token, "NOTICE") == 0) {
             if (!scan) {
-                char text[128];
-                snprintf(text, 128,
-                         "Missing argument for %s on Perform= setting", token);
+                auto text = fmt::format(
+                    "Missing argument for {} on Perform= setting", token);
                 throw std::runtime_error(text);
             }
             if (strcmp(token, "MSG") == 0) {
