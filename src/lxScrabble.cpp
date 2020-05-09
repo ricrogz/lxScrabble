@@ -31,11 +31,6 @@ const std::string INI_FILE("lxScrabble.ini");
 const std::string SCORE_FILE = "scores.ini";
 const std::size_t TOP_MAX = 10;
 
-void halt(int stat_code)
-{
-    exit(stat_code);
-}
-
 template <class T>
 T cfg(const std::string& section, const std::string& option,
       const T& default_value)
@@ -72,9 +67,8 @@ void readIni()
 
     // Check that the config file exists
     if (!fexists(INI_FILE)) {
-        log_stderr("\n\nConfiguration file not found. Please put "
-                   "'lxScrabble.ini' into this directory!\n\n");
-        halt(1);
+        throw std::runtime_error("\n\nConfiguration file not found. Please put "
+                                 "'lxScrabble.ini' into this directory!\n\n");
     }
     cfgp = std::make_unique<inicpp::config>(
         std::move(inicpp::parser::load_file(INI_FILE)));
@@ -97,8 +91,7 @@ void readIni()
     // Connection data
     servername = cfg<std::string>("IRC", "Server", DEFAULT_SERVER);
     if (servername == "<IRC SERVER HOSTNAME>") {
-        log_stderr("\nConfigure lxScrabble.ini first !!");
-        halt(2);
+        throw std::runtime_error("\nConfigure lxScrabble.ini first !!");
     }
     port = cfg<inicpp::unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
 

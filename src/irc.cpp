@@ -37,8 +37,7 @@ void init_socket()
 {
     irc_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (irc_socket < 0) {
-        log_stderr("Cannot create a socket.");
-        halt(irc_socket);
+        throw std::runtime_error("Cannot create a socket.");
     }
 }
 
@@ -151,16 +150,14 @@ void irc_connect(const std::string& servername, int port,
     struct sockaddr_in serv_addr;
 
     if ((host = gethostbyname(servername.c_str())) == nullptr) {
-        log_stderr("Could not resolve server name");
-        halt(2);
+        throw std::runtime_error("Could not resolve server name");
     }
 
     serv_addr.sin_addr = *(struct in_addr*) host->h_addr;
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons((u_short) port);
     if (connect(irc_socket, (sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
-        log_stderr("Connection failed.");
-        halt(3);
+        throw std::runtime_error("Connection failed.");
     }
 
     msleep(500);
@@ -193,8 +190,7 @@ void irc_connect(const std::string& servername, int port,
                 // Numerics indicating the nick is busy; use alternate
             } else if ((strcmp(cmd, "432") == 0) || (strcmp(cmd, "433") == 0)) {
                 if (nickname == altnickname) {
-                    log_stderr("Nicknames already in use");
-                    halt(6);
+                    throw std::runtime_error("Nicknames already in use");
                 }
                 nickname = altnickname;
                 irc_sendline("NICK " + nickname);
@@ -204,8 +200,7 @@ void irc_connect(const std::string& servername, int port,
     }
 
     // Time out: we were not able to connect
-    log_stderr("Problem during connection");
-    halt(7);
+    throw std::runtime_error("Problem during connection");
 }
 
 void do_perform(const std::string& perform)
@@ -226,8 +221,7 @@ void do_perform(const std::string& perform)
                 char text[128];
                 snprintf(text, 128,
                          "Missing argument for %s on Perform= setting", token);
-                log_stderr(text);
-                halt(2);
+                throw std::runtime_error(text);
             }
             if (strcmp(token, "MSG") == 0)
                 irc_send("PRIVMSG");

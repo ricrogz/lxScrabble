@@ -39,8 +39,7 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
 
     std::ifstream stream(filename);
     if (stream.fail()) {
-        log_stderr("Could not open dictionary file");
-        halt(3);
+        throw std::runtime_error("Could not open dictionary file");
     }
     std::string word;
     struct dict_stats words;
@@ -108,8 +107,8 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
 
     // Exit if no words could be imported
     if (words.loaded == 0) {
-        log_stderr("ERROR: No words were imported, game cannot continue.");
-        halt(1);
+        throw std::runtime_error(
+            "ERROR: No words were imported, game cannot continue.");
     }
 
     return std::unique_ptr<const Cell>{dictionary};

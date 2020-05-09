@@ -27,8 +27,6 @@ extern unsigned int autostop;
 extern bool autovoice;
 extern long reannounce;
 
-void halt(int stat_code);
-
 template <class T>
 T cfg(const std::string& section, const std::string& option,
       const T& default_value);

@@ -60,11 +60,6 @@ inline void log_stdout(const std::string& message)
     log(message, std::cout);
 }
 
-inline void log_stderr(const std::string& message)
-{
-    log(message, std::cerr);
-}
-
 inline void msleep(unsigned long t)
 {
     usleep((__useconds_t) t * 1000);
