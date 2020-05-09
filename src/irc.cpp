@@ -218,10 +218,10 @@ void do_perform(const std::string& perform)
         }
         char* scan = strchr(token, ' ');
         if (scan) {
-            *scan++ = '\0';
+            *(++scan) = '\0';
         }
         non_ascii_strupr(token);
-        if ((strcmp(token, "MSG") == 0) || (strcmp(token, "NOTICE") == 0)) {
+        if (strcmp(token, "MSG") == 0 || strcmp(token, "NOTICE") == 0) {
             if (!scan) {
                 char text[128];
                 snprintf(text, 128,
@@ -234,14 +234,14 @@ void do_perform(const std::string& perform)
                 irc_send(token);
             token = scan;
             scan = strchr(token, ' ');
-            *--token = ' ';
-            *scan++ = '\0';
+            *(--token) = ' ';
+            *(++scan) = '\0';
             irc_send(token);
             irc_send(" :");
             irc_sendline(scan);
         } else {
             if (scan)
-                *--scan = ' ';
+                *(--scan) = ' ';
             irc_sendline(token);
         }
         msleep(300);
@@ -369,4 +369,30 @@ void irc_sendformat(bool set_endl, const std::string& lpKeyName,
     if (set_endl) {
         send(irc_socket, "\n", 1, 0);
     }
+}
+
+Pinger::Pinger(RandGenerator& generator)
+    : d_generator{generator}, d_distrib(0, 1 << 8)
+{
+}
+
+void Pinger::recv()
+{
+    d_lastRecv = clock();
+    d_pinged = false;
+}
+
+bool Pinger::is_alive()
+{
+    const auto delta = clock() - d_lastRecv;
+    if (d_pinged && delta > TIMEOUT) {
+        return false;
+    } else if (!d_pinged && delta > PING_INTERVAL) {
+        auto ping = fmt::format("PING: {:04X}{:04X}\n", d_distrib(d_generator),
+                                d_distrib(d_generator));
+        irc_sendline(ping);
+        d_pinged = true;
+    }
+
+    return true;
 }

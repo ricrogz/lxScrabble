@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cstring>
 #include <iostream>
-#include <random>
 
 #include "fmt/ranges.h"
 
@@ -16,8 +15,6 @@
 #include "mimics.hpp"
 #include "scoreboard.hpp"
 
-using RandGenerator = std::default_random_engine;
-
 #ifdef CHEAT
 const bool cheats_enabled = true;
 #else
@@ -26,7 +23,7 @@ const bool cheats_enabled = false;
 
 extern Scoreboard* scores;
 
-run_state cur_state;
+run_state cur_state = STOPPED;
 std::string lastWinner;
 size_t winInARow;
 time_t last_msg; // Updates on last channel msg, when not playing
@@ -203,8 +200,8 @@ bool scrabbleCmd(const char* nickname, char* command)
         replyScore(nickname, nickname);
     else if (strncasecmp(command, "!score ", 7) == 0)
         replyScore(&command[7], nickname);
-    else if ((strcasecmp(command, "!top") == 0) ||
-             (strcasecmp(command, "!top10") == 0))
+    else if (strcasecmp(command, "!top") == 0 ||
+             strcasecmp(command, "!top10") == 0)
         sendTop(nickname, Scoreboard::Type::Week, 10,
                 "The 10 best players of the week: 1. %s (%d)",
                 "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
@@ -258,32 +255,31 @@ void run_game(Cell const* dictionary)
     cur_state = STOPPED;
     size_t noWinner = 0;
 
-    RandGenerator get_rand_int(time(nullptr));
+    RandGenerator rnd_gen(time(nullptr));
 
     while (cur_state != QUITTING) {
 
         line_buffer_t line;
 
         int tclock = cfg_after;
-        bool PINGed = false;
-        clock_t lastRecvTicks = clock();
 
         time_t t = 0;
         time(&t);
         struct tm* systemTime = localtime(&t);
         int lastDayOfWeek = systemTime->tm_wday;
 
+        Pinger pinger(rnd_gen);
+
         do {
             msleep(100);
             while (irc_recv(line)) {
-                lastRecvTicks = clock();
-                PINGed = false;
+                pinger.recv();
                 char *nickname = nullptr, *ident = nullptr, *hostname = nullptr,
                      *cmd = nullptr, *param1 = nullptr, *param2 = nullptr,
                      *paramtext = nullptr;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1,
                             &param2, &paramtext);
-                if ((strcmp(cmd, "PRIVMSG") == 0) &&
+                if (strcmp(cmd, "PRIVMSG") == 0 &&
                     (strcasecmp(param1, channel.c_str()) == 0)) {
                     time(&last_msg);
                     std::string ptext(paramtext);
@@ -304,16 +300,10 @@ void run_game(Cell const* dictionary)
             }
 
             // Keep alive
-            if (!PINGed && (clock() - lastRecvTicks > 15000)) {
-                sprintf(line, "%.8X",
-                        static_cast<unsigned int>((get_rand_int() << 16) |
-                                                  get_rand_int()));
-                irc_sendline("PING :" + std::string(line));
-                PINGed = true;
-            } else if (PINGed && (clock() - lastRecvTicks > TIMEOUT)) {
+            if (!pinger.is_alive()) {
                 log("***** Timeout detected, reconnecting. *****");
                 irc_disconnect_msg("Timeout detected, reconnecting.");
-                game_loop(dictionary);
+                return;
             }
 
             // Reset weekly scores on monday 00:00
@@ -332,7 +322,7 @@ void run_game(Cell const* dictionary)
                 lastDayOfWeek = systemTime->tm_wday;
             }
 
-        } while (((cur_state == RUNNING) && tclock--) ||
+        } while ((cur_state == RUNNING && tclock--) ||
                  (tclock = 0, cur_state == STOPPED));
 
         // Check if quitting
@@ -347,7 +337,7 @@ void run_game(Cell const* dictionary)
         std::string sortedLetters;
         FoundWords foundWords;
         do {
-            letters = pickLetters(get_rand_int, distrib);
+            letters = pickLetters(rnd_gen, distrib);
             displayLetters(letters);
 
             sortedLetters = std::string(letters);
@@ -380,8 +370,7 @@ void run_game(Cell const* dictionary)
         int lastHour = systemTime->tm_hour;
         std::string winningNick;
         size_t winningWordLen = 0;
-        lastRecvTicks = clock();
-        PINGed = false;
+        pinger.recv();
         do {
             --tclock;
             if (tclock == warning) { // more than 10 s
@@ -435,15 +424,14 @@ void run_game(Cell const* dictionary)
             }
 
             while (irc_recv(line)) {
-                lastRecvTicks = clock();
-                PINGed = false;
+                pinger.recv();
                 char *nickname = nullptr, *ident = nullptr, *hostname = nullptr,
                      *cmd = nullptr, *param1 = nullptr, *param2 = nullptr,
                      *paramtext = nullptr;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1,
                             &param2, &paramtext);
-                if ((strcmp(cmd, "PRIVMSG") == 0) &&
-                    (strcasecmp(param1, channel.c_str()) == 0)) {
+                if (strcmp(cmd, "PRIVMSG") == 0 &&
+                    strcasecmp(param1, channel.c_str()) == 0) {
                     irc_stripcodes(paramtext);
                     while (isspace(*paramtext)) {
                         ++paramtext;
@@ -454,8 +442,7 @@ void run_game(Cell const* dictionary)
                     if (strncasecmp(paramtext, "!r", 2) == 0) {
                         displayLetters(letters);
                     } else if (!scrabbleCmd(nickname, paramtext)) {
-                        while ((*paramtext != 0) &&
-                               !is_valid_char(*paramtext)) {
+                        while (*paramtext != 0 && !is_valid_char(*paramtext)) {
                             ++paramtext;
                         }
                         if (*paramtext == 0) {
@@ -501,31 +488,28 @@ void run_game(Cell const* dictionary)
             }
 
             // Keep alive
-            if (!PINGed && (clock() - lastRecvTicks > 15000)) {
-                sprintf(line, "%.8X",
-                        static_cast<unsigned int>((get_rand_int() << 16) |
-                                                  get_rand_int()));
-                irc_sendline("PING :" + std::string(line));
-                PINGed = true;
-            } else if (PINGed && (clock() - lastRecvTicks > TIMEOUT)) {
+            if (!pinger.is_alive()) {
                 log("***** Timeout detected, reconnecting. *****");
                 irc_disconnect_msg("Timeout detected, reconnecting.");
-                game_loop(dictionary);
+                return;
             }
 
-        } while ((cur_state == RUNNING) && tclock);
+        } while (cur_state == RUNNING && tclock);
     }
 }
 
 void game_loop(Cell const* dictionary)
 {
-    // Connect to irc
-    log("Connecting to IRC...");
-    irc_connect();
+    while (cur_state != QUITTING) {
 
-    // Init execution
-    show_about();
-    run_game(dictionary);
+        // Connect to irc
+        log("Connecting to IRC...");
+        irc_connect();
+
+        // Init execution
+        show_about();
+        run_game(dictionary);
+    }
 
     scores->save();
     log("Quitting...");

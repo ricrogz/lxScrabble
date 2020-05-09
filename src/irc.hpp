@@ -6,6 +6,7 @@
 #define LXSCRABBLE_IRC_H
 
 #include "version.hpp"
+#include <random>
 #include <string>
 
 const std::string IRC_BOLD = "\x002";
@@ -28,11 +29,13 @@ const std::string DEFAULT_IDENT = "lxScrabble";
 
 const std::string DEFAULT_CHANNEL = "#scrabble";
 const std::string DEFAULT_CHANNEL_KEY = "";
-constexpr clock_t TIMEOUT = 60 * 1000; // 45 s
+constexpr clock_t PING_INTERVAL = 15 * 1000;
+constexpr clock_t TIMEOUT = 30 * 1000; // default: 90 s
 
 const size_t BUFFER_SIZE = 8192;
 const size_t LINE_BUFFER_SIZE = 1024;
 
+using RandGenerator = std::default_random_engine;
 using line_buffer_t = char[LINE_BUFFER_SIZE];
 
 extern std::string servername;
@@ -67,5 +70,25 @@ void irc_send(const std::string& text);
 void irc_disconnect_msg(const std::string& msg);
 
 void irc_disconnect();
+
+class Pinger
+{
+  public:
+    Pinger() = delete;
+    Pinger(const Pinger&) = delete;
+    Pinger& operator=(const Pinger&) = delete;
+
+    explicit Pinger(RandGenerator& generator);
+
+    void recv();
+    bool is_alive();
+
+  private:
+    clock_t d_lastRecv = 0;
+    bool d_pinged = false;
+
+    RandGenerator& d_generator;
+    std::uniform_int_distribution<unsigned> d_distrib;
+};
 
 #endif // LXSCRABBLE_IRC_H
