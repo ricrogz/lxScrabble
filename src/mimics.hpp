@@ -12,6 +12,9 @@
 #include <unistd.h>
 #include <unordered_map>
 
+static const char* LOG_TIME_FMT = "%Y-%m-%d %H:%M:%S --- ";
+static const size_t LOG_TIME_SIZE = 25;
+
 const std::unordered_map<char, char> NON_ASCII_CONVERSIONS = {
     {241, 209}, // ñ >> Ñ
     {231, 199}, // ç >> Ç
@@ -28,8 +31,7 @@ inline bool is_valid_char(char c)
 
 inline char* non_ascii_strupr(char* s)
 {
-    char* tmp = s;
-    for (; *tmp; ++tmp) {
+    for (char* tmp = s; *tmp; ++tmp) {
         if (isalpha(*tmp)) {
             *tmp = toupper(*tmp);
         } else {
@@ -44,11 +46,11 @@ inline char* non_ascii_strupr(char* s)
 
 inline void log(const std::string& message, std::ostream& stream)
 {
-    char timestamp[25];
-    struct tm* sTm = nullptr;
-    time_t now = time(nullptr);
-    sTm = localtime(&now);
-    strftime(timestamp, 25, "%Y-%m-%d %H:%M:%S --- ", sTm);
+    auto now = time(nullptr);
+    auto sTm = localtime(&now);
+
+    std::string timestamp(LOG_TIME_SIZE, ' ');
+    strftime(&timestamp[0], LOG_TIME_SIZE, LOG_TIME_FMT, sTm);
     stream << timestamp << message << std::endl;
 }
 
