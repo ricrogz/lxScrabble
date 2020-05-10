@@ -99,7 +99,7 @@ Any of the options, except **Server**, can be disabled by putting a semicolon ('
 The options and strings in this section enumerate the format strings that will be used by the program to signal different events. Customize these strings i.e. to translate the game into other languages. Please respect these two rules, or the game may not work properly:
 
     * Escape any commas, colons or semicolons ('\\,', '\\:', '\\;').
-    * Respect the formatters ('%d' or '%s'): you can alter the position of the formatters in the string, but please respect their order and number (do not add or remove any formatters).
+    * Be careful with theRespect the formatters ('{\:d}' or '{\:s}'): you can alter the position of the formatters in the string, but please respect their order and number (do not add or remove any formatters!!).
 
 # Remote commands
 
@@ -142,7 +142,7 @@ Also take care that the ini and dictionary files are stored in the proper encodi
 * **also as a result of using inicpp** the format of ini files has changed slightly. Specifically:
     - Format strings in lxScrabble.ini are no longer embedded in quotes.
     - Commas, colons and semicolons (',', ':', ';') in format strings in lxScrabble need to be escaped ('\\,', '\\:', '\\;').
-    - Formatting placeholders ('%...') format strings in lxScrabble have been replaced by proper *printf* placeholders ('%s', '%d').
+    - Formatting placeholders ('{\:d}', '{\:s}') format strings in lxScrabble also *must* escape the semicolon.
     - Player scores in score.ini do no longer start with an underscore ('_').
 * Current source code allows for incorporation of non-ascii characters.
 * Incremental replacement of C code with C++.

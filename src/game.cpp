@@ -59,7 +59,7 @@ void displayLetters(const std::string& letters)
 {
     irc_sendmsg(channel);
     auto msg = fmt::format(" {} ", fmt::join(letters, " "));
-    irc_sendformat(true, "Letters", "[Mixed Letters]  - %s -", msg.c_str());
+    irc_sendformat(true, "Letters", "[Mixed Letters]  - {:s} -", msg);
 }
 
 void send_update_stats(const std::string& nickname, unsigned long gain)
@@ -70,11 +70,11 @@ void send_update_stats(const std::string& nickname, unsigned long gain)
 
     if (strcasecmp(lastWinner.c_str(), nickname.c_str()) != 0) {
         winInARow = 1;
-        irc_sendformat(true, "Stats", "( %d pts :  %d pts)", week, alltime);
+        irc_sendformat(true, "Stats", "( {:d} pts :  {:d} pts)", week, alltime);
     } else {
         ++winInARow;
         irc_sendformat(true, "StatsCont",
-                       "( %d pts :  %d pts) - %d  contiguous won games!",
+                       "( {:d} pts :  {:d} pts) - {:d}  contiguous won games!",
                        winInARow, week, alltime);
     }
     lastWinner = nickname;
@@ -145,12 +145,13 @@ void replyScore(const char* nickname, const char* dest)
 
     irc_sendnotice(dest);
     if (alltime == 0ul)
-        irc_sendformat(true, "ScoreUnknown", "%s has never played with me.",
+        irc_sendformat(true, "ScoreUnknown", "{:s} has never played with me.",
                        nickname);
     else
-        irc_sendformat(true, "Score",
-                       "%s's score is %d point(s) for this week, %d in total.",
-                       nickname, week, alltime);
+        irc_sendformat(
+            true, "Score",
+            "{:s}'s score is {:d} point(s) for this week, {:d} in total.",
+            nickname, week, alltime);
 }
 
 void sendTop(const char* dest, Scoreboard::Type which, size_t num,
@@ -171,11 +172,10 @@ void sendTop(const char* dest, Scoreboard::Type which, size_t num,
         auto a = top_iter;
         auto b = ++top_iter;
         auto c = ++top_iter;
-        irc_sendformat(true, title, lpDefault, a->first.c_str(), a->second,
-                       b->first.c_str(), b->second, c->first.c_str(),
-                       c->second);
+        irc_sendformat(true, title, lpDefault, a->first, a->second, b->first,
+                       b->second, c->first, c->second);
     } else {
-        irc_sendformat(true, title, lpDefault, top_iter->first.c_str(),
+        irc_sendformat(true, title, lpDefault, top_iter->first,
                        top_iter->second);
 
         title += "More";
@@ -184,9 +184,9 @@ void sendTop(const char* dest, Scoreboard::Type which, size_t num,
             auto b = ++top_iter;
             auto c = ++top_iter;
             irc_sendnotice(dest);
-            irc_sendformat(true, title, lpDefaultMore, i, a->first.c_str(),
-                           a->second, i + 1, b->first.c_str(), b->second, i + 2,
-                           c->first.c_str(), c->second);
+            irc_sendformat(true, title, lpDefaultMore, i, a->first, a->second,
+                           i + 1, b->first, b->second, i + 2, c->first,
+                           c->second);
         }
     }
 }
@@ -203,30 +203,30 @@ bool scrabbleCmd(const char* nickname, char* command)
     else if (strcasecmp(command, "!top") == 0 ||
              strcasecmp(command, "!top10") == 0)
         sendTop(nickname, Scoreboard::Type::Week, 10,
-                "The 10 best players of the week: 1. %s (%d)",
-                "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
+                "The 10 best players of the week: 1. {:s} ({:d})",
+                "{:d}. {:s} ({:d}) - {:d}. {:s} ({:d}) - {:d}. {:s} ({:d})");
     else if (strcasecmp(command, "!top10total") == 0)
         sendTop(nickname, Scoreboard::Type::Total, 10,
-                "The 10 best players of the all time: 1. %s (%d)",
-                "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
+                "The 10 best players of the all time: 1. {:s} ({:d})",
+                "{:d}. {:s} ({:d}) - {:d}. {:s} ({:d}) - {:d}. {:s} ({:d})");
     else if (strcasecmp(command, "!top3") == 0)
         sendTop(nickname, Scoreboard::Type::Week, 3,
-                "The 3 best players of the week:  1. %s (%d) - 2. %s (%d) - "
-                "3. %s (%d)",
+                "The 3 best players of the week:  1. {:s} ({:d}) - 2. {:s} "
+                "({:d}) - 3. {:s} ({:d})",
                 nullptr);
     else if (strcasecmp(command, "!top3total") == 0)
-        sendTop(
-            nickname, Scoreboard::Type::Total, 3,
-            "The 3 best players of the all time:  1. %s (%d) - 2. %s (%d) - "
-            "3. %s (%d)",
-            nullptr);
+        sendTop(nickname, Scoreboard::Type::Total, 3,
+                "The 3 best players of the all time:  1. {:s} ({:d}) - 2. {:s} "
+                "({:d}) - 3. {:s} ({:d})",
+                nullptr);
     else if (strcasecmp(command, "!start") == 0)
         cur_state = RUNNING;
     else if ((anyoneCanStop || isOwner) &&
              (strcasecmp(command, "!stop") == 0)) {
         if (cur_state == RUNNING) {
             irc_sendmsg(channel);
-            irc_sendformat(true, "Stop", "%s has stopped the game.", nickname);
+            irc_sendformat(true, "Stop", "{:s} has stopped the game.",
+                           nickname);
             time(&last_msg);
         }
         cur_state = STOPPED;
@@ -351,8 +351,8 @@ void run_game(Cell const* dictionary)
                                "again ;-)...]");
             } else {
                 irc_sendformat(true, "Found",
-                               "[I've found %d words, including %d which "
-                               "contain %d letters.]",
+                               "[I've found {:d} words, including {:d} which "
+                               "contain {:d} letters.]",
                                foundWords.totalWords,
                                foundWords.bestWords.size(),
                                foundWords.lenBestWords);
@@ -381,12 +381,11 @@ void run_game(Cell const* dictionary)
                 auto words =
                     fmt::format("{}", fmt::join(foundWords.bestWords, " - "));
                 irc_sendformat(true, "Timeout",
-                               "[Time is out.] MAX words were %s",
-                               words.c_str());
+                               "[Time is out.] MAX words were {:d}", words);
                 if (winningWordLen) {
                     irc_sendmsg(channel);
-                    irc_sendformat(false, "WinSome", "%s gets %d points! ",
-                                   winningNick.c_str(), winningWordLen);
+                    irc_sendformat(false, "WinSome", "{:s} gets {:d} points! ",
+                                   winningNick, winningWordLen);
                     send_update_stats(winningNick, winningWordLen);
                     noWinner = 0;
                 } else if (++noWinner == autostop) {
@@ -460,9 +459,9 @@ void run_game(Cell const* dictionary)
                                 if (winningWordLen == foundWords.lenBestWords) {
                                     irc_sendformat(
                                         false, "Win",
-                                        "Congratulations %s ! There's not "
-                                        "better [%s] !! You get %d points + %d "
-                                        "bonus !",
+                                        "Congratulations {:s} ! There isn't "
+                                        "anything better [{:s}] !! You get "
+                                        "{:d} points + {:d} bonus !",
                                         paramtext, nickname, winningWordLen,
                                         bonus);
                                     send_update_stats(nickname,
@@ -476,8 +475,9 @@ void run_game(Cell const* dictionary)
                                 } else {
                                     irc_sendformat(
                                         true, "Word",
-                                        "Not bad %s... I keep your word [%s] ! "
-                                        "Who can say better than %d letters ?",
+                                        "Not bad {:s}... I'll keep your word "
+                                        "[{:s}] !  Who can do better than {:d} "
+                                        "letters ?",
                                         paramtext, nickname, strlen(paramtext));
                                 }
                                 winningNick = nickname;

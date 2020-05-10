@@ -1,7 +1,6 @@
 //
 // Created by invik on 17/10/17.
 //
-#include <cstdarg>
 #include <cstring>
 #include <limits>
 #include <netdb.h>
@@ -360,24 +359,6 @@ void irc_disconnect()
     irc_disconnect_msg("QUIT :Game Over");
 }
 
-void irc_sendformat(bool set_endl, const std::string& lpKeyName,
-                    const std::string& lpDefault, ...)
-{
-    auto buffer = cfg<inicpp::string_ini_t>("Strings", lpKeyName, lpDefault);
-    if (irc_blackAndWhite) {
-        buffer = irc_stripcodes(buffer);
-    }
-    va_list arguments;
-    char text[BUFFER_SIZE] = {0};
-    va_start(arguments, &lpDefault);
-    vsnprintf(text, BUFFER_SIZE, buffer.c_str(), arguments);
-    va_end(arguments);
-    send(irc_socket, text, strlen(text), 0);
-    if (set_endl) {
-        send(irc_socket, "\n", 1, 0);
-    }
-}
-
 Pinger::Pinger(RandGenerator& generator)
     : d_generator{generator},
       d_distrib(0u, std::numeric_limits<uint32_t>::max()), d_lastRecv{clock()}
@@ -402,4 +383,15 @@ bool Pinger::is_alive()
     }
 
     return true;
+}
+
+std::string get_fmt_template(const std::string& lpKeyName,
+                             const std::string& lpDefault)
+{
+    auto fmt_template =
+        cfg<inicpp::string_ini_t>("Strings", lpKeyName, lpDefault);
+    if (irc_blackAndWhite) {
+        return irc_stripcodes(fmt_template);
+    }
+    return fmt_template;
 }
