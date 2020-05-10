@@ -424,9 +424,13 @@ void run_game(Cell const* dictionary)
 
             while (irc_recv(line)) {
                 pinger.recv();
-                char *nickname = nullptr, *ident = nullptr, *hostname = nullptr,
-                     *cmd = nullptr, *param1 = nullptr, *param2 = nullptr,
-                     *paramtext = nullptr;
+                char* nickname = nullptr;
+                char* ident = nullptr;
+                char* hostname = nullptr;
+                char* cmd = nullptr;
+                char* param1 = nullptr;
+                char* param2 = nullptr;
+                char* paramtext = nullptr;
                 irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1,
                             &param2, &paramtext);
                 if (strcmp(cmd, "PRIVMSG") == 0 &&

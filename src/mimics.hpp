@@ -20,9 +20,9 @@ const std::unordered_map<char, char> NON_ASCII_CONVERSIONS = {
     {231, 199}, // ç >> Ç
 };
 
-inline bool is_valid_char(char c)
+inline bool is_valid_char(char& c)
 {
-    auto is_match = [c](const std::pair<char, char>& p) {
+    auto is_match = [&c](const std::pair<char, char>& p) {
         return c == p.first || c == p.second;
     };
     return isascii(c) || std::any_of(NON_ASCII_CONVERSIONS.begin(),

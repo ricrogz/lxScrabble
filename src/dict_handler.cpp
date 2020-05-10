@@ -8,11 +8,18 @@
 #include "dict_handler.hpp"
 #include "mimics.hpp"
 
-void addWord(Cell*& dictionary, std::string&& word)
+Cell::Cell(const char& l, Cell* o) noexcept : other(o), letter(l) {}
+Cell::~Cell()
+{
+    delete other;
+    delete longer;
+}
+
+void Cell::addWord(Cell*& root_cell, std::string&& word)
 {
     std::string letters(word);
     std::sort(letters.begin(), letters.end());
-    Cell** cell = &dictionary;
+    Cell** cell = &root_cell;
     auto scan = letters.begin();
     while (scan != letters.end()) {
         char ch = *scan;
@@ -29,18 +36,37 @@ void addWord(Cell*& dictionary, std::string&& word)
             cell = &(*cell)->longer;
         }
     }
-    (*cell)->addWord(std::move(word));
+    (*cell)->storeWord(std::move(word));
+}
+
+size_t Cell::size() const
+{
+    return words.size();
+}
+bool Cell::empty() const
+{
+    return words.empty();
+}
+
+void Cell::storeWord(std::string&& word)
+{
+    words.push_back(std::move(word));
 }
 
 std::unique_ptr<const Cell> readDictionary(const std::string& filename)
 {
     const std::string whitespace_chars{" \r\n"};
-    Cell* dictionary = nullptr;
 
     std::ifstream stream(filename);
     if (stream.fail()) {
         throw std::runtime_error("Could not open dictionary file");
     }
+
+    // Make sure that at least the root cell is not nullptr.
+    // Also, manage it from here on.
+    auto root_cell = new Cell(distrib[0], nullptr);
+    std::unique_ptr<const Cell> dictionary{root_cell};
+
     std::string word;
     struct dict_stats words;
     while (!stream.eof()) {
@@ -85,7 +111,7 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
             ++words.wrong_symbols;
             continue;
         }
-        addWord(dictionary, std::move(word));
+        Cell::addWord(root_cell, std::move(word));
         ++words.loaded;
     }
     stream.close();
@@ -108,7 +134,7 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
             "ERROR: No words were imported, game cannot continue.");
     }
 
-    return std::unique_ptr<const Cell>{dictionary};
+    return dictionary;
 }
 
 void findWords(FoundWords& found, Cell const* cell, const std::string& letters,

@@ -70,7 +70,7 @@ bool irc_recv(line_buffer_t line)
     if (value) {
         irc_bufLen +=
             recv(irc_socket, &irc_buffer[irc_bufLen],
-                 std::min<unsigned long>(value, BUFFER_SIZE - irc_bufLen), 0);
+                 std::min<size_t>(value, BUFFER_SIZE - irc_bufLen), 0);
         irc_buffer[irc_bufLen] = 0;
         irc_bufLen = strlen(irc_buffer);
     }

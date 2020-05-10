@@ -19,6 +19,20 @@ struct dict_stats {
 class Cell
 {
   public:
+    static void addWord(Cell*& root_cell, std::string&& word);
+
+    Cell() = delete;
+    Cell(const Cell&) = delete;
+    Cell(Cell&&) = delete;
+    Cell& operator=(const Cell&) = delete;
+    Cell& operator=(Cell&&) = delete;
+
+    Cell(const char& l, Cell* o) noexcept;
+    ~Cell();
+
+    size_t size() const;
+    bool empty() const;
+
     Cell* other = nullptr;  // autres lettres possibles (plus grandes dans
                             // l'ordre alphab�tiques)
     Cell* longer = nullptr; // mots plus long disponibles
@@ -29,21 +43,9 @@ class Cell
 
     const char letter; // la lettre
 
-    Cell() = delete;
-    explicit Cell(const Cell&) = delete;
-    Cell(char& l, Cell* o) noexcept : other(o), letter(l) {}
-    ~Cell()
-    {
-        delete other;
-        delete longer;
-    }
-
-    void addWord(std::string&& w) { words.push_back(std::move(w)); }
-    size_t size() const { return words.size(); }
-    bool empty() const { return words.empty(); }
+  private:
+    void storeWord(std::string&& word);
 };
-
-void addWord(Cell*& dictionary, std::string&& word);
 
 std::unique_ptr<const Cell> readDictionary(const std::string& filename);
 
