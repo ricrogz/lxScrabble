@@ -473,8 +473,9 @@ void run_game(Cell const* dictionary)
                                     send_update_stats(nickname,
                                                       winningWordLen + bonus);
                                     if (autovoice) {
-                                        irc_sendline("MODE " + channel +
-                                                     " +v " + nickname);
+                                        irc_sendline(
+                                            fmt::format("MODE {} +v {}",
+                                                        channel, nickname));
                                     }
                                     tclock = 0;
                                     noWinner = 0;
