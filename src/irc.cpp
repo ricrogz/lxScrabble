@@ -1,6 +1,7 @@
 //
 // Created by invik on 17/10/17.
 //
+#include <arpa/inet.h>
 #include <array>
 #include <cstring>
 #include <limits>
@@ -88,7 +89,7 @@ bool irc_recv(std::string& line)
             }
             // skip the new line char
             line.assign(irc_buffer.begin(),
-                        lineLen - (irc_buffer[lineLen - 1] == '\r'));
+                        lineLen - (irc_buffer.at(lineLen - 1) == '\r'));
             ++lineLen;
             irc_bufLen -= lineLen;
             memmove(irc_buffer.begin(), irc_buffer.begin() + lineLen,
@@ -159,17 +160,18 @@ void irc_connect(const std::string& servername, int port,
                  const std::string& localhost, const std::string& fullname)
 {
 
-    struct hostent* host = nullptr;
-    struct sockaddr_in serv_addr;
-
-    if ((host = gethostbyname(servername.c_str())) == nullptr) {
+    const auto host = gethostbyname(servername.c_str());
+    if (host == nullptr) {
         throw std::runtime_error("Could not resolve server name");
     }
 
-    serv_addr.sin_addr = *(struct in_addr*) host->h_addr;
+    struct sockaddr_in serv_addr;
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons((u_short) port);
-    if (connect(irc_socket, (sockaddr*) &serv_addr, sizeof(serv_addr)) < 0) {
+    serv_addr.sin_port = htons(port);
+    memcpy(&serv_addr.sin_addr, *host->h_addr_list, host->h_length);
+
+    auto server = reinterpret_cast<sockaddr*>(&serv_addr);
+    if (connect(irc_socket, server, sizeof(serv_addr)) < 0) {
         throw std::runtime_error("Connection failed.");
     }
 
@@ -220,9 +222,9 @@ void irc_connect(const std::string& servername, int port,
     throw std::runtime_error("Problem during connection");
 }
 
-void do_perform(const std::string& perform)
+void do_perform(std::string perform)
 {
-    char* token = strtok((char*) perform.c_str(), "|");
+    char* token = strtok(perform.data(), "|");
     while (token != nullptr) {
         token = token + strspn(token, " ");
         if (*token == '/') {
