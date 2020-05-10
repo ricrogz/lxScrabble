@@ -54,18 +54,19 @@ void irc_sendline(const std::string& line)
     send(irc_socket, "\n", 1, 0);
 }
 
-bool irc_handlestd(line_buffer_t line)
+bool irc_handlestd(std::string& line)
 {
-    if (strncmp(line, "PING :", 6) == 0) {
+    if (line.compare(0, 6, "PING :") == 0) {
         log(line);
         irc_send("PONG :");
-        irc_sendline(&line[6]);
+        line.erase(0, 6);
+        irc_sendline(line);
         return true;
     }
     return false;
 }
 
-bool irc_recv(line_buffer_t line)
+bool irc_recv(std::string& line)
 {
     size_t value = 0;
     ioctl(irc_socket, FIONREAD, &value);
@@ -86,8 +87,8 @@ bool irc_recv(line_buffer_t line)
                 lineLen = LINE_BUFFER_SIZE;
             }
             // skip the new line char
-            memcpy(line, irc_buffer.begin(), lineLen);
-            line[lineLen - (irc_buffer[lineLen - 1] == '\r' ? 1 : 0)] = 0;
+            line.assign(irc_buffer.begin(),
+                        lineLen - (irc_buffer[lineLen - 1] == '\r'));
             ++lineLen;
             irc_bufLen -= lineLen;
             memmove(irc_buffer.begin(), irc_buffer.begin() + lineLen,
@@ -103,55 +104,53 @@ bool irc_recv(line_buffer_t line)
 
 void irc_flushrecv()
 {
-    line_buffer_t line = {0};
+    std::string line;
     while (irc_recv(line)) {
         log(line);
     }
 }
 
-void irc_analyze(char* line, char** nickname, char** ident, char** hostname,
-                 char** cmd, char** param1, char** param2, char** paramtext)
+void irc_analyze(std::string&& line, std::string& nickname, std::string& cmd,
+                 std::string& target, std::string& text)
 {
-    char* scan = nullptr;
-    *nickname = nullptr;
-    *ident = nullptr;
-    *hostname = nullptr;
+    size_t pos = 0;
     if (line[0] == ':') {
-        scan = strchr(line, ' ');
-        *scan = 0;
-        *cmd = &scan[1];
-        *nickname = &line[1];
-        scan = strchr(&line[1], '!');
-        if (scan) {
-            *scan++ = 0;
-            *ident = scan;
-            scan = strchr(scan, '@');
-            *scan++ = 0;
-            *hostname = scan;
-        }
-    } else {
-        *cmd = line;
-    }
-    scan = strchr(*cmd, ' ');
-    *scan++ = 0;
-    *param1 = *param2 = nullptr;
-    *paramtext = strchr(scan, '\0');
-    while (*scan != ':') {
-        if (!*param1) {
-            *param1 = scan;
-        } else if (!*param2) {
-            *param2 = scan;
+        pos = line.find(' ');
+        auto scan = line.rfind('!', pos);
+        if (scan != std::string::npos) {
+            // we don't care about ident and hostname
+            nickname.assign(line, 1, scan - 1);
         } else {
-            --scan;
+            nickname.assign(line, 1, pos - 1);
+        }
+        ++pos;
+    } else {
+        nickname.clear();
+    }
+
+    auto scan = line.find(' ', pos);
+    cmd.assign(line, pos, scan - pos);
+    ++scan;
+
+    line.erase(0, scan);
+    text = std::move(line);
+    scan = 0;
+
+    target.clear();
+    do {
+        pos = scan;
+        scan = text.find(' ', pos);
+        if (scan == std::string::npos) {
             break;
         }
-        scan = strchr(scan, ' ');
-        if (scan == nullptr) {
-            return;
+        if (target.empty()) {
+            target.assign(text, pos, scan - pos);
         }
-        *scan++ = 0;
-    }
-    *paramtext = &scan[1];
+        ++scan;
+        // There may be other parameters (e.g. modes),
+        // but we don't care about them.
+    } while (text[scan] != ':');
+    text.erase(0, scan + 1);
 }
 
 void irc_connect(const std::string& servername, int port,
@@ -186,27 +185,26 @@ void irc_connect(const std::string& servername, int port,
                  fullname);
 
     // All connection data has been send. Now, analyze answers for 45 secs
-    line_buffer_t line;
+    std::string line;
     clock_t ticks = clock();
     while (clock() - ticks < TIMEOUT) {
         if (irc_recv(line)) {
 
             log(line);
 
-            char* cmd = nullptr;
-            char* dummy = nullptr;
+            std::string cmd;
+            std::string dummy;
 
             // Get response text
-            irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy,
-                        &dummy);
+            irc_analyze(std::move(line), dummy, cmd, dummy, dummy);
 
             // We got a numeric indicating success
-            if (strcmp(cmd, "001") == 0) {
+            if (cmd == "001") {
                 irc_flushrecv();
                 return;
 
                 // Numerics indicating the nick is busy; use alternate
-            } else if ((strcmp(cmd, "432") == 0) || (strcmp(cmd, "433") == 0)) {
+            } else if (cmd == "432" || cmd == "433") {
                 if (nickname == altnickname) {
                     throw std::runtime_error("Nicknames already in use");
                 }
@@ -271,19 +269,21 @@ void do_perform(const std::string& perform)
     irc_flushrecv();
 }
 
-bool irc_want(const char* wantCmd, int timeout = 15000)
+bool irc_want(const std::string& wantCmd, int timeout = 15000)
 {
-    line_buffer_t line;
-    clock_t ticks = clock();
+    std::string line;
+    auto ticks = clock();
     while (clock() - ticks < timeout) {
         if (irc_recv(line)) {
-            char *cmd = nullptr, *dummy = nullptr;
-            irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy,
-                        &dummy);
-            if (strcmp(cmd, wantCmd) == 0)
+            std::string cmd;
+            std::string dummy;
+            irc_analyze(std::move(line), dummy, cmd, dummy, dummy);
+            if (cmd == wantCmd) {
                 return true;
-        } else
+            }
+        } else {
             msleep(100);
+        }
     }
     return false;
 }

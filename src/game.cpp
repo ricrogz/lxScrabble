@@ -191,7 +191,7 @@ void sendTop(const char* dest, Scoreboard::Type which, size_t num,
     }
 }
 
-bool scrabbleCmd(const char* nickname, char* command)
+bool scrabbleCmd(const char* nickname, const char* command)
 {
     bool isOwner = is_owner(nickname);
     if (strncasecmp(command, "!help", 5) == 0)
@@ -259,8 +259,6 @@ void run_game(Cell const* dictionary)
 
     while (cur_state != QUITTING) {
 
-        line_buffer_t line;
-
         auto tclock = cfg_after;
 
         time_t t = 0;
@@ -270,28 +268,32 @@ void run_game(Cell const* dictionary)
 
         Pinger pinger(rnd_gen);
 
+        std::string line;
         do {
             msleep(100);
             while (irc_recv(line)) {
                 pinger.recv();
-                char *nickname = nullptr, *ident = nullptr, *hostname = nullptr,
-                     *cmd = nullptr, *param1 = nullptr, *param2 = nullptr,
-                     *paramtext = nullptr;
-                irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1,
-                            &param2, &paramtext);
-                if (strcmp(cmd, "PRIVMSG") == 0 &&
-                    (strcasecmp(param1, channel.c_str()) == 0)) {
+                std::string nickname;
+                std::string dummy;
+                std::string cmd;
+                std::string msg_channel;
+                std::string paramtext;
+                irc_analyze(std::move(line), nickname, cmd, msg_channel,
+                            paramtext);
+                if (cmd == "PRIVMSG" &&
+                    (strcasecmp(msg_channel.c_str(), channel.c_str()) == 0)) {
                     time(&last_msg);
                     std::string ptext(paramtext);
                     ptext = irc_stripcodes(ptext);
                     if (ptext.empty()) {
                         continue;
                     }
-                    scrabbleCmd(nickname, paramtext);
+                    scrabbleCmd(nickname.c_str(), paramtext.c_str());
 
                     // Reannounce on JOIN after x time without no one talking
-                } else if (reannounce > 0 && (strcmp(cmd, "JOIN") == 0) &&
-                           (strcasecmp(paramtext, channel.c_str()) == 0)) {
+                } else if (reannounce > 0 && cmd == "JOIN" &&
+                           (strcasecmp(paramtext.c_str(), channel.c_str()) ==
+                            0)) {
                     time_t now = 0;
                     time(&now);
                     if (now - last_msg > reannounce)
@@ -424,42 +426,42 @@ void run_game(Cell const* dictionary)
 
             while (irc_recv(line)) {
                 pinger.recv();
-                char* nickname = nullptr;
-                char* ident = nullptr;
-                char* hostname = nullptr;
-                char* cmd = nullptr;
-                char* param1 = nullptr;
-                char* param2 = nullptr;
-                char* paramtext = nullptr;
-                irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1,
-                            &param2, &paramtext);
-                if (strcmp(cmd, "PRIVMSG") == 0 &&
-                    strcasecmp(param1, channel.c_str()) == 0) {
+                std::string nickname;
+                std::string dummy;
+                std::string cmd;
+                std::string msg_channel;
+                std::string paramtext;
+                irc_analyze(std::move(line), nickname, cmd, msg_channel,
+                            paramtext);
+                if (cmd == "PRIVMSG" &&
+                    strcasecmp(msg_channel.c_str(), channel.c_str()) == 0) {
                     irc_stripcodes(paramtext);
-                    while (isspace(*paramtext)) {
-                        ++paramtext;
+                    while (!paramtext.empty() && isspace(paramtext[0])) {
+                        paramtext.erase(0);
                     }
-                    if (*paramtext == 0) {
+                    if (paramtext.empty()) {
                         continue;
                     }
-                    if (strncasecmp(paramtext, "!r", 2) == 0) {
+                    if (strncasecmp(paramtext.c_str(), "!r", 2) == 0) {
                         displayLetters(letters);
-                    } else if (!scrabbleCmd(nickname, paramtext)) {
-                        while (*paramtext != 0 && !is_valid_char(*paramtext)) {
-                            ++paramtext;
+                    } else if (!scrabbleCmd(nickname.c_str(),
+                                            paramtext.c_str())) {
+                        while (!paramtext.empty() &&
+                               !is_valid_char(paramtext[0])) {
+                            paramtext.erase(0);
                         }
-                        if (*paramtext == 0) {
+                        if (paramtext.empty()) {
                             continue;
                         }
-                        if (strlen(paramtext) > winningWordLen) {
-                            non_ascii_strupr(paramtext);
+                        if (paramtext.size() > winningWordLen) {
+                            non_ascii_strupr(paramtext.data());
                             std::string sortedWord(paramtext);
                             std::sort(sortedWord.begin(), sortedWord.end());
                             if (isPossible(wordlen, sortedLetters,
                                            sortedWord) &&
                                 isWord(dictionary, sortedWord, paramtext)) {
                                 irc_sendmsg(channel);
-                                winningWordLen = strlen(paramtext);
+                                winningWordLen = paramtext.size();
                                 if (winningWordLen == foundWords.lenBestWords) {
                                     irc_sendformat(
                                         false, "Win",
@@ -482,7 +484,7 @@ void run_game(Cell const* dictionary)
                                         "Not bad {:s}... I'll keep your word "
                                         "[{:s}] !  Who can do better than {:d} "
                                         "letters ?",
-                                        paramtext, nickname, strlen(paramtext));
+                                        paramtext, nickname, winningWordLen);
                                 }
                                 winningNick = nickname;
                             }

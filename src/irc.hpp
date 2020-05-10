@@ -39,7 +39,6 @@ const size_t BUFFER_SIZE = 8192;
 const size_t LINE_BUFFER_SIZE = 1024;
 
 using RandGenerator = std::default_random_engine;
-using line_buffer_t = char[LINE_BUFFER_SIZE];
 
 extern std::string servername;
 extern int port;
@@ -63,10 +62,10 @@ std::string irc_stripcodes(const std::string& text);
 std::string get_fmt_template(const std::string& lpKeyName,
                              const std::string& lpDefault);
 
-void irc_analyze(char* line, char** nickname, char** ident, char** hostname,
-                 char** cmd, char** param1, char** param2, char** paramtext);
+void irc_analyze(std::string&& line, std::string& nickname, std::string& cmd,
+                 std::string& target, std::string& text);
 
-bool irc_recv(line_buffer_t line);
+bool irc_recv(std::string& line);
 
 void irc_send(const std::string& text);
 
