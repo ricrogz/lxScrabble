@@ -1,6 +1,7 @@
 //
 // Created by invik on 17/10/17.
 //
+#include <array>
 #include <cstring>
 #include <limits>
 #include <netdb.h>
@@ -25,7 +26,7 @@ std::string channelkey;
 std::string perform;
 
 int irc_socket;
-char irc_buffer[BUFFER_SIZE];
+std::array<char, BUFFER_SIZE> irc_buffer;
 size_t irc_bufLen = 0;
 bool irc_blackAndWhite;
 bool anyoneCanStop;
@@ -56,8 +57,9 @@ void irc_sendline(const std::string& line)
 bool irc_handlestd(line_buffer_t line)
 {
     if (strncmp(line, "PING :", 6) == 0) {
+        log(line);
         irc_send("PONG :");
-        irc_sendline(line + 6);
+        irc_sendline(&line[6]);
         return true;
     }
     return false;
@@ -68,23 +70,28 @@ bool irc_recv(line_buffer_t line)
     size_t value = 0;
     ioctl(irc_socket, FIONREAD, &value);
     if (value) {
-        irc_bufLen +=
-            recv(irc_socket, &irc_buffer[irc_bufLen],
-                 std::min<size_t>(value, BUFFER_SIZE - irc_bufLen), 0);
-        irc_buffer[irc_bufLen] = 0;
-        irc_bufLen = strlen(irc_buffer);
+        auto ret = recv(irc_socket, irc_buffer.begin() + irc_bufLen,
+                        std::min<size_t>(value, BUFFER_SIZE - irc_bufLen), 0);
+        if (ret < 0) {
+            throw std::runtime_error("Error retrieving data from socket.");
+        }
+        irc_bufLen += ret;
     }
     while (true) {
-        char* scan = strchr(irc_buffer, '\n');
-        if (scan) {
-            size_t lineLen = scan - irc_buffer;
+        auto scan = memchr(irc_buffer.begin(), '\n', irc_bufLen);
+        if (scan != nullptr) {
+            size_t lineLen =
+                std::distance(irc_buffer.begin(), static_cast<char*>(scan));
             if (lineLen > LINE_BUFFER_SIZE) {
                 lineLen = LINE_BUFFER_SIZE;
             }
-            strncpy(line, irc_buffer, lineLen - 1);
-            line[lineLen - 1] = 0;
-            irc_bufLen -= lineLen + 1;
-            memmove(irc_buffer, &irc_buffer[lineLen + 1], irc_bufLen + 1);
+            // skip the new line char
+            memcpy(line, irc_buffer.begin(), lineLen);
+            line[lineLen - (irc_buffer[lineLen - 1] == '\r' ? 1 : 0)] = 0;
+            ++lineLen;
+            irc_bufLen -= lineLen;
+            memmove(irc_buffer.begin(), irc_buffer.begin() + lineLen,
+                    irc_bufLen);
             if (!irc_handlestd(line)) {
                 return true;
             }
@@ -97,9 +104,9 @@ bool irc_recv(line_buffer_t line)
 void irc_flushrecv()
 {
     line_buffer_t line = {0};
-    do {
+    while (irc_recv(line)) {
         log(line);
-    } while (irc_recv(line));
+    }
 }
 
 void irc_analyze(char* line, char** nickname, char** ident, char** hostname,
@@ -183,7 +190,11 @@ void irc_connect(const std::string& servername, int port,
     clock_t ticks = clock();
     while (clock() - ticks < TIMEOUT) {
         if (irc_recv(line)) {
-            char *cmd = nullptr, *dummy = nullptr;
+
+            log(line);
+
+            char* cmd = nullptr;
+            char* dummy = nullptr;
 
             // Get response text
             irc_analyze(line, &dummy, &dummy, &dummy, &cmd, &dummy, &dummy,
@@ -202,8 +213,9 @@ void irc_connect(const std::string& servername, int port,
                 nickname = altnickname;
                 irc_sendline("NICK " + nickname);
             }
-        } else
+        } else {
             msleep(500);
+        }
     }
 
     // Time out: we were not able to connect
@@ -377,7 +389,7 @@ bool Pinger::is_alive()
     if (d_pinged && delta > TIMEOUT) {
         return false;
     } else if (!d_pinged && delta > PING_INTERVAL) {
-        auto ping = fmt::format("PING: {:08X}", d_distrib(d_generator));
+        auto ping = fmt::format("PING :{:08X}", d_distrib(d_generator));
         irc_sendline(ping);
         d_pinged = true;
     }
