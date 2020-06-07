@@ -224,7 +224,7 @@ void irc_connect(const std::string& servername, int port,
 
 void do_perform(std::string perform)
 {
-    char* token = strtok(perform.data(), "|");
+    char* token = strtok(const_cast<char*>(perform.data()), "|");
     while (token != nullptr) {
         token = token + strspn(token, " ");
         if (*token == '/') {
