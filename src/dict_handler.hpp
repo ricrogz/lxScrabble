@@ -55,6 +55,6 @@ struct FoundWords {
     std::vector<std::string> bestWords;
 };
 
-FoundWords findWords(Cell const*& dictionary, const std::string& letters);
+FoundWords findWords(const Cell* const& dictionary, const std::string& letters);
 
 #endif // LXSCRABBLE_DICT_HANDLER_H

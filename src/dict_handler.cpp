@@ -180,7 +180,7 @@ void findWords(FoundWords& found, Cell const* cell, const std::string& letters,
     }
 }
 
-FoundWords findWords(Cell const*& dictionary, const std::string& letters)
+FoundWords findWords(const Cell* const& dictionary, const std::string& letters)
 {
     FoundWords found;
     findWords(found, dictionary, letters, 0);

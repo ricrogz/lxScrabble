@@ -5,6 +5,7 @@
 #pragma once
 
 #include <functional>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -60,7 +61,7 @@ class Scoreboard
     std::vector<std::string> m_week_top;
     std::vector<std::string> m_total_top;
 
-    Scoreboard(std::string scorefile);
+    explicit Scoreboard(std::string scorefile);
 
     void update_top(std::vector<std::string>& top, Type which,
                     const std::string& player);
