@@ -454,7 +454,8 @@ void run_game(Cell const* dictionary)
                             continue;
                         }
                         if (paramtext.size() > winningWordLen) {
-                            non_ascii_strupr(paramtext.data());
+                            non_ascii_strupr(
+                                const_cast<char*>(paramtext.data()));
                             std::string sortedWord(paramtext);
                             std::sort(sortedWord.begin(), sortedWord.end());
                             if (isPossible(wordlen, sortedLetters,
