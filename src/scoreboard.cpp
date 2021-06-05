@@ -4,7 +4,8 @@
 
 #include <algorithm>
 #include <fstream>
-#include <sstream>
+
+#include "fmt/format.h"
 
 #include "scoreboard.hpp"
 
@@ -100,16 +101,16 @@ void Scoreboard::update_top(std::vector<std::string>& top, Type which,
     }
 }
 
-Scoreboard* Scoreboard::read_scoreboard(std::string scores_file)
+Scoreboard* Scoreboard::read_scoreboard(const std::string& scores_file)
 {
     static Scoreboard sb{scores_file};
 
     if (sb.m_players.empty()) {
-        auto f_in = std::ifstream{std::move(scores_file)};
+        auto f_in = std::ifstream{scores_file};
         if (!f_in.good()) {
-            std::stringstream ss;
-            ss << "Unable to open file '" << scores_file << "' to read scores.";
-            throw std::ifstream::failure(ss.str());
+            auto msg = fmt::format("Unable to open file '{}' to read scores.",
+                                   scores_file);
+            throw std::ifstream::failure(msg);
         }
 
         while (!f_in.eof()) {
@@ -142,9 +143,9 @@ void Scoreboard::save() const
 {
     auto f_out = std::ofstream{m_scorefile};
     if (!f_out.good()) {
-        std::stringstream ss;
-        ss << "Unable to open file '" << m_scorefile << "' to write scores.";
-        throw std::ifstream::failure(ss.str());
+        auto msg = fmt::format("Unable to open file '{}' to write scores.",
+                               m_scorefile);
+        throw std::ifstream::failure(msg);
     }
 
     auto weekly_score_getter = Scores::get_score_getter(Type::Week);

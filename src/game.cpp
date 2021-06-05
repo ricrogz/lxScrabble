@@ -4,22 +4,28 @@
 
 #include <algorithm>
 #include <cstring>
-#include <random>
-#include <sstream>
+#include <iostream>
+
+#include "fmt/ranges.h"
 
 #include "bot_commands.hpp"
 #include "dict_handler.hpp"
 #include "game.hpp"
+#include "irc.hpp"
 #include "mimics.hpp"
 #include "scoreboard.hpp"
 
-using RandGenerator = std::default_random_engine;
+#ifdef CHEAT
+const bool cheats_enabled = true;
+#else
+const bool cheats_enabled = false;
+#endif
 
 extern Scoreboard* scores;
 
-run_state cur_state;
+run_state cur_state = STOPPED;
 std::string lastWinner;
-std::size_t winInARow;
+size_t winInARow;
 time_t last_msg; // Updates on last channel msg, when not playing
 
 void show_about()
@@ -38,28 +44,22 @@ void show_about()
 std::string pickLetters(RandGenerator& get_rand_int,
                         const std::string& availableLetters)
 {
-#ifdef CHEAT
-    std::string letters;
-    log_stdout("[CHEATING] Input letters");
-    std::cin >> letters;
-#else
     std::string letters(availableLetters);
-    std::shuffle(letters.begin(), letters.end(), get_rand_int);
-    letters.resize(wordlen);
-#endif
+    if (cheats_enabled) {
+        log("[cheats_enabled] Input letters");
+        std::cin >> letters;
+    } else {
+        std::shuffle(letters.begin(), letters.end(), get_rand_int);
+        letters.resize(wordlen);
+    }
     return letters;
 }
 
 void displayLetters(const std::string& letters)
 {
     irc_sendmsg(channel);
-    std::ostringstream ss;
-    ss << ' ';
-    for (const auto& l : letters) {
-        ss << l << ' ';
-    }
-    irc_sendformat(true, "Letters", "[Mixed Letters]  - %s -",
-                   ss.str().c_str());
+    auto msg = fmt::format(" {} ", fmt::join(letters, " "));
+    irc_sendformat(true, "Letters", "[Mixed Letters]  - {:s} -", msg);
 }
 
 void send_update_stats(const std::string& nickname, unsigned long gain)
@@ -70,11 +70,11 @@ void send_update_stats(const std::string& nickname, unsigned long gain)
 
     if (strcasecmp(lastWinner.c_str(), nickname.c_str()) != 0) {
         winInARow = 1;
-        irc_sendformat(true, "Stats", "( %d pts :  %d pts)", week, alltime);
+        irc_sendformat(true, "Stats", "( {:d} pts :  {:d} pts)", week, alltime);
     } else {
         ++winInARow;
         irc_sendformat(true, "StatsCont",
-                       "( %d pts :  %d pts) - %d  contiguous won games!",
+                       "( {:d} pts :  {:d} pts) - {:d}  contiguous won games!",
                        winInARow, week, alltime);
     }
     lastWinner = nickname;
@@ -106,7 +106,7 @@ bool isWord(Cell const* dictionary, const std::string& letters,
     return false;
 }
 
-bool isPossible(std::size_t wordlen, const std::string& availableLetters,
+bool isPossible(size_t wordlen, const std::string& availableLetters,
                 const std::string& sortedWord)
 {
     if (sortedWord.size() > wordlen) {
@@ -145,12 +145,13 @@ void replyScore(const char* nickname, const char* dest)
 
     irc_sendnotice(dest);
     if (alltime == 0ul)
-        irc_sendformat(true, "ScoreUnknown", "%s has never played with me.",
+        irc_sendformat(true, "ScoreUnknown", "{:s} has never played with me.",
                        nickname);
     else
-        irc_sendformat(true, "Score",
-                       "%s's score is %d point(s) for this week, %d in total.",
-                       nickname, week, alltime);
+        irc_sendformat(
+            true, "Score",
+            "{:s}'s score is {:d} point(s) for this week, {:d} in total.",
+            nickname, week, alltime);
 }
 
 void sendTop(const char* dest, Scoreboard::Type which, size_t num,
@@ -160,8 +161,8 @@ void sendTop(const char* dest, Scoreboard::Type which, size_t num,
         num = 1 + num - (num % 3);
     }
 
-    std::stringstream title;
-    title << "Top" << (which == Scoreboard::Type::Week ? 'W' : 'A') << num;
+    auto title = fmt::format("Top{}{}",
+                             which == Scoreboard::Type::Week ? 'W' : 'A', num);
     const auto top = scores->get_top(which, num);
 
     auto top_iter = top.begin();
@@ -171,27 +172,26 @@ void sendTop(const char* dest, Scoreboard::Type which, size_t num,
         auto a = top_iter;
         auto b = ++top_iter;
         auto c = ++top_iter;
-        irc_sendformat(true, title.str(), lpDefault, a->first.c_str(),
-                       a->second, b->first.c_str(), b->second, c->first.c_str(),
-                       c->second);
+        irc_sendformat(true, title, lpDefault, a->first, a->second, b->first,
+                       b->second, c->first, c->second);
     } else {
-        irc_sendformat(true, title.str(), lpDefault, top_iter->first.c_str(),
+        irc_sendformat(true, title, lpDefault, top_iter->first,
                        top_iter->second);
 
-        title << "More";
+        title += "More";
         for (size_t i = 2; i < num; i += 3) {
             auto a = ++top_iter;
             auto b = ++top_iter;
             auto c = ++top_iter;
             irc_sendnotice(dest);
-            irc_sendformat(true, title.str(), lpDefaultMore, i,
-                           a->first.c_str(), a->second, i + 1, b->first.c_str(),
-                           b->second, i + 2, c->first.c_str(), c->second);
+            irc_sendformat(true, title, lpDefaultMore, i, a->first, a->second,
+                           i + 1, b->first, b->second, i + 2, c->first,
+                           c->second);
         }
     }
 }
 
-bool scrabbleCmd(const char* nickname, char* command)
+bool scrabbleCmd(const char* nickname, const char* command)
 {
     bool isOwner = is_owner(nickname);
     if (strncasecmp(command, "!help", 5) == 0)
@@ -199,34 +199,34 @@ bool scrabbleCmd(const char* nickname, char* command)
     else if (strcasecmp(command, "!score") == 0)
         replyScore(nickname, nickname);
     else if (strncasecmp(command, "!score ", 7) == 0)
-        replyScore(command + 7, nickname);
-    else if ((strcasecmp(command, "!top") == 0) ||
-             (strcasecmp(command, "!top10") == 0))
+        replyScore(&command[7], nickname);
+    else if (strcasecmp(command, "!top") == 0 ||
+             strcasecmp(command, "!top10") == 0)
         sendTop(nickname, Scoreboard::Type::Week, 10,
-                "The 10 best players of the week: 1. %s (%d)",
-                "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
+                "The 10 best players of the week: 1. {:s} ({:d})",
+                "{:d}. {:s} ({:d}) - {:d}. {:s} ({:d}) - {:d}. {:s} ({:d})");
     else if (strcasecmp(command, "!top10total") == 0)
         sendTop(nickname, Scoreboard::Type::Total, 10,
-                "The 10 best players of the all time: 1. %s (%d)",
-                "%d. %s (%d) - %d. %s (%d) - %d. %s (%d)");
+                "The 10 best players of the all time: 1. {:s} ({:d})",
+                "{:d}. {:s} ({:d}) - {:d}. {:s} ({:d}) - {:d}. {:s} ({:d})");
     else if (strcasecmp(command, "!top3") == 0)
         sendTop(nickname, Scoreboard::Type::Week, 3,
-                "The 3 best players of the week:  1. %s (%d) - 2. %s (%d) - "
-                "3. %s (%d)",
+                "The 3 best players of the week:  1. {:s} ({:d}) - 2. {:s} "
+                "({:d}) - 3. {:s} ({:d})",
                 nullptr);
     else if (strcasecmp(command, "!top3total") == 0)
-        sendTop(
-            nickname, Scoreboard::Type::Total, 3,
-            "The 3 best players of the all time:  1. %s (%d) - 2. %s (%d) - "
-            "3. %s (%d)",
-            nullptr);
+        sendTop(nickname, Scoreboard::Type::Total, 3,
+                "The 3 best players of the all time:  1. {:s} ({:d}) - 2. {:s} "
+                "({:d}) - 3. {:s} ({:d})",
+                nullptr);
     else if (strcasecmp(command, "!start") == 0)
         cur_state = RUNNING;
     else if ((anyoneCanStop || isOwner) &&
              (strcasecmp(command, "!stop") == 0)) {
         if (cur_state == RUNNING) {
             irc_sendmsg(channel);
-            irc_sendformat(true, "Stop", "%s has stopped the game.", nickname);
+            irc_sendformat(true, "Stop", "{:s} has stopped the game.",
+                           nickname);
             time(&last_msg);
         }
         cur_state = STOPPED;
@@ -253,46 +253,47 @@ void run_game(Cell const* dictionary)
 {
 
     cur_state = STOPPED;
-    std::size_t noWinner = 0;
+    size_t noWinner = 0;
 
-    RandGenerator get_rand_int(time(nullptr));
+    RandGenerator rnd_gen(time(nullptr));
 
     while (cur_state != QUITTING) {
 
-        char line[1024];
+        auto tclock = cfg_after;
 
-        int tclock = cfg_after;
-        bool PINGed = false;
-        clock_t lastRecvTicks = clock();
-
-        time_t t;
+        time_t t = 0;
         time(&t);
         struct tm* systemTime = localtime(&t);
         int lastDayOfWeek = systemTime->tm_wday;
 
+        Pinger pinger(rnd_gen);
+
+        std::string line;
         do {
             msleep(100);
             while (irc_recv(line)) {
-                lastRecvTicks = clock();
-                PINGed = false;
-                char *nickname, *ident, *hostname, *cmd, *param1, *param2,
-                    *paramtext;
-                irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1,
-                            &param2, &paramtext);
-                if ((strcmp(cmd, "PRIVMSG") == 0) &&
-                    (strcasecmp(param1, channel.c_str()) == 0)) {
+                pinger.recv();
+                std::string nickname;
+                std::string dummy;
+                std::string cmd;
+                std::string msg_channel;
+                std::string paramtext;
+                irc_analyze(std::move(line), nickname, cmd, msg_channel,
+                            paramtext);
+                if (cmd == "PRIVMSG" &&
+                    (strcasecmp(msg_channel.c_str(), channel.c_str()) == 0)) {
                     time(&last_msg);
-                    std::string ptext(paramtext);
-                    ptext = irc_stripcodes(ptext);
-                    if (ptext.empty()) {
+                    paramtext = irc_stripcodes(paramtext);
+                    if (paramtext.empty()) {
                         continue;
                     }
-                    scrabbleCmd(nickname, paramtext);
+                    scrabbleCmd(nickname.c_str(), paramtext.c_str());
 
                     // Reannounce on JOIN after x time without no one talking
-                } else if (reannounce > 0 && (strcmp(cmd, "JOIN") == 0) &&
-                           (strcasecmp(paramtext, channel.c_str()) == 0)) {
-                    time_t now;
+                } else if (reannounce > 0 && cmd == "JOIN" &&
+                           (strcasecmp(paramtext.c_str(), channel.c_str()) ==
+                            0)) {
+                    time_t now = 0;
                     time(&now);
                     if (now - last_msg > reannounce)
                         show_about();
@@ -300,16 +301,10 @@ void run_game(Cell const* dictionary)
             }
 
             // Keep alive
-            if (!PINGed && (clock() - lastRecvTicks > 15000)) {
-                sprintf(line, "%.8X",
-                        static_cast<unsigned int>((get_rand_int() << 16) |
-                                                  get_rand_int()));
-                irc_sendline("PING :" + std::string(line));
-                PINGed = true;
-            } else if (PINGed && (clock() - lastRecvTicks > TIMEOUT)) {
-                log_stdout("***** Timeout detected, reconnecting. *****");
+            if (!pinger.is_alive()) {
+                log("***** Timeout detected, reconnecting. *****");
                 irc_disconnect_msg("Timeout detected, reconnecting.");
-                game_loop(dictionary);
+                return;
             }
 
             // Reset weekly scores on monday 00:00
@@ -328,7 +323,7 @@ void run_game(Cell const* dictionary)
                 lastDayOfWeek = systemTime->tm_wday;
             }
 
-        } while (((cur_state == RUNNING) && tclock--) ||
+        } while ((cur_state == RUNNING && tclock--) ||
                  (tclock = 0, cur_state == STOPPED));
 
         // Check if quitting
@@ -343,7 +338,7 @@ void run_game(Cell const* dictionary)
         std::string sortedLetters;
         FoundWords foundWords;
         do {
-            letters = pickLetters(get_rand_int, distrib);
+            letters = pickLetters(rnd_gen, distrib);
             displayLetters(letters);
 
             sortedLetters = std::string(letters);
@@ -357,58 +352,51 @@ void run_game(Cell const* dictionary)
                                "again ;-)...]");
             } else {
                 irc_sendformat(true, "Found",
-                               "[I've found %d words, including %d which "
-                               "contain %d letters.]",
+                               "[I've found {:d} words, including {:d} which "
+                               "contain {:d} letters.]",
                                foundWords.totalWords,
                                foundWords.bestWords.size(),
                                foundWords.lenBestWords);
             }
         } while (foundWords.totalWords == 0);
         tclock = cfg_clock;
-        int warning = tclock - cfg_warning;
-#ifdef CHEAT
-        std::ostringstream ss;
-        ss << "Longest Words :" << foundWords.maxWordsString << std::endl;
-        log_stdout(ss.str());
-#endif
+        auto warning = tclock - cfg_warning;
+
+        if (cheats_enabled) {
+            log(fmt::format("\nLongest Words :{}\n", foundWords.bestWords));
+        }
         time(&t);
         systemTime = localtime(&t);
         lastDayOfWeek = systemTime->tm_wday;
         int lastHour = systemTime->tm_hour;
-        char winningNick[128];
-        std::size_t winningWordLen = 0;
-        lastRecvTicks = clock();
-        PINGed = false;
+        std::string winningNick;
+        size_t winningWordLen = 0;
+        pinger.recv();
         do {
-            tclock--;
-            if (tclock == warning) { // plus que 10 sec
+            --tclock;
+            if (tclock == warning) { // more than 10 s
                 irc_sendmsg(channel);
                 irc_sendformat(true, "Warning", "Warning, time is nearly out!");
             } else if (tclock == 0) {
                 irc_sendmsg(channel);
-                std::ostringstream ss;
-                ss << foundWords.bestWords.front();
-                for (auto w = foundWords.bestWords.begin() + 1;
-                     w != foundWords.bestWords.end(); ++w) {
-                    ss << " - " << *w;
-                }
+                auto words =
+                    fmt::format("{}", fmt::join(foundWords.bestWords, " - "));
                 irc_sendformat(true, "Timeout",
-                               "[Time is out.] MAX words were %s",
-                               ss.str().c_str());
+                               "[Time is out.] MAX words were {:d}", words);
                 if (winningWordLen) {
                     irc_sendmsg(channel);
-                    irc_sendformat(false, "WinSome", "%s gets %d points! ",
+                    irc_sendformat(false, "WinSome", "{:s} gets {:d} points! ",
                                    winningNick, winningWordLen);
                     send_update_stats(winningNick, winningWordLen);
                     noWinner = 0;
                 } else if (++noWinner == autostop) {
-                    noWinner = 0;
                     irc_sendmsg(channel);
                     irc_sendformat(
                         true, "GameOver",
                         "[Game is over. Type !start to restart it.]");
                     cur_state = STOPPED;
                     time(&last_msg);
+                    noWinner = 0;
                 }
                 break;
             }
@@ -436,58 +424,63 @@ void run_game(Cell const* dictionary)
             }
 
             while (irc_recv(line)) {
-                lastRecvTicks = clock();
-                PINGed = false;
-                char *nickname, *ident, *hostname, *cmd, *param1, *param2,
-                    *paramtext;
-                irc_analyze(line, &nickname, &ident, &hostname, &cmd, &param1,
-                            &param2, &paramtext);
-                if ((strcmp(cmd, "PRIVMSG") == 0) &&
-                    (strcasecmp(param1, channel.c_str()) == 0)) {
-                    irc_stripcodes(paramtext);
-                    while (isspace(*paramtext))
-                        paramtext++;
-                    if (*paramtext == 0)
+                pinger.recv();
+                std::string nickname;
+                std::string dummy;
+                std::string cmd;
+                std::string msg_channel;
+                std::string paramtext;
+                irc_analyze(std::move(line), nickname, cmd, msg_channel,
+                            paramtext);
+                if (cmd == "PRIVMSG" &&
+                    strcasecmp(msg_channel.c_str(), channel.c_str()) == 0) {
+                    paramtext = irc_stripcodes(paramtext);
+                    if (paramtext.empty()) {
                         continue;
-                    if (strncasecmp(paramtext, "!r", 2) == 0)
+                    }
+                    if (strncasecmp(paramtext.c_str(), "!r", 2) == 0) {
                         displayLetters(letters);
-                    else if (!scrabbleCmd(nickname, paramtext)) {
-                        while ((*paramtext != 0) && !is_valid_char(*paramtext))
-                            paramtext++;
-                        if (*paramtext == 0)
+                    } else if (!scrabbleCmd(nickname.c_str(),
+                                            paramtext.c_str())) {
+                        if (paramtext.empty()) {
                             continue;
-                        if (strlen(paramtext) > winningWordLen) {
-                            non_ascii_strupr(paramtext);
+                        }
+                        if (paramtext.size() > winningWordLen) {
+                            non_ascii_strupr(
+                                const_cast<char*>(paramtext.data()));
                             std::string sortedWord(paramtext);
                             std::sort(sortedWord.begin(), sortedWord.end());
                             if (isPossible(wordlen, sortedLetters,
                                            sortedWord) &&
                                 isWord(dictionary, sortedWord, paramtext)) {
                                 irc_sendmsg(channel);
-                                strcpy(winningNick, nickname);
-                                winningWordLen = strlen(paramtext);
+                                winningWordLen = paramtext.size();
                                 if (winningWordLen == foundWords.lenBestWords) {
                                     irc_sendformat(
                                         false, "Win",
-                                        "Congratulations %s ! There's not "
-                                        "better [%s] !! You get %d points + %d "
-                                        "bonus !",
+                                        "Congratulations {:s} ! There isn't "
+                                        "anything better [{:s}] !! You get "
+                                        "{:d} points + {:d} bonus !",
                                         paramtext, nickname, winningWordLen,
                                         bonus);
                                     send_update_stats(nickname,
                                                       winningWordLen + bonus);
                                     if (autovoice) {
-                                        irc_sendline("MODE " + channel +
-                                                     " +v " + nickname);
+                                        irc_sendline(
+                                            fmt::format("MODE {} +v {}",
+                                                        channel, nickname));
                                     }
                                     tclock = 0;
+                                    noWinner = 0;
                                 } else {
                                     irc_sendformat(
                                         true, "Word",
-                                        "Not bad %s... I keep your word [%s] ! "
-                                        "Who can say better than %d letters ?",
-                                        paramtext, nickname, strlen(paramtext));
+                                        "Not bad {:s}... I'll keep your word "
+                                        "[{:s}] !  Who can do better than {:d} "
+                                        "letters ?",
+                                        paramtext, nickname, winningWordLen);
                                 }
+                                winningNick = nickname;
                             }
                         }
                     }
@@ -495,33 +488,30 @@ void run_game(Cell const* dictionary)
             }
 
             // Keep alive
-            if (!PINGed && (clock() - lastRecvTicks > 15000)) {
-                sprintf(line, "%.8X",
-                        static_cast<unsigned int>((get_rand_int() << 16) |
-                                                  get_rand_int()));
-                irc_sendline("PING :" + std::string(line));
-                PINGed = true;
-            } else if (PINGed && (clock() - lastRecvTicks > TIMEOUT)) {
-                log_stdout("***** Timeout detected, reconnecting. *****");
+            if (!pinger.is_alive()) {
+                log("***** Timeout detected, reconnecting. *****");
                 irc_disconnect_msg("Timeout detected, reconnecting.");
-                game_loop(dictionary);
+                return;
             }
 
-        } while ((cur_state == RUNNING) && tclock);
+        } while (cur_state == RUNNING && tclock);
     }
 }
 
 void game_loop(Cell const* dictionary)
 {
-    // Connect to irc
-    log_stdout("Connecting to IRC...");
-    irc_connect();
+    while (cur_state != QUITTING) {
 
-    // Init execution
-    show_about();
-    run_game(dictionary);
+        // Connect to irc
+        log("Connecting to IRC...");
+        irc_connect();
+
+        // Init execution
+        show_about();
+        run_game(dictionary);
+    }
 
     scores->save();
-    log_stdout("Quitting...");
+    log("Quitting...");
     irc_disconnect();
 }

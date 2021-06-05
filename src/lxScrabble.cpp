@@ -5,16 +5,17 @@
 #include <csignal>
 #include <memory>
 
+#include "inicpp/inicpp.h"
+
 #include "dict_handler.hpp"
 #include "game.hpp"
-#include "inicpp/inicpp.h"
 #include "irc.hpp"
 #include "lxScrabble.hpp"
 #include "mimics.hpp"
 #include "scoreboard.hpp"
 
 bool list_failed_words = false;
-std::size_t wordlen;
+size_t wordlen;
 unsigned long bonus;
 std::string distrib;
 std::string dict_file;
@@ -29,12 +30,7 @@ long reannounce;
 
 const std::string INI_FILE("lxScrabble.ini");
 const std::string SCORE_FILE = "scores.ini";
-const std::size_t TOP_MAX = 10;
-
-void halt(int stat_code)
-{
-    exit(stat_code);
-}
+const size_t TOP_MAX = 10;
 
 template <class T>
 T cfg(const std::string& section, const std::string& option,
@@ -72,9 +68,8 @@ void readIni()
 
     // Check that the config file exists
     if (!fexists(INI_FILE)) {
-        log_stderr("\n\nConfiguration file not found. Please put "
-                   "'lxScrabble.ini' into this directory!\n\n");
-        halt(1);
+        throw std::runtime_error("\n\nConfiguration file not found. Please put "
+                                 "'lxScrabble.ini' into this directory!\n\n");
     }
     cfgp = std::make_unique<inicpp::config>(
         std::move(inicpp::parser::load_file(INI_FILE)));
@@ -97,8 +92,7 @@ void readIni()
     // Connection data
     servername = cfg<std::string>("IRC", "Server", DEFAULT_SERVER);
     if (servername == "<IRC SERVER HOSTNAME>") {
-        log_stderr("\nConfigure lxScrabble.ini first !!");
-        halt(2);
+        throw std::runtime_error("\nConfigure lxScrabble.ini first !!");
     }
     port = cfg<inicpp::unsigned_ini_t>("IRC", "Port", DEFAULT_PORT);
 
@@ -132,8 +126,7 @@ void readIni()
 
 void gentle_terminator(int)
 {
-    log_stdout("");
-    log_stdout("Terminating gently...");
+    log("\nTerminating gently...");
     cur_state = QUITTING;
 }
 
@@ -151,28 +144,33 @@ void setup_interrupt_catcher()
 int main(int argc, char* argv[])
 {
     // Show banner, initialize random number generator
-    log_stdout(BOTFULLNAME);
+    log(BOTFULLNAME);
+    try {
 
-    // Detect --list parameter
-    for (int i = 0; i < argc; ++i) {
-        list_failed_words = strcmp("--list", argv[i]) == 0;
+        // Detect --list parameter
+        for (int i = 0; i < argc; ++i) {
+            list_failed_words = strcmp("--list", argv[i]) == 0;
+        }
+
+        // Setup a handler to catch interrupt signals;
+        setup_interrupt_catcher();
+
+        // Read ini file
+        readIni();
+
+        // ReadDictionary
+        auto dictionary = readDictionary(dict_file);
+
+        // Read top scores
+        scores = Scoreboard::read_scoreboard(SCORE_FILE);
+
+        // Connect and start game
+        game_loop(dictionary.get());
+
+    } catch (const std::runtime_error& e) {
+        fmt::print("FATAL ERROR: {}\n", e.what());
+        return 1;
     }
 
-    // Setup a handler to catch interrupt signals;
-    setup_interrupt_catcher();
-
-    // Read ini file
-    readIni();
-
-    // ReadDictionary
-    auto dictionary = readDictionary(dict_file);
-
-    // Read top scores
-    scores = Scoreboard::read_scoreboard(SCORE_FILE);
-
-    // Connect and start game
-    game_loop(dictionary);
-
-    delete dictionary;
     return 0;
 }

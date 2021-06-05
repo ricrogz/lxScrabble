@@ -6,20 +6,23 @@
 #define LXSCRABBLE_MIMICS_H
 
 #include <algorithm>
-#include <iostream>
 #include <string>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <unordered_map>
+
+#include "fmt/chrono.h"
+
+static const char* LOG_FMT = "{:%Y-%m-%d %H:%M:%S} --- {}\n";
 
 const std::unordered_map<char, char> NON_ASCII_CONVERSIONS = {
     {241, 209}, // ñ >> Ñ
     {231, 199}, // ç >> Ç
 };
 
-inline bool is_valid_char(char c)
+inline bool is_valid_char(char& c)
 {
-    auto is_match = [c](const std::pair<char, char>& p) {
+    auto is_match = [&c](const std::pair<char, char>& p) {
         return c == p.first || c == p.second;
     };
     return isascii(c) || std::any_of(NON_ASCII_CONVERSIONS.begin(),
@@ -28,8 +31,7 @@ inline bool is_valid_char(char c)
 
 inline char* non_ascii_strupr(char* s)
 {
-    char* tmp = s;
-    for (; *tmp; ++tmp) {
+    for (char* tmp = s; *tmp; ++tmp) {
         if (isalpha(*tmp)) {
             *tmp = toupper(*tmp);
         } else {
@@ -42,24 +44,10 @@ inline char* non_ascii_strupr(char* s)
     return s;
 }
 
-inline void log(const std::string& message, std::ostream& stream)
+inline void log(const std::string& message)
 {
-    char timestamp[25];
-    struct tm* sTm;
-    time_t now = time(nullptr);
-    sTm = localtime(&now);
-    strftime(timestamp, 25, "%Y-%m-%d %H:%M:%S --- ", sTm);
-    stream << timestamp << message << std::endl;
-}
-
-inline void log_stdout(const std::string& message)
-{
-    log(message, std::cout);
-}
-
-inline void log_stderr(const std::string& message)
-{
-    log(message, std::cerr);
+    std::time_t now = std::time(nullptr);
+    fmt::print(LOG_FMT, fmt::localtime(now), message);
 }
 
 inline void msleep(unsigned long t)

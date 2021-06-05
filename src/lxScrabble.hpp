@@ -10,7 +10,7 @@
 #include <vector>
 
 extern bool list_failed_words;
-extern std::size_t wordlen;
+extern size_t wordlen;
 extern unsigned long bonus;
 extern std::string distrib;
 extern std::string dict_file;
@@ -26,8 +26,6 @@ extern unsigned int cfg_after;
 extern unsigned int autostop;
 extern bool autovoice;
 extern long reannounce;
-
-void halt(int stat_code);
 
 template <class T>
 T cfg(const std::string& section, const std::string& option,
