@@ -86,23 +86,22 @@ bool isWord(Cell const* dictionary, const std::string& letters,
     auto char_ptr = letters.begin();
     Cell const* cell = dictionary;
     do {
-        while (cell && cell->letter < *char_ptr) {
+        while ((cell != nullptr) && cell->letter < *char_ptr) {
             cell = cell->other;
         }
-        if (!cell) {
+        if (cell == nullptr) {
             return false;
         }
         if (cell->letter == *char_ptr) {
             if (++char_ptr == letters.end()) {
                 return cell->words.end() !=
                        std::find(cell->words.begin(), cell->words.end(), word);
-            } else {
-                cell = cell->longer;
             }
+            cell = cell->longer;
         } else {
             return false;
         }
-    } while (cell);
+    } while (cell != nullptr);
     return false;
 }
 
@@ -132,9 +131,11 @@ bool isPossible(size_t wordlen, const std::string& availableLetters,
 
 bool is_owner(const std::string& nickname)
 {
-    for (auto& o : owner)
-        if (strcasecmp(o.c_str(), nickname.c_str()) == 0)
+    for (auto& o : owner) {
+        if (strcasecmp(o.c_str(), nickname.c_str()) == 0) {
             return true;
+        }
+    }
     return false;
 }
 
@@ -144,14 +145,15 @@ void replyScore(const char* nickname, const char* dest)
     const auto alltime = scores->get_score(nickname, Scoreboard::Type::Total);
 
     irc_sendnotice(dest);
-    if (alltime == 0ul)
+    if (alltime == 0UL) {
         irc_sendformat(true, "ScoreUnknown", "{:s} has never played with me.",
                        nickname);
-    else
+    } else {
         irc_sendformat(
             true, "Score",
             "{:s}'s score is {:d} point(s) for this week, {:d} in total.",
             nickname, week, alltime);
+    }
 }
 
 void sendTop(const char* dest, Scoreboard::Type which, size_t num,
@@ -194,35 +196,35 @@ void sendTop(const char* dest, Scoreboard::Type which, size_t num,
 bool scrabbleCmd(const char* nickname, const char* command)
 {
     bool isOwner = is_owner(nickname);
-    if (strncasecmp(command, "!help", 5) == 0)
+    if (strncasecmp(command, "!help", 5) == 0) {
         help_cmd(nickname, isOwner);
-    else if (strcasecmp(command, "!score") == 0)
+    } else if (strcasecmp(command, "!score") == 0) {
         replyScore(nickname, nickname);
-    else if (strncasecmp(command, "!score ", 7) == 0)
+    } else if (strncasecmp(command, "!score ", 7) == 0) {
         replyScore(&command[7], nickname);
-    else if (strcasecmp(command, "!top") == 0 ||
-             strcasecmp(command, "!top10") == 0)
+    } else if (strcasecmp(command, "!top") == 0 ||
+               strcasecmp(command, "!top10") == 0) {
         sendTop(nickname, Scoreboard::Type::Week, 10,
                 "The 10 best players of the week: 1. {:s} ({:d})",
                 "{:d}. {:s} ({:d}) - {:d}. {:s} ({:d}) - {:d}. {:s} ({:d})");
-    else if (strcasecmp(command, "!top10total") == 0)
+    } else if (strcasecmp(command, "!top10total") == 0) {
         sendTop(nickname, Scoreboard::Type::Total, 10,
                 "The 10 best players of the all time: 1. {:s} ({:d})",
                 "{:d}. {:s} ({:d}) - {:d}. {:s} ({:d}) - {:d}. {:s} ({:d})");
-    else if (strcasecmp(command, "!top3") == 0)
+    } else if (strcasecmp(command, "!top3") == 0) {
         sendTop(nickname, Scoreboard::Type::Week, 3,
                 "The 3 best players of the week:  1. {:s} ({:d}) - 2. {:s} "
                 "({:d}) - 3. {:s} ({:d})",
                 nullptr);
-    else if (strcasecmp(command, "!top3total") == 0)
+    } else if (strcasecmp(command, "!top3total") == 0) {
         sendTop(nickname, Scoreboard::Type::Total, 3,
                 "The 3 best players of the all time:  1. {:s} ({:d}) - 2. {:s} "
                 "({:d}) - 3. {:s} ({:d})",
                 nullptr);
-    else if (strcasecmp(command, "!start") == 0)
+    } else if (strcasecmp(command, "!start") == 0) {
         cur_state = RUNNING;
-    else if ((anyoneCanStop || isOwner) &&
-             (strcasecmp(command, "!stop") == 0)) {
+    } else if ((anyoneCanStop || isOwner) &&
+               (strcasecmp(command, "!stop") == 0)) {
         if (cur_state == RUNNING) {
             irc_sendmsg(channel);
             irc_sendformat(true, "Stop", "{:s} has stopped the game.",
@@ -242,10 +244,12 @@ bool scrabbleCmd(const char* nickname, const char* command)
             cur_state = QUITTING;
         } else if (strcasecmp(command, "!op") == 0) {
             irc_sendline("MODE " + channel + " +o " + nickname);
-        } else
+        } else {
             return false;
-    } else
+        }
+    } else {
         return false;
+    }
     return true; // commande reconnue
 }
 
@@ -295,8 +299,9 @@ void run_game(Cell const* dictionary)
                             0)) {
                     time_t now = 0;
                     time(&now);
-                    if (now - last_msg > reannounce)
+                    if (now - last_msg > reannounce) {
                         show_about();
+                    }
                 }
             }
 
@@ -323,12 +328,13 @@ void run_game(Cell const* dictionary)
                 lastDayOfWeek = systemTime->tm_wday;
             }
 
-        } while ((cur_state == RUNNING && tclock--) ||
+        } while ((cur_state == RUNNING && ((tclock--) != 0u)) ||
                  (tclock = 0, cur_state == STOPPED));
 
         // Check if quitting
-        if (cur_state == QUITTING)
+        if (cur_state == QUITTING) {
             return;
+        }
 
         /*
          * Start a new round: pick letters, find words, print letters & stats
@@ -383,7 +389,7 @@ void run_game(Cell const* dictionary)
                     fmt::format("{}", fmt::join(foundWords.bestWords, " - "));
                 irc_sendformat(true, "Timeout",
                                "[Time is out.] MAX words were {:d}", words);
-                if (winningWordLen) {
+                if (winningWordLen != 0u) {
                     irc_sendmsg(channel);
                     irc_sendformat(false, "WinSome", "{:s} gets {:d} points! ",
                                    winningNick, winningWordLen);
@@ -494,7 +500,7 @@ void run_game(Cell const* dictionary)
                 return;
             }
 
-        } while (cur_state == RUNNING && tclock);
+        } while (cur_state == RUNNING && (tclock != 0u));
     }
 }
 

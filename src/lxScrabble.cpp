@@ -36,10 +36,12 @@ template <class T>
 T cfg(const std::string& section, const std::string& option,
       const T& default_value)
 {
-    if (!cfgp->contains(section))
+    if (!cfgp->contains(section)) {
         cfgp->add_section(section);
-    if (!(*cfgp)[section].contains(option))
+    }
+    if (!(*cfgp)[section].contains(option)) {
         (*cfgp)[section].add_option(option, (T) default_value);
+    }
     return (*cfgp)[section][option].get<T>();
 }
 
@@ -47,10 +49,12 @@ template <class T>
 std::vector<T> cfg_get_list(const std::string& section,
                             const std::string& option, const T& default_value)
 {
-    if (!cfgp->contains(section))
+    if (!cfgp->contains(section)) {
         cfgp->add_section(section);
-    if (!(*cfgp)[section].contains(option))
+    }
+    if (!(*cfgp)[section].contains(option)) {
         (*cfgp)[section].add_option(option, default_value);
+    }
     return (*cfgp)[section][option].get_list<T>();
 }
 
@@ -110,8 +114,10 @@ void readIni()
     channelkey = cfg<std::string>("IRC", "ChannelKey", DEFAULT_CHANNEL_KEY);
 
     // Other configs
-    irc_blackAndWhite = cfg<inicpp::unsigned_ini_t>("IRC", "BlackAndWhite", 0);
-    anyoneCanStop = cfg<inicpp::unsigned_ini_t>("IRC", "AnyoneCanStop", 0);
+    irc_blackAndWhite =
+        (cfg<inicpp::unsigned_ini_t>("IRC", "BlackAndWhite", 0) != 0u);
+    anyoneCanStop =
+        (cfg<inicpp::unsigned_ini_t>("IRC", "AnyoneCanStop", 0) != 0u);
     perform = cfg<std::string>("IRC", "Perform", "");
     owner = cfg_get_list<std::string>("IRC", "Owner", "");
 
@@ -120,7 +126,7 @@ void readIni()
     cfg_warning = cfg<inicpp::unsigned_ini_t>("Delay", "warning", 30) * 10;
     cfg_after = cfg<inicpp::unsigned_ini_t>("Delay", "after", 30) * 10;
     autostop = cfg<inicpp::unsigned_ini_t>("Settings", "autostop", 3);
-    autovoice = cfg<inicpp::unsigned_ini_t>("Settings", "autovoice", 1);
+    autovoice = (cfg<inicpp::unsigned_ini_t>("Settings", "autovoice", 1) != 0u);
     reannounce = cfg<inicpp::unsigned_ini_t>("Delay", "reannounce", 300);
 }
 

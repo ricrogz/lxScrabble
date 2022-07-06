@@ -15,16 +15,16 @@ Scoreboard::Scores::Scores(unsigned long week, unsigned long total)
 }
 void Scoreboard::Scores::clear_week()
 {
-    m_week = 0ul;
+    m_week = 0UL;
 }
 void Scoreboard::Scores::clear_total()
 {
-    m_total = 0ul;
+    m_total = 0UL;
 }
 void Scoreboard::Scores::clear_all()
 {
-    m_week = 0ul;
-    m_total = 0ul;
+    m_week = 0UL;
+    m_total = 0UL;
 }
 unsigned long Scoreboard::Scores::get_week() const
 {
@@ -88,9 +88,8 @@ void Scoreboard::update_top(std::vector<std::string>& top, Type which,
     if (current_pos != top.end()) {
         if (current_pos == insert_pos) {
             return;
-        } else {
-            top.erase(current_pos);
         }
+        top.erase(current_pos);
     }
 
     if (abs(std::distance(top.begin(), insert_pos)) < TOP_SIZE) {
@@ -115,8 +114,8 @@ Scoreboard* Scoreboard::read_scoreboard(const std::string& scores_file)
 
         while (!f_in.eof()) {
             auto player = std::string{};
-            auto week_score = 0ul;
-            auto alltime_score = 0ul;
+            auto week_score = 0UL;
+            auto alltime_score = 0UL;
 
             f_in >> player >> alltime_score >> week_score;
 
@@ -126,10 +125,10 @@ Scoreboard* Scoreboard::read_scoreboard(const std::string& scores_file)
 
             sb.m_players[player] = {week_score, alltime_score};
 
-            if (week_score > 0ul) {
+            if (week_score > 0UL) {
                 sb.update_top(sb.m_week_top, Type::Week, player);
             }
-            if (alltime_score > 0ul) {
+            if (alltime_score > 0UL) {
                 sb.update_top(sb.m_total_top, Type::Total, player);
             }
         }
@@ -173,7 +172,7 @@ unsigned long Scoreboard::get_score(const std::string& player,
                                     Scoreboard::Type which) const
 {
     if (m_players.count(player) == 0) {
-        return 0ul;
+        return 0UL;
     }
 
     auto getter = Scores::get_score_getter(which);
@@ -198,7 +197,7 @@ const std::vector<std::pair<std::string, unsigned>>
 Scoreboard::get_top(Type which, size_t num_top) const
 {
     auto getter = Scores::get_score_getter(which);
-    auto& top_list = (which == Type::Week ? m_week_top : m_total_top);
+    const auto& top_list = (which == Type::Week ? m_week_top : m_total_top);
 
     auto top = std::vector<std::pair<std::string, unsigned>>{};
     top.reserve(num_top);
@@ -210,7 +209,7 @@ Scoreboard::get_top(Type which, size_t num_top) const
         top.emplace_back(*player, score);
     }
     for (; count < num_top; ++count) {
-        top.emplace_back("---", 0u);
+        top.emplace_back("---", 0U);
     }
 
     return top;

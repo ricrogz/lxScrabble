@@ -74,10 +74,11 @@ std::unique_ptr<const Cell> readDictionary(const std::string& filename)
 
         // Remove whitespace at end
         size_t l = word.length();
-        for (const auto& c : whitespace_chars)
-            while (l && *&word[--l] == c) {
+        for (const auto& c : whitespace_chars) {
+            while ((l != 0u) && *&word[--l] == c) {
                 *&word[l] = '\0';
             }
+        }
 
         // Skip if line is empty -- length recalculated after whitespace removal
         if (word.empty()) {
@@ -145,12 +146,12 @@ void findWords(FoundWords& found, Cell const* cell, const std::string& letters,
     char ch = *pos++;
 
     // Advance to the cell matching current letter
-    while (cell && cell->letter < ch) {
+    while ((cell != nullptr) && cell->letter < ch) {
         cell = cell->other;
     }
 
     // If no cell, exit
-    if (!cell) {
+    if (cell == nullptr) {
         return;
     }
 
@@ -168,7 +169,7 @@ void findWords(FoundWords& found, Cell const* cell, const std::string& letters,
             }
         }
 
-        if (pos != letters.end() && cell->longer) {
+        if (pos != letters.end() && (cell->longer != nullptr)) {
             findWords(found, cell->longer, letters, pos - letters.begin());
         }
         while (pos != letters.end() && *pos == ch) {

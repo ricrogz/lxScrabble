@@ -15,7 +15,7 @@
 const std::string IRC_BOLD = "\x002";
 const std::string IRC_COLOR = "\x003";
 
-const std::string BOT_URL = "https://github.com/ricrogz/lxScrabble";
+const std::string BOT_URL = "ricrogz/lxScrabble @ github";
 
 const std::string BOTFULLNAME = BOTNAME + " by invik";
 const std::string ADVERTISE =
@@ -31,7 +31,7 @@ const std::string DEFAULT_ANICK = "Scrabbl0r";
 const std::string DEFAULT_IDENT = "lxScrabble";
 
 const std::string DEFAULT_CHANNEL = "#scrabble";
-const std::string DEFAULT_CHANNEL_KEY = "";
+const std::string DEFAULT_CHANNEL_KEY;
 constexpr clock_t PING_INTERVAL = 15 * 1000;
 constexpr clock_t TIMEOUT = 90 * 1000; // default: 90 s
 

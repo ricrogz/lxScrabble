@@ -28,8 +28,8 @@ class Scoreboard
         void add(unsigned long score);
 
       private:
-        unsigned long m_week{0ul};
-        unsigned long m_total{0ul};
+        unsigned long m_week{0UL};
+        unsigned long m_total{0UL};
 
         void clear_week();
         void clear_total();

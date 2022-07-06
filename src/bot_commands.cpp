@@ -31,7 +31,7 @@ void help_cmd(const std::string& dest, bool is_owner)
     // User commands
     irc_sendmsg(dest);
     irc_sendline("User commands:");
-    for (auto& cmd : user_commands) {
+    for (const auto& cmd : user_commands) {
         irc_sendmsg(dest);
         irc_sendline(cmd);
     }
@@ -44,7 +44,7 @@ void help_cmd(const std::string& dest, bool is_owner)
     if (is_owner) {
         irc_sendmsg(dest);
         irc_sendline("Owner commands:");
-        for (auto& cmd : owner_commands) {
+        for (const auto& cmd : owner_commands) {
             irc_sendmsg(dest);
             irc_sendline(cmd);
         }

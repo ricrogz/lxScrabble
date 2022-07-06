@@ -71,7 +71,7 @@ bool irc_recv(std::string& line)
 {
     size_t value = 0;
     ioctl(irc_socket, FIONREAD, &value);
-    if (value) {
+    if (value != 0u) {
         auto ret = recv(irc_socket, irc_buffer.begin() + irc_bufLen,
                         std::min<size_t>(value, BUFFER_SIZE - irc_bufLen), 0);
         if (ret < 0) {
@@ -89,7 +89,8 @@ bool irc_recv(std::string& line)
             }
             // skip the new line char
             line.assign(irc_buffer.begin(),
-                        lineLen - (irc_buffer.at(lineLen - 1) == '\r'));
+                        lineLen - static_cast<unsigned long>(
+                                      irc_buffer.at(lineLen - 1) == '\r'));
             ++lineLen;
             irc_bufLen -= lineLen;
             memmove(irc_buffer.begin(), irc_buffer.begin() + lineLen,
@@ -143,6 +144,7 @@ void irc_analyze(std::string&& line, std::string& nickname, std::string& cmd,
         pos = scan;
         scan = text.find(' ', pos);
         if (scan == std::string::npos) {
+            scan = 0;
             break;
         }
         if (target.empty()) {
@@ -207,7 +209,8 @@ void irc_connect(const std::string& servername, int port,
                 return;
 
                 // Numerics indicating the nick is busy; use alternate
-            } else if (cmd == "432" || cmd == "433") {
+            }
+            if (cmd == "432" || cmd == "433") {
                 if (nickname == altnickname) {
                     throw std::runtime_error("Nicknames already in use");
                 }
@@ -232,13 +235,13 @@ void do_perform(std::string perform)
             ++token;
         }
         char* scan = strchr(token, ' ');
-        if (scan) {
+        if (scan != nullptr) {
             *scan = '\0';
             ++scan;
         }
         non_ascii_strupr(token);
         if (strcmp(token, "MSG") == 0 || strcmp(token, "NOTICE") == 0) {
-            if (!scan) {
+            if (scan == nullptr) {
                 auto text = fmt::format(
                     "Missing argument for {} on Perform= setting", token);
                 throw std::runtime_error(text);
@@ -258,7 +261,7 @@ void do_perform(std::string perform)
             irc_send(" :");
             irc_sendline(scan);
         } else {
-            if (scan) {
+            if (scan != nullptr) {
                 --scan;
                 *scan = ' ';
             }
@@ -333,16 +336,18 @@ std::string irc_stripcodes(const std::string& text)
     ret.reserve(text.length());
     size_t expected_digit = 0;
     for (const auto& ch : text) {
-        if (ret.empty() && isspace(ch)) {
+        if (ret.empty() && (isspace(ch) != 0)) {
             continue;
         }
         if (ch == 2) { // Bold
             expected_digit = 0;
             continue;
-        } else if (ch == 3) { // Color marker
+        }
+        if (ch == 3) { // Color marker
             expected_digit = 1;
             continue;
-        } else if (expected_digit > 0) {
+        }
+        if (expected_digit > 0) {
 
             // triggers at 3 & 6
             if (expected_digit % 3 == 0 && ch != ',') {
@@ -379,7 +384,7 @@ void irc_disconnect()
 
 Pinger::Pinger(RandGenerator& generator)
     : d_generator{generator},
-      d_distrib(0u, std::numeric_limits<uint32_t>::max()), d_lastRecv{clock()}
+      d_distrib(0U, std::numeric_limits<uint32_t>::max()), d_lastRecv{clock()}
 {
 }
 
@@ -394,7 +399,8 @@ bool Pinger::is_alive()
     const auto delta = clock() - d_lastRecv;
     if (d_pinged && delta > TIMEOUT) {
         return false;
-    } else if (!d_pinged && delta > PING_INTERVAL) {
+    }
+    if (!d_pinged && delta > PING_INTERVAL) {
         auto ping = fmt::format("PING :{:08X}", d_distrib(d_generator));
         irc_sendline(ping);
         d_pinged = true;

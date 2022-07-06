@@ -25,14 +25,15 @@ inline bool is_valid_char(char& c)
     auto is_match = [&c](const std::pair<char, char>& p) {
         return c == p.first || c == p.second;
     };
-    return isascii(c) || std::any_of(NON_ASCII_CONVERSIONS.begin(),
-                                     NON_ASCII_CONVERSIONS.end(), is_match);
+    return (isascii(c) != 0) ||
+           std::any_of(NON_ASCII_CONVERSIONS.begin(),
+                       NON_ASCII_CONVERSIONS.end(), is_match);
 }
 
 inline char* non_ascii_strupr(char* s)
 {
-    for (char* tmp = s; *tmp; ++tmp) {
-        if (isalpha(*tmp)) {
+    for (char* tmp = s; *tmp != 0u; ++tmp) {
+        if (isalpha(*tmp) != 0) {
             *tmp = toupper(*tmp);
         } else {
             auto found = NON_ASCII_CONVERSIONS.find(*tmp);
